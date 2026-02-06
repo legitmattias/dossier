@@ -11,14 +11,20 @@
       "import": "./dist/index.mjs"
     }
   },
+  "bin": {
+    "dossier": "./dist/bin.mjs"
+  },
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsdown",
+    "dev": "node --import tsx ./src/bin.ts",
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@dossier/core": "workspace:*"
+    "@dossier/core": "workspace:*",
+    "@inquirer/prompts": "^8.2.0",
+    "commander": "^14.0.3"
   }
 }
