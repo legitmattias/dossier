@@ -22,15 +22,15 @@ export function registerListCommand(
         proficiency?: string;
       }) => {
         const container = getContainer();
+        const profile = await container.profileRepository.load();
+        if (!profile) {
+          throw new application.ProfileNotFoundError();
+        }
 
         let domainId: string | undefined;
         let categoryId: string | undefined;
 
         if (opts.domain) {
-          const profile = await container.profileRepository.load();
-          if (!profile) {
-            throw new application.ProfileNotFoundError();
-          }
           const domain = resolveDomain(profile, opts.domain);
           domainId = domain.id;
 
@@ -50,9 +50,20 @@ export function registerListCommand(
           return;
         }
 
+        // Build ID → name lookup maps (keyed by plain string for DTO compatibility)
+        const domainNames = new Map<string, string>(profile.domains.map((d) => [d.id, d.name]));
+        const categoryNames = new Map<string, string>(
+          profile.domains.flatMap((d) => d.categories.map((c) => [c.id, c.name])),
+        );
+
         table(
           ["Name", "Proficiency", "Domain", "Category"],
-          result.skills.map((s) => [s.name, s.proficiency, s.domainId, s.categoryId]),
+          result.skills.map((s) => [
+            s.name,
+            s.proficiency,
+            domainNames.get(s.domainId) ?? s.domainId,
+            categoryNames.get(s.categoryId) ?? s.categoryId,
+          ]),
         );
       }),
     );
