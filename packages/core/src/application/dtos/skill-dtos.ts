@@ -1,0 +1,65 @@
+import type { SkillSource, SkillUsage } from "../../domain/index.js";
+
+// --- Input DTOs (plain strings, no branded types) ---
+
+export interface AddSkillInput {
+  readonly name: string;
+  readonly domainId: string;
+  readonly categoryId: string;
+  readonly proficiency: string;
+  readonly sources?: readonly SkillSource[];
+  readonly usage?: readonly SkillUsage[];
+  readonly notes?: string;
+}
+
+export interface UpdateSkillInput {
+  readonly skillId: string;
+  readonly name?: string;
+  readonly proficiency?: string;
+  readonly notes?: string;
+  readonly addSources?: readonly SkillSource[];
+  readonly addUsage?: readonly SkillUsage[];
+}
+
+export interface RemoveSkillInput {
+  readonly skillId: string;
+}
+
+export interface ListSkillsInput {
+  readonly domainId?: string;
+  readonly categoryId?: string;
+  readonly proficiency?: string;
+  readonly minFreshness?: number;
+}
+
+// --- Output DTOs (plain types, ISO date strings) ---
+
+export interface SkillOutput {
+  readonly id: string;
+  readonly slug: string;
+  readonly name: string;
+  readonly domainId: string;
+  readonly categoryId: string;
+  readonly proficiency: string;
+  readonly sources: readonly SkillSource[];
+  readonly usage: readonly SkillUsage[];
+  readonly notes?: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface AddSkillOutput {
+  readonly skill: SkillOutput;
+}
+
+export interface UpdateSkillOutput {
+  readonly skill: SkillOutput;
+}
+
+export interface RemoveSkillOutput {
+  readonly removed: true;
+}
+
+export interface ListSkillsOutput {
+  readonly skills: readonly SkillOutput[];
+}
