@@ -1,0 +1,111 @@
+import type { Profile } from "../../domain/entities/profile.js";
+import type { Skill } from "../../domain/entities/skill.js";
+import type { ExportOptions, IExporter } from "../../application/ports/exporter.js";
+import type { Proficiency } from "../../domain/value-objects/proficiency.js";
+import {
+  formatTimeSince,
+  getLastUsedDate,
+  getLatestProgress,
+} from "./format-helpers.js";
+
+interface ProficiencyTier {
+  readonly label: string;
+  readonly levels: readonly Proficiency[];
+}
+
+const TIERS: readonly ProficiencyTier[] = [
+  { label: "Strong (proficient/expert)", levels: ["proficient", "expert"] },
+  { label: "Familiar", levels: ["familiar"] },
+  { label: "Learning", levels: ["learning"] },
+];
+
+export class ClaudeMdExporter implements IExporter {
+  export(profile: Profile, _options?: ExportOptions): string {
+    const lines: string[] = [];
+    const now = new Date();
+
+    lines.push(`# Developer Profile: ${profile.name}`);
+
+    // Skills grouped by proficiency tier
+    if (profile.skills.length > 0) {
+      lines.push("");
+      lines.push("## Skills");
+
+      for (const tier of TIERS) {
+        const skills = profile.skills.filter((s) =>
+          (tier.levels as readonly string[]).includes(s.proficiency),
+        );
+        if (skills.length === 0) continue;
+
+        lines.push("");
+        lines.push(`### ${tier.label}`);
+        for (const skill of skills) {
+          lines.push(`- ${formatSkillLine(skill, now)}`);
+        }
+      }
+    }
+
+    // Active goals
+    const activeGoals = profile.goals.filter((g) => g.status === "active");
+    if (activeGoals.length > 0) {
+      lines.push("");
+      lines.push("## Currently Learning");
+      for (const goal of activeGoals) {
+        const progress = getLatestProgress(goal);
+        lines.push(
+          `- **${goal.name}** — ${goal.priority} priority, ${progress}% complete`,
+        );
+      }
+    }
+
+    // Interests
+    if (profile.interests.length > 0) {
+      lines.push("");
+      lines.push("## On My Radar");
+      for (const interest of profile.interests) {
+        lines.push(`- ${interest.name}`);
+      }
+    }
+
+    // Guidance section
+    const strongSkills = profile.skills.filter(
+      (s) => s.proficiency === "proficient" || s.proficiency === "expert",
+    );
+    const learningSkills = profile.skills.filter(
+      (s) => s.proficiency === "learning",
+    );
+
+    if (strongSkills.length > 0 || learningSkills.length > 0) {
+      lines.push("");
+      lines.push("## When suggesting solutions:");
+      for (const skill of strongSkills) {
+        lines.push(`- Prefer ${skill.name} — this is a strength`);
+      }
+      for (const skill of learningSkills) {
+        lines.push(
+          `- I'm actively learning ${skill.name} — extra explanation welcome`,
+        );
+      }
+    }
+
+    lines.push("");
+    return lines.join("\n");
+  }
+}
+
+function formatSkillLine(skill: Skill, now: Date): string {
+  const lastUsed = getLastUsedDate(skill);
+  let freshness: string;
+
+  if (!lastUsed) {
+    freshness = "no usage recorded";
+  } else {
+    const timeSince = formatTimeSince(lastUsed, now);
+    freshness =
+      timeSince === "recently"
+        ? "last used: recently"
+        : `last used: ${timeSince} - may need refresher`;
+  }
+
+  return `${skill.name} (${skill.proficiency}) [${freshness}]`;
+}
