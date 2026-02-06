@@ -3,7 +3,6 @@ import {
   createProfile,
   toProfileId,
   BUILT_IN_DOMAINS,
-  infrastructure,
 } from "@dossier/core";
 import type { Container } from "../container.js";
 import { withErrorHandler } from "../helpers/error-handler.js";
@@ -39,8 +38,7 @@ export function registerInitCommand(
 
         await container.profileRepository.save(profile);
 
-        const path = infrastructure.getDefaultProfilePath();
-        success(`Profile created at ${path}`);
+        success(`Profile created at ${container.profilePath}`);
         info(`Added ${BUILT_IN_DOMAINS.length} built-in domains.`);
       }),
     );
