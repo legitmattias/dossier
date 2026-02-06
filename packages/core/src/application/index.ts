@@ -1,0 +1,87 @@
+// Ports
+export type { IProfileRepository } from "./ports/profile-repository.js";
+export type { IIdGenerator } from "./ports/id-generator.js";
+export type { IExporter, ExportOptions } from "./ports/exporter.js";
+
+// Errors
+export {
+  ApplicationError,
+  ProfileNotFoundError,
+  InvalidInputError,
+} from "./errors/application-errors.js";
+
+// DTOs — Skills
+export type {
+  AddSkillInput,
+  AddSkillOutput,
+  UpdateSkillInput,
+  UpdateSkillOutput,
+  RemoveSkillInput,
+  RemoveSkillOutput,
+  ListSkillsInput,
+  ListSkillsOutput,
+  SkillOutput,
+} from "./dtos/skill-dtos.js";
+
+// DTOs — Goals
+export type {
+  AddGoalInput,
+  AddGoalOutput,
+  UpdateGoalProgressInput,
+  UpdateGoalProgressOutput,
+  CompleteGoalInput,
+  CompleteGoalOutput,
+  GoalOutput,
+} from "./dtos/goal-dtos.js";
+
+// DTOs — Interests
+export type {
+  AddInterestInput,
+  AddInterestOutput,
+  RemoveInterestInput,
+  RemoveInterestOutput,
+  PromoteInterestInput,
+  PromoteInterestOutput,
+  InterestOutput,
+} from "./dtos/interest-dtos.js";
+
+// DTOs — Export
+export type {
+  ExportProfileInput,
+  ExportProfileOutput,
+} from "./dtos/export-dtos.js";
+
+// Helpers
+export { slugify } from "./helpers/slugify.js";
+export { toSkillOutput, toGoalOutput, toInterestOutput } from "./helpers/mappers.js";
+export { validateProficiency, validatePriority } from "./helpers/validation.js";
+
+// Use Cases — Skills
+export { addSkill } from "./use-cases/add-skill.js";
+export type { AddSkillDeps } from "./use-cases/add-skill.js";
+export { updateSkill } from "./use-cases/update-skill.js";
+export type { UpdateSkillDeps } from "./use-cases/update-skill.js";
+export { removeSkill } from "./use-cases/remove-skill.js";
+export type { RemoveSkillDeps } from "./use-cases/remove-skill.js";
+export { listSkills } from "./use-cases/list-skills.js";
+export type { ListSkillsDeps } from "./use-cases/list-skills.js";
+
+// Use Cases — Goals
+export { addLearningGoal } from "./use-cases/add-learning-goal.js";
+export type { AddLearningGoalDeps } from "./use-cases/add-learning-goal.js";
+export { updateGoalProgress } from "./use-cases/update-goal-progress.js";
+export type { UpdateGoalProgressDeps } from "./use-cases/update-goal-progress.js";
+export { completeGoal } from "./use-cases/complete-goal.js";
+export type { CompleteGoalDeps } from "./use-cases/complete-goal.js";
+
+// Use Cases — Interests
+export { addInterest } from "./use-cases/add-interest.js";
+export type { AddInterestDeps } from "./use-cases/add-interest.js";
+export { removeInterest } from "./use-cases/remove-interest.js";
+export type { RemoveInterestDeps } from "./use-cases/remove-interest.js";
+export { promoteInterest } from "./use-cases/promote-interest.js";
+export type { PromoteInterestDeps } from "./use-cases/promote-interest.js";
+
+// Use Cases — Export
+export { exportProfile } from "./use-cases/export-profile.js";
+export type { ExportProfileDeps } from "./use-cases/export-profile.js";
