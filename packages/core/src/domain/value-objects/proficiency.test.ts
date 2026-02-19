@@ -8,7 +8,7 @@ import {
 
 describe("PROFICIENCY_LEVELS", () => {
   it("has four levels in order", () => {
-    expect(PROFICIENCY_LEVELS).toEqual(["learning", "familiar", "proficient", "expert"]);
+    expect(PROFICIENCY_LEVELS).toEqual(["beginner", "familiar", "proficient", "expert"]);
   });
 });
 
@@ -20,7 +20,7 @@ describe("isProficiency", () => {
   });
 
   it("returns false for invalid strings", () => {
-    expect(isProficiency("beginner")).toBe(false);
+    expect(isProficiency("learning")).toBe(false);
     expect(isProficiency("master")).toBe(false);
     expect(isProficiency("")).toBe(false);
   });
@@ -41,12 +41,12 @@ describe("compareProficiency", () => {
   });
 
   it("returns negative when first is lower than second", () => {
-    expect(compareProficiency("learning", "expert")).toBeLessThan(0);
+    expect(compareProficiency("beginner", "expert")).toBeLessThan(0);
     expect(compareProficiency("familiar", "proficient")).toBeLessThan(0);
   });
 
   it("returns positive when first is higher than second", () => {
-    expect(compareProficiency("expert", "learning")).toBeGreaterThan(0);
+    expect(compareProficiency("expert", "beginner")).toBeGreaterThan(0);
     expect(compareProficiency("proficient", "familiar")).toBeGreaterThan(0);
   });
 

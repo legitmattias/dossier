@@ -1,4 +1,4 @@
-export const PROFICIENCY_LEVELS = ["learning", "familiar", "proficient", "expert"] as const;
+export const PROFICIENCY_LEVELS = ["beginner", "familiar", "proficient", "expert"] as const;
 
 export type Proficiency = (typeof PROFICIENCY_LEVELS)[number];
 

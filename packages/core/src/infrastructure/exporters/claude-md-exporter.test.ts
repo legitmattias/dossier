@@ -29,7 +29,7 @@ describe("ClaudeMdExporter", () => {
     expect(output).toContain("TypeScript (proficient)");
   });
 
-  it("shows learning skills in Learning tier", () => {
+  it("shows beginner skills in Beginner tier", () => {
     const domain = BUILT_IN_DOMAINS[0]!;
     let profile = createProfile({ id: toProfileId("p"), name: "P" });
     profile = addDomainToProfile(profile, domain);
@@ -39,13 +39,13 @@ describe("ClaudeMdExporter", () => {
       name: "Rust",
       domainId: domain.id,
       categoryId: domain.categories[0]!.id,
-      proficiency: "learning",
+      proficiency: "beginner",
     });
     profile = addSkillToProfile(profile, skill);
 
     const output = exporter.export(profile);
-    expect(output).toContain("### Learning");
-    expect(output).toContain("Rust (learning) [no usage recorded]");
+    expect(output).toContain("### Beginner");
+    expect(output).toContain("Rust (beginner) [no usage recorded]");
   });
 
   it("shows freshness hints for skills with usage", () => {

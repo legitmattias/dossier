@@ -14,7 +14,7 @@ export function registerAddCommand(
     .description("Add a skill to your profile")
     .requiredOption("-d, --domain <domain>", "Domain (name or slug)")
     .requiredOption("-c, --category <category>", "Category (name or slug)")
-    .option("-p, --proficiency <level>", "Proficiency level", "learning")
+    .option("-p, --proficiency <level>", "Proficiency level", "beginner")
     .option("--notes <text>", "Notes about this skill")
     .action(
       withErrorHandler(async (name: string, opts: {

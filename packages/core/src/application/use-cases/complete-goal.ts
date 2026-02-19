@@ -50,7 +50,7 @@ export async function completeGoal(
 
   const proficiency = input.proficiency !== undefined
     ? validateProficiency(input.proficiency)
-    : validateProficiency("learning");
+    : validateProficiency("beginner");
 
   const skillId = toSkillId(deps.idGenerator.generate("skill"));
   const slug = slugify(goal.name);

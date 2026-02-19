@@ -83,7 +83,7 @@ describe("listSkills", () => {
 
   it("returns empty array when no skills match", async () => {
     const result = await listSkills({ profileRepository: repo }, {
-      proficiency: "learning",
+      proficiency: "beginner",
     });
 
     expect(result.skills).toHaveLength(0);

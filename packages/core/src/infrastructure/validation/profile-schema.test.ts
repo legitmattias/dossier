@@ -176,7 +176,7 @@ describe("profile-schema", () => {
         name: "Go",
         domainId: toDomainId("d1"),
         categoryId: toCategoryId("c1"),
-        proficiency: "learning",
+        proficiency: "beginner",
       });
 
       let profile = createProfile({ id: toProfileId("p"), name: "P" });

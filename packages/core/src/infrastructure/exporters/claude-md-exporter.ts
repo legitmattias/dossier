@@ -16,7 +16,7 @@ interface ProficiencyTier {
 const TIERS: readonly ProficiencyTier[] = [
   { label: "Strong (proficient/expert)", levels: ["proficient", "expert"] },
   { label: "Familiar", levels: ["familiar"] },
-  { label: "Learning", levels: ["learning"] },
+  { label: "Beginner", levels: ["beginner"] },
 ];
 
 export class ClaudeMdExporter implements IExporter {
@@ -71,19 +71,19 @@ export class ClaudeMdExporter implements IExporter {
     const strongSkills = profile.skills.filter(
       (s) => s.proficiency === "proficient" || s.proficiency === "expert",
     );
-    const learningSkills = profile.skills.filter(
-      (s) => s.proficiency === "learning",
+    const beginnerSkills = profile.skills.filter(
+      (s) => s.proficiency === "beginner",
     );
 
-    if (strongSkills.length > 0 || learningSkills.length > 0) {
+    if (strongSkills.length > 0 || beginnerSkills.length > 0) {
       lines.push("");
       lines.push("## When suggesting solutions:");
       for (const skill of strongSkills) {
         lines.push(`- Prefer ${skill.name} — this is a strength`);
       }
-      for (const skill of learningSkills) {
+      for (const skill of beginnerSkills) {
         lines.push(
-          `- I'm actively learning ${skill.name} — extra explanation welcome`,
+          `- ${skill.name} is a beginner skill — extra explanation welcome`,
         );
       }
     }
