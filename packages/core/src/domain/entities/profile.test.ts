@@ -192,9 +192,38 @@ describe("skill operations", () => {
     expect(profile.skills).toHaveLength(1);
   });
 
-  it("prevents duplicate skills", () => {
+  it("prevents duplicate skills by ID", () => {
     const profile = addSkillToProfile(makeProfile(), makeSkill());
     expect(() => addSkillToProfile(profile, makeSkill())).toThrow(DuplicateSkillError);
+  });
+
+  it("prevents duplicate skills by slug + domain", () => {
+    const profile = addSkillToProfile(makeProfile(), makeSkill("skill-1", "TypeScript"));
+    const duplicate = makeSkill("skill-2", "TypeScript"); // different ID, same name/domain
+    expect(() => addSkillToProfile(profile, duplicate)).toThrow(DuplicateSkillError);
+  });
+
+  it("allows same skill name in different domains", () => {
+    const skill1 = createSkill({
+      id: toSkillId("skill-1"),
+      slug: createSlug("python"),
+      name: "Python",
+      domainId: toDomainId("domain-sw"),
+      categoryId: toCategoryId("cat-languages"),
+      proficiency: "familiar",
+    });
+    const skill2 = createSkill({
+      id: toSkillId("skill-2"),
+      slug: createSlug("python"),
+      name: "Python",
+      domainId: toDomainId("domain-other"),
+      categoryId: toCategoryId("cat-other"),
+      proficiency: "beginner",
+    });
+
+    let profile = addSkillToProfile(makeProfile(), skill1);
+    profile = addSkillToProfile(profile, skill2);
+    expect(profile.skills).toHaveLength(2);
   });
 
   it("finds a skill by ID", () => {

@@ -106,9 +106,16 @@ export function removeDomainFromProfile(
 // --- Skill operations ---
 
 export function addSkillToProfile(profile: Profile, skill: Skill): Readonly<Profile> {
-  const duplicate = profile.skills.find((s) => s.id === skill.id);
-  if (duplicate) {
+  const duplicateById = profile.skills.find((s) => s.id === skill.id);
+  if (duplicateById) {
     throw new DuplicateSkillError(skill.id);
+  }
+
+  const duplicateBySlugAndDomain = profile.skills.find(
+    (s) => s.slug === skill.slug && s.domainId === skill.domainId,
+  );
+  if (duplicateBySlugAndDomain) {
+    throw new DuplicateSkillError(skill.name);
   }
 
   return {
