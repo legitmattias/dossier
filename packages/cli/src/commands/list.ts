@@ -2,7 +2,7 @@ import type { Command } from "commander";
 import { application } from "@dossier/core";
 import type { Container } from "../container.js";
 import { withErrorHandler } from "../helpers/error-handler.js";
-import { resolveDomain, resolveCategoryId } from "../helpers/resolve.js";
+import { resolveDomain, resolveCategoryId, resolveSkillId } from "../helpers/resolve.js";
 import { info, table } from "../helpers/output.js";
 
 export function registerListCommand(
@@ -10,13 +10,13 @@ export function registerListCommand(
   getContainer: () => Container,
 ): void {
   program
-    .command("list")
-    .description("List skills in your profile")
+    .command("list [name]")
+    .description("List skills in your profile, or show detail for a specific skill")
     .option("-d, --domain <domain>", "Filter by domain")
     .option("-c, --category <category>", "Filter by category (requires --domain)")
     .option("-p, --proficiency <level>", "Filter by proficiency level")
     .action(
-      withErrorHandler(async (opts: {
+      withErrorHandler(async (name: string | undefined, opts: {
         domain?: string;
         category?: string;
         proficiency?: string;
@@ -27,6 +27,48 @@ export function registerListCommand(
           throw new application.ProfileNotFoundError();
         }
 
+        // Detail view for a single skill
+        if (name) {
+          const skillId = resolveSkillId(profile, name);
+          const skill = profile.skills.find((s) => s.id === skillId)!;
+
+          const domainName = profile.domains.find((d) => d.id === skill.domainId)?.name ?? skill.domainId;
+          const categoryName = profile.domains
+            .flatMap((d) => d.categories)
+            .find((c) => c.id === skill.categoryId)?.name ?? skill.categoryId;
+
+          const lines: string[] = [];
+          lines.push(`Name:         ${skill.name}`);
+          lines.push(`Proficiency:  ${skill.proficiency}`);
+          lines.push(`Domain:       ${domainName}`);
+          lines.push(`Category:     ${categoryName}`);
+          if (skill.notes) {
+            lines.push(`Notes:        ${skill.notes}`);
+          }
+          lines.push(`Created:      ${skill.createdAt.toISOString().slice(0, 10)}`);
+
+          if (skill.usage.length > 0) {
+            lines.push("");
+            lines.push("Usage:");
+            for (const u of skill.usage) {
+              lines.push(`  - ${u.lastUsed.toISOString().slice(0, 10)} (${u.context})`);
+            }
+          }
+
+          if (skill.sources.length > 0) {
+            lines.push("");
+            lines.push("Sources:");
+            for (const s of skill.sources) {
+              const detail = s.detail ? `: ${s.detail}` : "";
+              lines.push(`  - ${s.type}${detail} (${s.date.toISOString().slice(0, 10)})`);
+            }
+          }
+
+          console.log(lines.join("\n"));
+          return;
+        }
+
+        // Table view
         let domainId: string | undefined;
         let categoryId: string | undefined;
 
