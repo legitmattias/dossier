@@ -10,34 +10,37 @@ export function registerUsedCommand(
   getContainer: () => Container,
 ): void {
   program
-    .command("used <name>")
-    .description("Mark a skill as recently used")
+    .command("used <names...>")
+    .description("Mark one or more skills as recently used")
     .option("--context <text>", "How the skill was used")
     .action(
-      withErrorHandler(async (name: string, opts: { context?: string }) => {
+      withErrorHandler(async (names: string[], opts: { context?: string }) => {
         const container = getContainer();
-        const profile = await container.profileRepository.load();
-        if (!profile) {
-          throw new application.ProfileNotFoundError();
+
+        for (const name of names) {
+          const profile = await container.profileRepository.load();
+          if (!profile) {
+            throw new application.ProfileNotFoundError();
+          }
+
+          const skillId = resolveSkillId(profile, name);
+
+          await application.updateSkill(container, {
+            skillId,
+            addUsage: [{
+              context: opts.context ?? "used",
+              lastUsed: new Date(),
+            }],
+          });
+
+          // Reload to get freshness
+          const updated = await container.profileRepository.load();
+          const skill = updated!.skills.find((s) => s.id === skillId)!;
+          const freshness = getSkillFreshness(skill);
+
+          success(`Marked '${name}' as recently used.`);
+          info(`Freshness: ${Math.round(freshness * 100)}%`);
         }
-
-        const skillId = resolveSkillId(profile, name);
-
-        await application.updateSkill(container, {
-          skillId,
-          addUsage: [{
-            context: opts.context ?? "used",
-            lastUsed: new Date(),
-          }],
-        });
-
-        // Reload to get freshness
-        const updated = await container.profileRepository.load();
-        const skill = updated!.skills.find((s) => s.id === skillId)!;
-        const freshness = getSkillFreshness(skill);
-
-        success(`Marked '${name}' as recently used.`);
-        info(`Freshness: ${Math.round(freshness * 100)}%`);
       }),
     );
 }
