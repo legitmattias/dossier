@@ -15,15 +15,15 @@ export function registerExportCommand(
     .description("Export your profile")
     .option("-f, --format <format>", "Export format (json, markdown, text, claude)", "markdown")
     .option("-d, --domain <domain>", "Filter by domain")
-    .option("--include-goals", "Include learning goals")
-    .option("--include-interests", "Include interests")
+    .option("--exclude-goals", "Exclude learning goals")
+    .option("--exclude-interests", "Exclude interests")
     .option("-o, --output <file>", "Write to file instead of stdout")
     .action(
       withErrorHandler(async (opts: {
         format: string;
         domain?: string;
-        includeGoals?: boolean;
-        includeInterests?: boolean;
+        excludeGoals?: boolean;
+        excludeInterests?: boolean;
         output?: string;
       }) => {
         const container = getContainer();
@@ -50,8 +50,8 @@ export function registerExportCommand(
           { ...container, exporter },
           {
             domainIds,
-            includeGoals: opts.includeGoals,
-            includeInterests: opts.includeInterests,
+            includeGoals: opts.excludeGoals ? false : undefined,
+            includeInterests: opts.excludeInterests ? false : undefined,
           },
         );
 
