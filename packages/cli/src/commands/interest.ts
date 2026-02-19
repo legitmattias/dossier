@@ -49,7 +49,7 @@ export function registerInterestCommand(
             ["Name", "Domain", "Created"],
             interests.map((i) => {
               const domain = profile.domains.find((d) => d.id === i.domainId);
-              return [i.name, domain?.name ?? i.domainId, i.createdAt.toLocaleDateString()];
+              return [i.name, domain?.name ?? i.domainId, i.createdAt.toISOString().slice(0, 10)];
             }),
           );
           return;

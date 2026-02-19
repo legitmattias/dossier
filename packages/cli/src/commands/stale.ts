@@ -65,7 +65,7 @@ export function registerStaleCommand(
             if (lastUsage) {
               const daysSinceUse = (now.getTime() - lastUsage.lastUsed.getTime()) / (1000 * 60 * 60 * 24);
               freshness = `${Math.round((daysSinceUse <= 0 ? 1 : Math.pow(2, -daysSinceUse / 90)) * 100)}%`;
-              lastUsed = lastUsage.lastUsed.toLocaleDateString();
+              lastUsed = lastUsage.lastUsed.toISOString().slice(0, 10);
             }
 
             return [s.name, s.proficiency, freshness, lastUsed];
