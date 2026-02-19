@@ -37,14 +37,14 @@ function createFullProfile() {
     categoryId: domain.categories[0]!.id,
     proficiency: "proficient",
     sources: [
-      { type: "self-reported", detail: "Primary language", date: new Date("2024-01-15") },
+      { type: "self-reported", detail: "Primary language", date: new Date("2026-01-15") },
     ],
     usage: [
-      { context: "work", lastUsed: new Date("2024-06-01"), frequency: "daily" },
+      { context: "work", lastUsed: new Date("2026-06-01"), frequency: "daily" },
     ],
     notes: "Main language",
-    createdAt: new Date("2024-01-01"),
-    updatedAt: new Date("2024-06-01"),
+    createdAt: new Date("2026-01-01"),
+    updatedAt: new Date("2026-06-01"),
   });
   profile = addSkillToProfile(profile, skill);
 
@@ -57,9 +57,9 @@ function createFullProfile() {
     resources: [
       { title: "The Rust Book", url: "https://doc.rust-lang.org/book/", type: "book", completed: false },
     ],
-    targetDate: new Date("2025-12-31"),
-    createdAt: new Date("2024-03-01"),
-    updatedAt: new Date("2024-03-01"),
+    targetDate: new Date("2026-12-31"),
+    createdAt: new Date("2026-03-01"),
+    updatedAt: new Date("2026-03-01"),
   });
   profile = addGoalToProfile(profile, goal);
 
@@ -68,7 +68,7 @@ function createFullProfile() {
     name: "Machine Learning",
     domainId: domain.id,
     description: "Neural networks and deep learning",
-    createdAt: new Date("2024-02-01"),
+    createdAt: new Date("2026-02-01"),
   });
   profile = addInterestToProfile(profile, interest);
 

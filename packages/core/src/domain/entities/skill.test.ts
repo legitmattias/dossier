@@ -35,11 +35,11 @@ describe("createSkill", () => {
     const source: SkillSource = {
       type: "self-reported",
       detail: "10 years experience",
-      date: new Date("2025-01-01"),
+      date: new Date("2026-01-01"),
     };
     const usage: SkillUsage = {
       context: "Daily development work",
-      lastUsed: new Date("2025-06-01"),
+      lastUsed: new Date("2026-06-01"),
       frequency: "daily",
     };
 
@@ -153,7 +153,7 @@ describe("getSkillFreshness", () => {
   });
 
   it("returns 1.0 for skill used today", () => {
-    const now = new Date("2025-06-15T12:00:00Z");
+    const now = new Date("2026-06-15T12:00:00Z");
     const skill = createSkill({
       ...baseInput,
       usage: [{ context: "work", lastUsed: now }],
@@ -162,8 +162,8 @@ describe("getSkillFreshness", () => {
   });
 
   it("returns ~0.5 at half-life (90 days)", () => {
-    const lastUsed = new Date("2025-01-01");
-    const now = new Date("2025-04-01"); // ~90 days later
+    const lastUsed = new Date("2026-01-01");
+    const now = new Date("2026-04-01"); // ~90 days later
     const skill = createSkill({
       ...baseInput,
       usage: [{ context: "work", lastUsed }],
@@ -174,15 +174,15 @@ describe("getSkillFreshness", () => {
   });
 
   it("decays over time", () => {
-    const lastUsed = new Date("2025-01-01");
+    const lastUsed = new Date("2026-01-01");
     const skill = createSkill({
       ...baseInput,
       usage: [{ context: "work", lastUsed }],
     });
 
-    const fresh30 = getSkillFreshness(skill, new Date("2025-01-31"));
-    const fresh90 = getSkillFreshness(skill, new Date("2025-04-01"));
-    const fresh180 = getSkillFreshness(skill, new Date("2025-06-30"));
+    const fresh30 = getSkillFreshness(skill, new Date("2026-01-31"));
+    const fresh90 = getSkillFreshness(skill, new Date("2026-04-01"));
+    const fresh180 = getSkillFreshness(skill, new Date("2026-06-30"));
 
     expect(fresh30).toBeGreaterThan(fresh90);
     expect(fresh90).toBeGreaterThan(fresh180);
@@ -190,12 +190,12 @@ describe("getSkillFreshness", () => {
   });
 
   it("uses the most recent usage date", () => {
-    const now = new Date("2025-06-15");
+    const now = new Date("2026-06-15");
     const skill = createSkill({
       ...baseInput,
       usage: [
-        { context: "old project", lastUsed: new Date("2024-01-01") },
-        { context: "recent work", lastUsed: new Date("2025-06-14") },
+        { context: "old project", lastUsed: new Date("2025-01-01") },
+        { context: "recent work", lastUsed: new Date("2026-06-14") },
       ],
     });
 
@@ -205,8 +205,8 @@ describe("getSkillFreshness", () => {
   });
 
   it("supports custom half-life", () => {
-    const lastUsed = new Date("2025-01-01");
-    const now = new Date("2025-01-31"); // 30 days
+    const lastUsed = new Date("2026-01-01");
+    const now = new Date("2026-01-31"); // 30 days
     const skill = createSkill({
       ...baseInput,
       usage: [{ context: "work", lastUsed }],
