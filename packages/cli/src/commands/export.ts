@@ -16,6 +16,7 @@ export function registerExportCommand(
     .option("-f, --format <format>", "Export format (json, markdown, text, claude)", "markdown")
     .option("-d, --domain <domain>", "Filter by domain")
     .option("--exclude-goals", "Exclude learning goals")
+    .option("--exclude-completed", "Exclude completed goals")
     .option("--exclude-interests", "Exclude interests")
     .option("-o, --output <file>", "Write to file instead of stdout")
     .action(
@@ -23,6 +24,7 @@ export function registerExportCommand(
         format: string;
         domain?: string;
         excludeGoals?: boolean;
+        excludeCompleted?: boolean;
         excludeInterests?: boolean;
         output?: string;
       }) => {
@@ -51,6 +53,7 @@ export function registerExportCommand(
           {
             domainIds,
             includeGoals: opts.excludeGoals ? false : undefined,
+            excludeCompleted: opts.excludeCompleted ?? undefined,
             includeInterests: opts.excludeInterests ? false : undefined,
           },
         );

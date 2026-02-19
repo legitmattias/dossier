@@ -11,15 +11,15 @@ import {
 } from "../../domain/index.js";
 import { slugify } from "../../application/helpers/slugify.js";
 import { ClaudeMdExporter } from "./claude-md-exporter.js";
-import { createExportTestProfile } from "./test-helpers.js";
+import { createExportTestProfile, createExportTestProfileWithCompletedGoal } from "./test-helpers.js";
 
 describe("ClaudeMdExporter", () => {
   const exporter = new ClaudeMdExporter();
 
-  it("starts with Developer Profile heading", () => {
+  it("starts with Dossier Profile heading", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
-    expect(output.startsWith("# Developer Profile: Test User\n")).toBe(true);
+    expect(output.startsWith("# Dossier Profile: Test User\n")).toBe(true);
   });
 
   it("groups skills by proficiency tier", () => {
@@ -63,6 +63,13 @@ describe("ClaudeMdExporter", () => {
     expect(output).toContain("high priority");
   });
 
+  it("shows completed goals in Completed Learning section", () => {
+    const profile = createExportTestProfileWithCompletedGoal();
+    const output = exporter.export(profile);
+    expect(output).toContain("## Completed Learning");
+    expect(output).toContain("~~Learn Python~~");
+  });
+
   it("shows interests as On My Radar", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
@@ -80,7 +87,7 @@ describe("ClaudeMdExporter", () => {
   it("handles empty profile", () => {
     const profile = createProfile({ id: toProfileId("empty"), name: "Empty" });
     const output = exporter.export(profile);
-    expect(output).toBe("# Developer Profile: Empty\n");
+    expect(output).toBe("# Dossier Profile: Empty\n");
   });
 
   it("ends with trailing newline", () => {

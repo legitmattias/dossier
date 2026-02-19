@@ -17,6 +17,28 @@ import { slugify } from "../../application/helpers/slugify.js";
 import type { Profile } from "../../domain/entities/profile.js";
 
 /**
+ * Creates a test profile with one domain, one skill, one active goal, one completed goal,
+ * and one interest. Shared across exporter tests for consistency.
+ */
+export function createExportTestProfileWithCompletedGoal(): Profile {
+  let profile = createExportTestProfile();
+
+  const domain = BUILT_IN_DOMAINS[0]!;
+  const completedGoal = createLearningGoal({
+    id: toGoalId("goal-2"),
+    name: "Learn Python",
+    domainId: domain.id,
+    priority: "medium",
+    status: "completed",
+    createdAt: new Date("2026-01-01"),
+    updatedAt: new Date("2026-06-01"),
+  });
+  profile = addGoalToProfile(profile, completedGoal);
+
+  return profile;
+}
+
+/**
  * Creates a test profile with one domain, one skill, one goal, and one interest.
  * Shared across exporter tests for consistency.
  */
@@ -36,9 +58,9 @@ export function createExportTestProfile(): Profile {
     categoryId: domain.categories[0]!.id,
     proficiency: "proficient",
     notes: "Primary language",
-    usage: [{ context: "work", lastUsed: new Date("2024-06-01"), frequency: "daily" }],
-    createdAt: new Date("2024-01-01"),
-    updatedAt: new Date("2024-06-01"),
+    usage: [{ context: "work", lastUsed: new Date("2026-06-01"), frequency: "daily" }],
+    createdAt: new Date("2026-01-01"),
+    updatedAt: new Date("2026-06-01"),
   });
   profile = addSkillToProfile(profile, skill);
 
@@ -47,8 +69,8 @@ export function createExportTestProfile(): Profile {
     name: "Learn Rust",
     domainId: domain.id,
     priority: "high",
-    createdAt: new Date("2024-03-01"),
-    updatedAt: new Date("2024-03-01"),
+    createdAt: new Date("2026-03-01"),
+    updatedAt: new Date("2026-03-01"),
   });
   profile = addGoalToProfile(profile, goal);
 
@@ -56,7 +78,7 @@ export function createExportTestProfile(): Profile {
     id: toInterestId("interest-1"),
     name: "Machine Learning",
     domainId: domain.id,
-    createdAt: new Date("2024-02-01"),
+    createdAt: new Date("2026-02-01"),
   });
   profile = addInterestToProfile(profile, interest);
 

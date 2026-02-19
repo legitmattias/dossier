@@ -20,11 +20,12 @@ describe("JsonExporter", () => {
     expect(output).toContain("\n  ");
   });
 
-  it("includes all profile data", () => {
+  it("includes generator field and all profile data", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
     const parsed = JSON.parse(output) as Record<string, unknown>;
 
+    expect(parsed["generator"]).toBe("dossier");
     expect(parsed["name"]).toBe("Test User");
     expect((parsed["skills"] as unknown[]).length).toBeGreaterThan(0);
     expect((parsed["goals"] as unknown[]).length).toBeGreaterThan(0);

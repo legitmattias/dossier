@@ -99,6 +99,32 @@ describe("exportProfile", () => {
     expect(call.profile.interests).toHaveLength(0);
   });
 
+  it("excludes completed goals when excludeCompleted is true", async () => {
+    // Add and complete a goal to have both active and completed
+    await addLearningGoal({ profileRepository: repo, idGenerator: idGen }, {
+      name: "Learn Python",
+      domainId: "builtin-domain-software-development",
+    });
+    // Manually complete the goal by updating the profile
+    const profile = (await repo.load())!;
+    const pythonGoal = profile.goals.find((g) => g.name === "Learn Python")!;
+    const updatedProfile = {
+      ...profile,
+      goals: profile.goals.map((g) =>
+        g.id === pythonGoal.id ? { ...g, status: "completed" as const } : g,
+      ),
+    };
+    await repo.save(updatedProfile);
+
+    await exportProfile({ profileRepository: repo, exporter }, {
+      excludeCompleted: true,
+    });
+
+    const call = exporter.calls[0];
+    expect(call.profile.goals).toHaveLength(1);
+    expect(call.profile.goals[0].name).toBe("Learn Rust");
+  });
+
   it("passes export options to the exporter", async () => {
     await exportProfile({ profileRepository: repo, exporter }, {
       domainIds: ["builtin-domain-software-development"],
@@ -112,6 +138,7 @@ describe("exportProfile", () => {
       includeSkills: true,
       includeGoals: false,
       includeInterests: undefined,
+      excludeCompleted: undefined,
     });
   });
 

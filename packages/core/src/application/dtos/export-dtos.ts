@@ -3,6 +3,7 @@ export interface ExportProfileInput {
   readonly includeSkills?: boolean;
   readonly includeGoals?: boolean;
   readonly includeInterests?: boolean;
+  readonly excludeCompleted?: boolean;
 }
 
 export interface ExportProfileOutput {

@@ -24,7 +24,7 @@ export class ClaudeMdExporter implements IExporter {
     const lines: string[] = [];
     const now = new Date();
 
-    lines.push(`# Developer Profile: ${profile.name}`);
+    lines.push(`# Dossier Profile: ${profile.name}`);
 
     // Skills grouped by proficiency tier
     if (profile.skills.length > 0) {
@@ -55,6 +55,16 @@ export class ClaudeMdExporter implements IExporter {
         lines.push(
           `- **${goal.name}** — ${goal.priority} priority, ${progress}% complete`,
         );
+      }
+    }
+
+    // Completed goals
+    const completedGoals = profile.goals.filter((g) => g.status === "completed");
+    if (completedGoals.length > 0) {
+      lines.push("");
+      lines.push("## Completed Learning");
+      for (const goal of completedGoals) {
+        lines.push(`- ~~${goal.name}~~`);
       }
     }
 

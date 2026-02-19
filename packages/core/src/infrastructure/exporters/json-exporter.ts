@@ -5,6 +5,6 @@ import { serializeProfile } from "../validation/profile-schema.js";
 export class JsonExporter implements IExporter {
   export(profile: Profile, _options?: ExportOptions): string {
     const serialized = serializeProfile(profile);
-    return JSON.stringify(serialized, null, 2) + "\n";
+    return JSON.stringify({ generator: "dossier", ...serialized as Record<string, unknown> }, null, 2) + "\n";
   }
 }

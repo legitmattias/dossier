@@ -39,6 +39,12 @@ export async function exportProfile(
   if (input.includeGoals === false) {
     filteredProfile = { ...filteredProfile, goals: [] };
   }
+  if (input.excludeCompleted) {
+    filteredProfile = {
+      ...filteredProfile,
+      goals: filteredProfile.goals.filter((g) => g.status !== "completed"),
+    };
+  }
   if (input.includeInterests === false) {
     filteredProfile = { ...filteredProfile, interests: [] };
   }
@@ -48,6 +54,7 @@ export async function exportProfile(
     includeSkills: input.includeSkills,
     includeGoals: input.includeGoals,
     includeInterests: input.includeInterests,
+    excludeCompleted: input.excludeCompleted,
   });
 
   return { content };

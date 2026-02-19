@@ -5,7 +5,7 @@ import { getLatestProgress, groupByDomain } from "./format-helpers.js";
 export class MarkdownExporter implements IExporter {
   export(profile: Profile, _options?: ExportOptions): string {
     const lines: string[] = [];
-    lines.push(`# ${profile.name}`);
+    lines.push(`# ${profile.name} — Dossier Profile`);
 
     const groups = groupByDomain(profile);
 
@@ -24,14 +24,25 @@ export class MarkdownExporter implements IExporter {
         }
       }
 
-      if (group.goals.length > 0) {
+      const activeGoals = group.goals.filter((g) => g.status !== "completed");
+      const completedGoals = group.goals.filter((g) => g.status === "completed");
+
+      if (activeGoals.length > 0) {
         lines.push("");
         lines.push("### Learning Goals");
-        for (const goal of group.goals) {
+        for (const goal of activeGoals) {
           const progress = getLatestProgress(goal);
           lines.push(
             `- **${goal.name}** (${goal.status}, ${goal.priority} priority) — ${progress}% complete`,
           );
+        }
+      }
+
+      if (completedGoals.length > 0) {
+        lines.push("");
+        lines.push("### Completed Goals");
+        for (const goal of completedGoals) {
+          lines.push(`- ~~${goal.name}~~`);
         }
       }
 

@@ -9,6 +9,8 @@ export interface ExportOptions {
   readonly includeGoals?: boolean;
   /** Include interests in export. Default: true. */
   readonly includeInterests?: boolean;
+  /** Exclude completed goals from export. Default: false. */
+  readonly excludeCompleted?: boolean;
 }
 
 /**
