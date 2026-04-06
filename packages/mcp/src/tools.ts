@@ -1,7 +1,19 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { application, infrastructure, PROFICIENCY_LEVELS } from "@dossier/core";
+import {
+  application,
+  infrastructure,
+  PROFICIENCY_LEVELS,
+  createDomain,
+  createCategory,
+  addDomainToProfile,
+  addCategoryToDomain,
+  findDomainInProfile,
+  updateSkillInProfile,
+  toDomainId,
+  toCategoryId,
+} from "@dossier/core";
 
 import type { DossierMcpDeps } from "./server.js";
 
@@ -199,6 +211,61 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         }],
       });
       return ok(`Marked as used: ${result.skill.name}`);
+    },
+  );
+
+  server.registerTool(
+    "dossier_add_domain",
+    {
+      title: "Add Custom Domain",
+      description: "Add a new custom knowledge domain (e.g. 'Music', 'Design'). Domains organize skills and goals into broad fields.",
+      inputSchema: z.object({
+        name: z.string().describe("Domain name (e.g. 'Music', 'Design', 'Data Science')"),
+        description: z.string().optional().describe("Brief description of the domain"),
+      }),
+    },
+    async (input): Promise<CallToolResult> => {
+      const profile = await deps.profileRepository.load();
+      if (!profile) throw new Error("No profile found.");
+
+      const id = toDomainId(deps.idGenerator.generate("domain"));
+      const slug = application.slugify(input.name);
+      const domain = createDomain({ id, slug, name: input.name, description: input.description });
+      const updated = addDomainToProfile(profile, domain);
+      await deps.profileRepository.save(updated);
+      return ok(`Added domain: ${domain.name} (${domain.slug})`);
+    },
+  );
+
+  server.registerTool(
+    "dossier_add_category",
+    {
+      title: "Add Category to Domain",
+      description: "Add a new category to an existing domain (e.g. add 'instrument' to 'Music'). Categories classify skills within a domain.",
+      inputSchema: z.object({
+        domainId: z.string().describe("Domain ID to add the category to"),
+        name: z.string().describe("Category name (e.g. 'Instrument', 'Genre', 'Cloud Service')"),
+        description: z.string().optional().describe("Brief description of the category"),
+      }),
+    },
+    async (input): Promise<CallToolResult> => {
+      const profile = await deps.profileRepository.load();
+      if (!profile) throw new Error("No profile found.");
+
+      const domainId = toDomainId(input.domainId);
+      const domain = findDomainInProfile(profile, domainId);
+      const categoryId = toCategoryId(deps.idGenerator.generate("category"));
+      const slug = application.slugify(input.name);
+      const category = createCategory({ id: categoryId, slug, name: input.name, description: input.description });
+      const updatedDomain = addCategoryToDomain(domain, category);
+
+      const updatedProfile = {
+        ...profile,
+        domains: profile.domains.map((d) => d.id === domainId ? updatedDomain : d),
+        updatedAt: new Date(),
+      };
+      await deps.profileRepository.save(updatedProfile);
+      return ok(`Added category: ${category.name} (${category.slug}) to domain ${domain.name}`);
     },
   );
 
