@@ -1,5 +1,6 @@
 import {
   isProficiency,
+  PROFICIENCY_LEVELS,
   type Priority,
   type Proficiency,
 } from "../../domain/index.js";
@@ -14,7 +15,7 @@ const VALID_PRIORITIES = ["low", "medium", "high"] as const;
 export function validateProficiency(value: string): Proficiency {
   if (!isProficiency(value)) {
     throw new InvalidInputError(
-      `Invalid proficiency: "${value}". Must be one of: learning, familiar, proficient, expert.`,
+      `Invalid proficiency: "${value}". Must be one of: ${PROFICIENCY_LEVELS.join(", ")}.`,
     );
   }
   return value;

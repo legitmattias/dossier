@@ -22,7 +22,7 @@ describe("PlainTextExporter", () => {
   it("lists skills with proficiency", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
-    expect(output).toContain("    TypeScript (proficient)");
+    expect(output).toContain("    TypeScript (advanced)");
   });
 
   it("lists goals with status and priority", () => {

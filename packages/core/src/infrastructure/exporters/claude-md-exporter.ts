@@ -14,9 +14,10 @@ interface ProficiencyTier {
 }
 
 const TIERS: readonly ProficiencyTier[] = [
-  { label: "Strong (proficient/expert)", levels: ["proficient", "expert"] },
+  { label: "Strong (advanced/expert)", levels: ["advanced", "expert"] },
+  { label: "Proficient", levels: ["proficient"] },
   { label: "Familiar", levels: ["familiar"] },
-  { label: "Beginner", levels: ["beginner"] },
+  { label: "Novice", levels: ["novice"] },
 ];
 
 export class ClaudeMdExporter implements IExporter {
@@ -58,6 +59,16 @@ export class ClaudeMdExporter implements IExporter {
       }
     }
 
+    // Paused goals
+    const pausedGoals = profile.goals.filter((g) => g.status === "paused");
+    if (pausedGoals.length > 0) {
+      lines.push("");
+      lines.push("## Paused");
+      for (const goal of pausedGoals) {
+        lines.push(`- ${goal.name} — paused`);
+      }
+    }
+
     // Completed goals
     const completedGoals = profile.goals.filter((g) => g.status === "completed");
     if (completedGoals.length > 0) {
@@ -79,21 +90,21 @@ export class ClaudeMdExporter implements IExporter {
 
     // Guidance section
     const strongSkills = profile.skills.filter(
-      (s) => s.proficiency === "proficient" || s.proficiency === "expert",
+      (s) => s.proficiency === "advanced" || s.proficiency === "expert",
     );
-    const beginnerSkills = profile.skills.filter(
-      (s) => s.proficiency === "beginner",
+    const noviceSkills = profile.skills.filter(
+      (s) => s.proficiency === "novice",
     );
 
-    if (strongSkills.length > 0 || beginnerSkills.length > 0) {
+    if (strongSkills.length > 0 || noviceSkills.length > 0) {
       lines.push("");
       lines.push("## When suggesting solutions:");
       for (const skill of strongSkills) {
         lines.push(`- Prefer ${skill.name} — this is a strength`);
       }
-      for (const skill of beginnerSkills) {
+      for (const skill of noviceSkills) {
         lines.push(
-          `- ${skill.name} is a beginner skill — extra explanation welcome`,
+          `- ${skill.name} is a novice skill — extra explanation welcome`,
         );
       }
     }

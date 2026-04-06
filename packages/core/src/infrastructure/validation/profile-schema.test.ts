@@ -176,7 +176,7 @@ describe("profile-schema", () => {
         name: "Go",
         domainId: toDomainId("d1"),
         categoryId: toCategoryId("c1"),
-        proficiency: "beginner",
+        proficiency: "novice",
       });
 
       let profile = createProfile({ id: toProfileId("p"), name: "P" });
@@ -235,6 +235,35 @@ describe("profile-schema", () => {
         updatedAt: new Date().toISOString(),
       };
       expect(() => parseProfile(invalid)).toThrow();
+    });
+
+    it("migrates beginner proficiency to novice", () => {
+      const legacy = {
+        id: "p1",
+        name: "Test",
+        settings: {},
+        domains: [],
+        skills: [
+          {
+            id: "s1",
+            slug: "ts",
+            name: "TS",
+            domainId: "d1",
+            categoryId: "c1",
+            proficiency: "beginner",
+            sources: [],
+            usage: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ],
+        goals: [],
+        interests: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const profile = parseProfile(legacy);
+      expect(profile.skills[0].proficiency).toBe("novice");
     });
 
     it("throws on invalid date string", () => {

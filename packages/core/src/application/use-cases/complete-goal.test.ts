@@ -39,7 +39,7 @@ describe("completeGoal", () => {
     expect(result.skill.name).toBe("Learn TypeScript");
     expect(result.skill.domainId).toBe("builtin-domain-software-development");
     expect(result.skill.categoryId).toBe("builtin-category-software-development-languages");
-    expect(result.skill.proficiency).toBe("beginner"); // default
+    expect(result.skill.proficiency).toBe("novice"); // default
   });
 
   it("uses specified proficiency", async () => {

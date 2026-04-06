@@ -218,7 +218,7 @@ describe("skill operations", () => {
       name: "Python",
       domainId: toDomainId("domain-other"),
       categoryId: toCategoryId("cat-other"),
-      proficiency: "beginner",
+      proficiency: "novice",
     });
 
     let profile = addSkillToProfile(makeProfile(), skill1);

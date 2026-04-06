@@ -23,7 +23,7 @@ describe("MarkdownExporter", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
     expect(output).toContain("| Skill | Proficiency | Notes |");
-    expect(output).toContain("| TypeScript | proficient |");
+    expect(output).toContain("| TypeScript | advanced |");
   });
 
   it("renders goals with status and progress", () => {

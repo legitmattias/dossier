@@ -13,11 +13,13 @@ export function registerGoalsCommand(
     .command("goals [name]")
     .description("List learning goals, or show detail for a specific goal")
     .option("--active", "Show only active goals")
+    .option("--paused", "Show only paused goals")
     .option("--completed", "Show only completed goals")
     .option("-d, --domain <domain>", "Filter by domain")
     .action(
       withErrorHandler(async (name: string | undefined, opts: {
         active?: boolean;
+        paused?: boolean;
         completed?: boolean;
         domain?: string;
       }) => {
@@ -69,6 +71,8 @@ export function registerGoalsCommand(
 
         if (opts.active) {
           goals = goals.filter((g) => g.status === "active");
+        } else if (opts.paused) {
+          goals = goals.filter((g) => g.status === "paused");
         } else if (opts.completed) {
           goals = goals.filter((g) => g.status === "completed");
         }

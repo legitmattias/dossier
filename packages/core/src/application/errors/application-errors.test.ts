@@ -27,7 +27,7 @@ describe("ProfileNotFoundError", () => {
 
 describe("InvalidInputError", () => {
   it("includes the detail in the message", () => {
-    const error = new InvalidInputError("Proficiency must be one of: learning, familiar, proficient, expert");
+    const error = new InvalidInputError("Proficiency must be one of: novice, familiar, proficient, advanced, expert");
     expect(error.code).toBe("INVALID_INPUT");
     expect(error.message).toContain("Proficiency must be");
     expect(error.name).toBe("InvalidInputError");

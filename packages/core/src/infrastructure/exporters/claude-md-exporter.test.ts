@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   addDomainToProfile,
+  addGoalToProfile,
   addSkillToProfile,
   BUILT_IN_DOMAINS,
+  createLearningGoal,
   createProfile,
   createSkill,
+  toGoalId,
   toProfileId,
   toSkillId,
 } from "../../domain/index.js";
@@ -25,11 +28,11 @@ describe("ClaudeMdExporter", () => {
   it("groups skills by proficiency tier", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
-    expect(output).toContain("### Strong (proficient/expert)");
-    expect(output).toContain("TypeScript (proficient)");
+    expect(output).toContain("### Strong (advanced/expert)");
+    expect(output).toContain("TypeScript (advanced)");
   });
 
-  it("shows beginner skills in Beginner tier", () => {
+  it("shows novice skills in Novice tier", () => {
     const domain = BUILT_IN_DOMAINS[0]!;
     let profile = createProfile({ id: toProfileId("p"), name: "P" });
     profile = addDomainToProfile(profile, domain);
@@ -39,13 +42,13 @@ describe("ClaudeMdExporter", () => {
       name: "Rust",
       domainId: domain.id,
       categoryId: domain.categories[0]!.id,
-      proficiency: "beginner",
+      proficiency: "novice",
     });
     profile = addSkillToProfile(profile, skill);
 
     const output = exporter.export(profile);
-    expect(output).toContain("### Beginner");
-    expect(output).toContain("Rust (beginner) [no usage recorded]");
+    expect(output).toContain("### Novice");
+    expect(output).toContain("Rust (novice) [no usage recorded]");
   });
 
   it("shows freshness hints for skills with usage", () => {
@@ -61,6 +64,23 @@ describe("ClaudeMdExporter", () => {
     expect(output).toContain("## Currently Learning");
     expect(output).toContain("**Learn Rust**");
     expect(output).toContain("high priority");
+  });
+
+  it("shows paused goals in Paused section", () => {
+    const domain = BUILT_IN_DOMAINS[0]!;
+    let profile = createExportTestProfile();
+    const pausedGoal = createLearningGoal({
+      id: toGoalId("goal-paused"),
+      name: "Learn Go",
+      domainId: domain.id,
+      priority: "low",
+      status: "paused",
+    });
+    profile = addGoalToProfile(profile, pausedGoal);
+
+    const output = exporter.export(profile);
+    expect(output).toContain("## Paused");
+    expect(output).toContain("Learn Go — paused");
   });
 
   it("shows completed goals in Completed Learning section", () => {

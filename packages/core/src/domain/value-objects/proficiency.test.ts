@@ -7,8 +7,8 @@ import {
 } from "./proficiency.js";
 
 describe("PROFICIENCY_LEVELS", () => {
-  it("has four levels in order", () => {
-    expect(PROFICIENCY_LEVELS).toEqual(["beginner", "familiar", "proficient", "expert"]);
+  it("has five levels in order", () => {
+    expect(PROFICIENCY_LEVELS).toEqual(["novice", "familiar", "proficient", "advanced", "expert"]);
   });
 });
 
@@ -20,6 +20,7 @@ describe("isProficiency", () => {
   });
 
   it("returns false for invalid strings", () => {
+    expect(isProficiency("beginner")).toBe(false);
     expect(isProficiency("learning")).toBe(false);
     expect(isProficiency("master")).toBe(false);
     expect(isProficiency("")).toBe(false);
@@ -41,13 +42,14 @@ describe("compareProficiency", () => {
   });
 
   it("returns negative when first is lower than second", () => {
-    expect(compareProficiency("beginner", "expert")).toBeLessThan(0);
+    expect(compareProficiency("novice", "expert")).toBeLessThan(0);
     expect(compareProficiency("familiar", "proficient")).toBeLessThan(0);
+    expect(compareProficiency("proficient", "advanced")).toBeLessThan(0);
   });
 
   it("returns positive when first is higher than second", () => {
-    expect(compareProficiency("expert", "beginner")).toBeGreaterThan(0);
-    expect(compareProficiency("proficient", "familiar")).toBeGreaterThan(0);
+    expect(compareProficiency("expert", "novice")).toBeGreaterThan(0);
+    expect(compareProficiency("advanced", "proficient")).toBeGreaterThan(0);
   });
 
   it("maintains transitivity", () => {

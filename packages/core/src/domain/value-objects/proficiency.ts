@@ -1,4 +1,4 @@
-export const PROFICIENCY_LEVELS = ["beginner", "familiar", "proficient", "expert"] as const;
+export const PROFICIENCY_LEVELS = ["novice", "familiar", "proficient", "advanced", "expert"] as const;
 
 export type Proficiency = (typeof PROFICIENCY_LEVELS)[number];
 
@@ -12,7 +12,7 @@ export function isProficiency(value: unknown): value is Proficiency {
 /**
  * Compares two proficiency levels.
  * Returns negative if a < b, zero if equal, positive if a > b.
- * Ordering: learning < familiar < proficient < expert
+ * Ordering: novice < familiar < proficient < advanced < expert
  */
 export function compareProficiency(a: Proficiency, b: Proficiency): number {
   return PROFICIENCY_LEVELS.indexOf(a) - PROFICIENCY_LEVELS.indexOf(b);

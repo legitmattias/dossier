@@ -56,7 +56,7 @@ export function createExportTestProfile(): Profile {
     name: "TypeScript",
     domainId: domain.id,
     categoryId: domain.categories[0]!.id,
-    proficiency: "proficient",
+    proficiency: "advanced",
     notes: "Primary language",
     usage: [{ context: "work", lastUsed: new Date("2026-06-01"), frequency: "daily" }],
     createdAt: new Date("2026-01-01"),

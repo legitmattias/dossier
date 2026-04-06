@@ -110,12 +110,34 @@ const profileSchema = z.object({
 });
 
 /**
+ * Migrate raw profile JSON from older formats before validation.
+ * - Remaps proficiency "beginner" → "novice" (v1 → v2 change).
+ */
+function migrateProfileData(json: unknown): unknown {
+  if (typeof json !== "object" || json === null) return json;
+  const data = json as Record<string, unknown>;
+
+  if (Array.isArray(data.skills)) {
+    data.skills = (data.skills as Record<string, unknown>[]).map((skill) => {
+      if (skill.proficiency === "beginner") {
+        return { ...skill, proficiency: "novice" };
+      }
+      return skill;
+    });
+  }
+
+  return data;
+}
+
+/**
  * Parse and validate raw JSON data into a Profile.
+ * Applies migrations for older profile formats before validation.
  * Zod coerces ISO date strings into Date objects.
  * Branded types are compile-time only, so casting after Zod validation is safe.
  */
 export function parseProfile(json: unknown): Profile {
-  return profileSchema.parse(json) as unknown as Profile;
+  const migrated = migrateProfileData(json);
+  return profileSchema.parse(migrated) as unknown as Profile;
 }
 
 // --- Serialization helpers ---
