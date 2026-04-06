@@ -129,6 +129,34 @@ export function registerResources(server: McpServer, deps: DossierMcpDeps): void
     },
   );
 
+  // All domains with categories (taxonomy discovery)
+  server.registerResource(
+    "domains",
+    "dossier://domains",
+    {
+      title: "Domains & Categories",
+      description: "All available domains and their categories — use this to discover valid domainId and categoryId values when adding skills or goals",
+      mimeType: "application/json",
+    },
+    async (uri): Promise<ReadResourceResult> => {
+      const profile = await loadProfileOrThrow(profileRepository);
+      const domains = profile.domains.map((d) => ({
+        id: d.id,
+        slug: d.slug,
+        name: d.name,
+        isBuiltIn: d.isBuiltIn,
+        categories: d.categories.map((c) => ({
+          id: c.id,
+          slug: c.slug,
+          name: c.name,
+        })),
+      }));
+      return {
+        contents: [{ uri: uri.href, text: JSON.stringify(domains, null, 2) }],
+      };
+    },
+  );
+
   // All interests
   server.registerResource(
     "interests",

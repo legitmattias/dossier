@@ -26,6 +26,57 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
   );
 
   server.registerTool(
+    "dossier_list_skills",
+    {
+      title: "List Skills",
+      description: "List skills with optional filters. Returns skill names, proficiency levels, domain, and category.",
+      inputSchema: z.object({
+        domainId: z.string().optional().describe("Filter by domain ID"),
+        categoryId: z.string().optional().describe("Filter by category ID"),
+        proficiency: z.enum(PROFICIENCY_LEVELS).optional().describe("Filter by proficiency level"),
+      }),
+    },
+    async (input): Promise<CallToolResult> => {
+      const result = await application.listSkills(deps, input);
+      if (result.skills.length === 0) {
+        return ok("No skills found matching the filters.");
+      }
+      const lines = result.skills.map((s) =>
+        `- ${s.name} (${s.proficiency}) [domain: ${s.domainId}, category: ${s.categoryId}]`,
+      );
+      return ok(lines.join("\n"));
+    },
+  );
+
+  server.registerTool(
+    "dossier_list_goals",
+    {
+      title: "List Learning Goals",
+      description: "List learning goals with optional status filter.",
+      inputSchema: z.object({
+        status: z.enum(["active", "paused", "completed", "abandoned"]).optional().describe("Filter by goal status"),
+      }),
+    },
+    async (input): Promise<CallToolResult> => {
+      const profile = await deps.profileRepository.load();
+      if (!profile) {
+        return ok("No profile found.");
+      }
+      let goals = [...profile.goals];
+      if (input.status) {
+        goals = goals.filter((g) => g.status === input.status);
+      }
+      if (goals.length === 0) {
+        return ok("No goals found matching the filter.");
+      }
+      const lines = goals.map((g) =>
+        `- ${g.name} (${g.status}, ${g.priority} priority)`,
+      );
+      return ok(lines.join("\n"));
+    },
+  );
+
+  server.registerTool(
     "dossier_update_skill",
     {
       title: "Update Skill",
