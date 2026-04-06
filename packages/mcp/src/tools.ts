@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { application, PROFICIENCY_LEVELS } from "@dossier/core";
+import { application, infrastructure, PROFICIENCY_LEVELS } from "@dossier/core";
 
 import type { DossierMcpDeps } from "./server.js";
 
@@ -161,7 +161,10 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     async (input): Promise<CallToolResult> => {
-      const result = await application.exportProfile(deps, { format: input.format });
+      const exporter = infrastructure.createExporter(input.format);
+      const result = await application.exportProfile(
+        { profileRepository: deps.profileRepository, exporter },
+      );
       return { content: [{ type: "text", text: result.content }] };
     },
   );
