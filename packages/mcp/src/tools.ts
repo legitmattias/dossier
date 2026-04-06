@@ -25,14 +25,19 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       description: "Add a new skill to the profile. Requires name, domainId, categoryId, and proficiency level.",
       inputSchema: z.object({
         name: z.string().describe("Skill name (e.g. 'TypeScript', 'Swedish')"),
-        domainId: z.string().describe("Domain ID (e.g. 'builtin-domain-software-development')"),
-        categoryId: z.string().describe("Category ID (e.g. 'builtin-category-software-development-languages')"),
+        domainId: z.string().describe("Domain ID, slug, or name (e.g. 'software-development' or 'Software Development')"),
+        categoryId: z.string().describe("Category ID, slug, or name (e.g. 'languages' or 'Programming Languages')"),
         proficiency: z.enum(PROFICIENCY_LEVELS).describe("Proficiency level"),
         notes: z.string().optional().describe("Optional notes about this skill"),
       }),
     },
     async (input): Promise<CallToolResult> => {
-      const result = await application.addSkill(deps, input);
+      const profile = await deps.profileRepository.load();
+      if (!profile) throw new Error("No profile found.");
+      const domainId = resolveDomainId(profile, input.domainId);
+      const domain = findDomainInProfile(profile, domainId);
+      const categoryId = resolveCategoryId(domain, input.categoryId);
+      const result = await application.addSkill(deps, { ...input, domainId, categoryId });
       return ok(`Added skill: ${result.skill.name} (${result.skill.proficiency})`);
     },
   );
@@ -128,14 +133,17 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       description: "Add a new learning goal to the profile.",
       inputSchema: z.object({
         name: z.string().describe("Goal name (e.g. 'Learn Rust')"),
-        domainId: z.string().describe("Domain ID"),
+        domainId: z.string().describe("Domain ID, slug, or name"),
         priority: z.enum(["low", "medium", "high"]).optional().describe("Priority level (default: medium)"),
         description: z.string().optional().describe("Goal description or motivation"),
         targetDate: z.string().optional().describe("Target date in ISO format (e.g. '2026-12-31')"),
       }),
     },
     async (input): Promise<CallToolResult> => {
-      const result = await application.addLearningGoal(deps, input);
+      const profile = await deps.profileRepository.load();
+      if (!profile) throw new Error("No profile found.");
+      const domainId = resolveDomainId(profile, input.domainId);
+      const result = await application.addLearningGoal(deps, { ...input, domainId });
       return ok(`Added goal: ${result.goal.name} (${result.goal.priority} priority)`);
     },
   );
@@ -182,12 +190,15 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       description: "Add a topic of interest — something you're curious about but haven't committed to learning.",
       inputSchema: z.object({
         name: z.string().describe("Interest name"),
-        domainId: z.string().describe("Domain ID"),
+        domainId: z.string().describe("Domain ID, slug, or name"),
         description: z.string().optional().describe("Why you're interested"),
       }),
     },
     async (input): Promise<CallToolResult> => {
-      const result = await application.addInterest(deps, input);
+      const profile = await deps.profileRepository.load();
+      if (!profile) throw new Error("No profile found.");
+      const domainId = resolveDomainId(profile, input.domainId);
+      const result = await application.addInterest(deps, { ...input, domainId });
       return ok(`Added interest: ${result.interest.name}`);
     },
   );
@@ -233,7 +244,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       const domain = createDomain({ id, slug, name: input.name, description: input.description });
       const updated = addDomainToProfile(profile, domain);
       await deps.profileRepository.save(updated);
-      return ok(`Added domain: ${domain.name} (${domain.slug})`);
+      return ok(`Added domain: ${domain.name} (id: ${domain.id}, slug: ${domain.slug})`);
     },
   );
 
@@ -243,7 +254,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       title: "Add Category to Domain",
       description: "Add a new category to an existing domain (e.g. add 'instrument' to 'Music'). Categories classify skills within a domain.",
       inputSchema: z.object({
-        domainId: z.string().describe("Domain ID to add the category to"),
+        domainId: z.string().describe("Domain ID, slug, or name"),
         name: z.string().describe("Category name (e.g. 'Instrument', 'Genre', 'Cloud Service')"),
         description: z.string().optional().describe("Brief description of the category"),
       }),
@@ -252,7 +263,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       const profile = await deps.profileRepository.load();
       if (!profile) throw new Error("No profile found.");
 
-      const domainId = toDomainId(input.domainId);
+      const domainId = resolveDomainId(profile, input.domainId);
       const domain = findDomainInProfile(profile, domainId);
       const categoryId = toCategoryId(deps.idGenerator.generate("category"));
       const slug = application.slugify(input.name);
@@ -265,7 +276,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         updatedAt: new Date(),
       };
       await deps.profileRepository.save(updatedProfile);
-      return ok(`Added category: ${category.name} (${category.slug}) to domain ${domain.name}`);
+      return ok(`Added category: ${category.name} (id: ${categoryId}, slug: ${category.slug}) to domain ${domain.name}`);
     },
   );
 
@@ -290,4 +301,42 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
 
 function ok(message: string): CallToolResult {
   return { content: [{ type: "text", text: message }] };
+}
+
+/**
+ * Resolve a domain by ID or slug. Accepts either the full internal ID
+ * (e.g. "domain-7607c507-...") or the human-friendly slug (e.g. "hobbies").
+ */
+function resolveDomainId(profile: import("@dossier/core").Profile, idOrSlug: string): import("@dossier/core").DomainId {
+  // Try exact ID match first
+  const byId = profile.domains.find((d) => d.id === idOrSlug);
+  if (byId) return byId.id;
+
+  // Fall back to slug match
+  const bySlug = profile.domains.find((d) => d.slug === idOrSlug);
+  if (bySlug) return bySlug.id;
+
+  // Fall back to case-insensitive name match
+  const lower = idOrSlug.toLowerCase();
+  const byName = profile.domains.find((d) => d.name.toLowerCase() === lower);
+  if (byName) return byName.id;
+
+  throw new Error(`Domain not found: "${idOrSlug}". Use dossier://domains resource to see available domains.`);
+}
+
+/**
+ * Resolve a category by ID or slug within a domain.
+ */
+function resolveCategoryId(domain: import("@dossier/core").Domain, idOrSlug: string): import("@dossier/core").CategoryId {
+  const byId = domain.categories.find((c) => c.id === idOrSlug);
+  if (byId) return byId.id;
+
+  const bySlug = domain.categories.find((c) => c.slug === idOrSlug);
+  if (bySlug) return bySlug.id;
+
+  const lower = idOrSlug.toLowerCase();
+  const byName = domain.categories.find((c) => c.name.toLowerCase() === lower);
+  if (byName) return byName.id;
+
+  throw new Error(`Category not found: "${idOrSlug}" in domain "${domain.name}". Available: ${domain.categories.map((c) => c.slug).join(", ")}`);
 }
