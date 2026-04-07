@@ -19,9 +19,10 @@ describe("MarkdownExporter", () => {
     expect(output).toContain("## Software Development");
   });
 
-  it("renders skills as a table", () => {
+  it("renders skills grouped by category", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
+    expect(output).toContain("#### Programming Languages");
     expect(output).toContain("| Skill | Proficiency | Notes |");
     expect(output).toContain("| TypeScript | advanced |");
   });

@@ -1,24 +1,12 @@
 import type { Profile } from "../../domain/entities/profile.js";
 import type { Skill } from "../../domain/entities/skill.js";
 import type { ExportOptions, IExporter } from "../../application/ports/exporter.js";
-import type { Proficiency } from "../../domain/value-objects/proficiency.js";
 import {
   formatTimeSince,
   getLastUsedDate,
   getLatestProgress,
+  groupByDomain,
 } from "./format-helpers.js";
-
-interface ProficiencyTier {
-  readonly label: string;
-  readonly levels: readonly Proficiency[];
-}
-
-const TIERS: readonly ProficiencyTier[] = [
-  { label: "Strong (advanced/expert)", levels: ["advanced", "expert"] },
-  { label: "Proficient", levels: ["proficient"] },
-  { label: "Familiar", levels: ["familiar"] },
-  { label: "Novice", levels: ["novice"] },
-];
 
 export class ClaudeMdExporter implements IExporter {
   export(profile: Profile, _options?: ExportOptions): string {
@@ -27,21 +15,32 @@ export class ClaudeMdExporter implements IExporter {
 
     lines.push(`# Dossier Profile: ${profile.name}`);
 
-    // Skills grouped by proficiency tier
-    if (profile.skills.length > 0) {
+    // Skills grouped by domain > category
+    const groups = groupByDomain(profile);
+    const hasSkills = groups.some((g) => g.skills.length > 0);
+
+    if (hasSkills) {
       lines.push("");
       lines.push("## Skills");
 
-      for (const tier of TIERS) {
-        const skills = profile.skills.filter((s) =>
-          (tier.levels as readonly string[]).includes(s.proficiency),
-        );
-        if (skills.length === 0) continue;
+      for (const group of groups) {
+        if (group.skills.length === 0) continue;
 
         lines.push("");
-        lines.push(`### ${tier.label}`);
-        for (const skill of skills) {
-          lines.push(`- ${formatSkillLine(skill, now)}`);
+        lines.push(`### ${group.domain.name}`);
+
+        // Group skills by category within the domain
+        const byCategory = new Map<string, Skill[]>();
+        for (const skill of group.skills) {
+          const list = byCategory.get(skill.categoryId) ?? [];
+          list.push(skill);
+          byCategory.set(skill.categoryId, list);
+        }
+
+        for (const [categoryId, skills] of byCategory) {
+          const category = group.domain.categories.find((c) => c.id === categoryId);
+          const categoryName = category?.name ?? "Other";
+          lines.push(`**${categoryName}:** ${skills.map((s) => formatSkillLine(s, now)).join(", ")}`);
         }
       }
     }

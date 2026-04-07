@@ -15,8 +15,22 @@ export class PlainTextExporter implements IExporter {
 
       if (group.skills.length > 0) {
         lines.push("  Skills:");
+
+        // Group skills by category
+        const byCategory = new Map<string, typeof group.skills[number][]>();
         for (const skill of group.skills) {
-          lines.push(`    ${skill.name} (${skill.proficiency})`);
+          const list = byCategory.get(skill.categoryId) ?? [];
+          list.push(skill);
+          byCategory.set(skill.categoryId, list);
+        }
+
+        for (const [categoryId, skills] of byCategory) {
+          const category = group.domain.categories.find((c) => c.id === categoryId);
+          const categoryName = category?.name ?? "Other";
+          lines.push(`    ${categoryName}:`);
+          for (const skill of skills) {
+            lines.push(`      ${skill.name} (${skill.proficiency})`);
+          }
         }
       }
 

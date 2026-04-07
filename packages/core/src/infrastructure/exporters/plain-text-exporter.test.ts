@@ -19,10 +19,11 @@ describe("PlainTextExporter", () => {
     expect(output).toContain("\nSoftware Development\n");
   });
 
-  it("lists skills with proficiency", () => {
+  it("lists skills grouped by category", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
-    expect(output).toContain("    TypeScript (advanced)");
+    expect(output).toContain("    Programming Languages:");
+    expect(output).toContain("      TypeScript (advanced)");
   });
 
   it("lists goals with status and priority", () => {
@@ -55,8 +56,9 @@ describe("PlainTextExporter", () => {
   it("uses correct indentation", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
-    // Domain at 0 indent, section labels at 2, items at 4
+    // Domain at 0 indent, section labels at 2, categories at 4, items at 6
     expect(output).toContain("  Skills:");
-    expect(output).toContain("    TypeScript");
+    expect(output).toContain("    Programming Languages:");
+    expect(output).toContain("      TypeScript");
   });
 });

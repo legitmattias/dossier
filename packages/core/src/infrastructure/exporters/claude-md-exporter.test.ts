@@ -25,14 +25,15 @@ describe("ClaudeMdExporter", () => {
     expect(output.startsWith("# Dossier Profile: Test User\n")).toBe(true);
   });
 
-  it("groups skills by proficiency tier", () => {
+  it("groups skills by domain and category", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
-    expect(output).toContain("### Strong (advanced/expert)");
+    expect(output).toContain("### Software Development");
+    expect(output).toContain("**Programming Languages:**");
     expect(output).toContain("TypeScript (advanced)");
   });
 
-  it("shows novice skills in Novice tier", () => {
+  it("shows category name for skills", () => {
     const domain = BUILT_IN_DOMAINS[0]!;
     let profile = createProfile({ id: toProfileId("p"), name: "P" });
     profile = addDomainToProfile(profile, domain);
@@ -47,8 +48,8 @@ describe("ClaudeMdExporter", () => {
     profile = addSkillToProfile(profile, skill);
 
     const output = exporter.export(profile);
-    expect(output).toContain("### Novice");
-    expect(output).toContain("Rust (novice) [no usage recorded]");
+    expect(output).toContain("**Programming Languages:**");
+    expect(output).toContain("Rust (novice)");
   });
 
   it("shows freshness hints for skills with usage", () => {
