@@ -2,6 +2,10 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 
 import type { DbConnection } from "./db/connection.js";
+import { optionalAuth } from "./middleware/auth.js";
+import { authRoutes } from "./routes/auth.js";
+import { profileRoutes } from "./routes/profile.js";
+import { publicRoutes } from "./routes/public.js";
 
 export interface AppEnv {
   Variables: {
@@ -29,17 +33,29 @@ export function createApp(dbConnection: DbConnection): Hono<AppEnv> {
     credentials: true,
   }));
 
+  // Auth — resolve JWT/API key on every request (doesn't require it)
+  app.use("*", optionalAuth);
+
+  // Global error handler
+  app.onError((err, c) => {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[dossier-api] Error: ${message}`);
+
+    // Domain/application errors → 400
+    if (err.constructor?.name?.includes("Error") && "code" in err) {
+      return c.json({ error: message }, 400);
+    }
+
+    return c.json({ error: "Internal server error" }, 500);
+  });
+
   // Health check
   app.get("/health", (c) => c.json({ status: "ok" }));
 
-  // TODO: Mount route groups
-  // app.route("/auth", authRoutes);
-  // app.route("/profile", profileRoutes);
-  // app.route("/skills", skillRoutes);
-  // app.route("/goals", goalRoutes);
-  // app.route("/interests", interestRoutes);
-  // app.route("/u", publicRoutes);
-  // app.route("/export", exportRoutes);
+  // Routes
+  app.route("/auth", authRoutes);
+  app.route("/profile", profileRoutes);
+  app.route("/u", publicRoutes);
 
   return app;
 }
