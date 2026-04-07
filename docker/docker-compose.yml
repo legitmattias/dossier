@@ -16,6 +16,7 @@ services:
     env_file:
       - path: .env
         required: false
+    init: true
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3100/mcp', { method: 'OPTIONS' }).then(r => { if (r.status !== 204) process.exit(1) })"]
