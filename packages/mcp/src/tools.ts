@@ -186,7 +186,14 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     async (input): Promise<CallToolResult> => {
-      const result = await application.completeGoal(deps, input);
+      const profile = await deps.profileRepository.load();
+      if (!profile) throw new Error("No profile found.");
+      // Resolve categoryId within the goal's domain
+      const goal = profile.goals.find((g) => g.id === input.goalId);
+      if (!goal) throw new Error(`Goal not found: ${input.goalId}`);
+      const domain = findDomainInProfile(profile, goal.domainId);
+      const categoryId = resolveCategoryId(domain, input.categoryId);
+      const result = await application.completeGoal(deps, { ...input, categoryId });
       return ok(`Completed goal: ${result.goal.name}. Created skill: ${result.skill.name} (${result.skill.proficiency})`);
     },
   );
