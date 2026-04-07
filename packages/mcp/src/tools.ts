@@ -54,13 +54,21 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     async (input): Promise<CallToolResult> => {
-      const result = await application.listSkills(deps, input);
+      const profile = await deps.profileRepository.load();
+      if (!profile) throw new Error("No profile found.");
+      const resolvedInput = input.domainId ? { ...input, domainId: resolveDomainId(profile, input.domainId) } : input;
+      const result = await application.listSkills(deps, resolvedInput);
       if (result.skills.length === 0) {
         return ok("No skills found matching the filters.");
       }
-      const lines = result.skills.map((s) =>
-        `- ${s.name} (${s.proficiency}) [domain: ${s.domainId}, category: ${s.categoryId}]`,
-      );
+      // Build name lookup maps
+      const domainNames = new Map(profile.domains.map((d) => [d.id, d.name]));
+      const categoryNames = new Map(profile.domains.flatMap((d) => d.categories.map((c) => [c.id, c.name])));
+      const lines = result.skills.map((s) => {
+        const domain = domainNames.get(s.domainId) ?? s.domainId;
+        const category = categoryNames.get(s.categoryId) ?? s.categoryId;
+        return `- ${s.name} (${s.proficiency}) [${domain} > ${category}]`;
+      });
       return ok(lines.join("\n"));
     },
   );
