@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { log } from "./logger.js";
 
 export interface HttpServerOptions {
   readonly port: number;
@@ -38,6 +39,7 @@ export async function startHttpServer(
     if (apiKey) {
       const authHeader = req.headers["authorization"];
       if (authHeader !== `Bearer ${apiKey}`) {
+        log.warn(`Unauthorized ${req.method} ${req.url}`);
         res.writeHead(401, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Unauthorized" }));
         return;
@@ -65,6 +67,7 @@ export async function startHttpServer(
         const transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (id) => {
+            log.info(`Session initialized: ${id}`);
             transports[id] = transport;
           },
         });
@@ -72,6 +75,7 @@ export async function startHttpServer(
         transport.onclose = () => {
           const sid = transport.sessionId;
           if (sid && transports[sid]) {
+            log.info(`Session closed: ${sid}`);
             delete transports[sid];
           }
         };
@@ -114,11 +118,11 @@ export async function startHttpServer(
   });
 
   httpServer.listen(port, host, () => {
-    console.log(`Dossier MCP server listening on http://${host}:${port}/mcp`);
+    log.info(`Listening on http://${host}:${port}/mcp`);
     if (apiKey) {
-      console.log("API key authentication enabled");
+      log.info("API key authentication enabled");
     } else {
-      console.warn("WARNING: No DOSSIER_API_KEY set — HTTP transport is unauthenticated");
+      log.warn("No DOSSIER_API_KEY set — HTTP transport is unauthenticated");
     }
   });
 

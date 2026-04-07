@@ -16,6 +16,7 @@ import {
 } from "@dossier/core";
 
 import type { DossierMcpDeps } from "./server.js";
+import { log } from "./logger.js";
 
 export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
   server.registerTool(
@@ -330,7 +331,7 @@ function withErrorHandler<T>(handler: ToolHandler<T>): ToolHandler<T> {
       return await handler(input);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error(`[dossier-mcp] Tool error: ${message}`);
+      log.error(`Tool error: ${message}`);
       return fail(message);
     }
   };
