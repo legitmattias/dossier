@@ -48,50 +48,17 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       updatedAt: new Date(),
     }).where(eq(pgSchema.profiles.id, profileId));
 
-    // Sync skills — delete all and re-insert (simple, correct for whole-aggregate save)
+    // Delete all children first (FK-safe order: leaves → parents)
     await db.delete(pgSchema.skills).where(eq(pgSchema.skills.profileId, profileId));
-    for (const skill of profile.skills) {
-      await db.insert(pgSchema.skills).values({
-        id: skill.id, profileId, slug: skill.slug, name: skill.name,
-        domainId: skill.domainId, categoryId: skill.categoryId,
-        proficiency: skill.proficiency, notes: skill.notes,
-        sources: skill.sources, usage: skill.usage,
-        createdAt: skill.createdAt, updatedAt: skill.updatedAt,
-      });
-    }
-
-    // Sync goals
     await db.delete(pgSchema.goals).where(eq(pgSchema.goals.profileId, profileId));
-    for (const goal of profile.goals) {
-      await db.insert(pgSchema.goals).values({
-        id: goal.id, profileId, name: goal.name, domainId: goal.domainId,
-        description: goal.description, priority: goal.priority, status: goal.status,
-        progress: goal.progress, resources: goal.resources,
-        targetDate: goal.targetDate, createdAt: goal.createdAt, updatedAt: goal.updatedAt,
-      });
-    }
-
-    // Sync interests
     await db.delete(pgSchema.interests).where(eq(pgSchema.interests.profileId, profileId));
-    for (const interest of profile.interests) {
-      await db.insert(pgSchema.interests).values({
-        id: interest.id, profileId, name: interest.name, domainId: interest.domainId,
-        description: interest.description, createdAt: interest.createdAt,
-      });
-    }
-
-    // Sync domains and categories
-    // Delete non-built-in categories first (foreign key ordering)
+    // Categories reference domains, so delete categories first
     for (const domain of profile.domains) {
-      if (!domain.isBuiltIn) {
-        await db.delete(pgSchema.categories).where(eq(pgSchema.categories.domainId, domain.id));
-      }
+      await db.delete(pgSchema.categories).where(eq(pgSchema.categories.domainId, domain.id));
     }
-    // Delete non-built-in domains
-    await db.delete(pgSchema.domains).where(
-      eq(pgSchema.domains.profileId, profileId),
-    );
-    // Re-insert all domains and categories
+    await db.delete(pgSchema.domains).where(eq(pgSchema.domains.profileId, profileId));
+
+    // Re-insert in parent-first order: domains → categories → skills, goals, interests
     for (const domain of profile.domains) {
       await db.insert(pgSchema.domains).values({
         id: domain.id, profileId, slug: domain.slug, name: domain.name,
@@ -103,6 +70,32 @@ export class DatabaseProfileRepository implements application.IProfileRepository
           description: cat.description,
         }).onConflictDoNothing();
       }
+    }
+
+    for (const skill of profile.skills) {
+      await db.insert(pgSchema.skills).values({
+        id: skill.id, profileId, slug: skill.slug, name: skill.name,
+        domainId: skill.domainId, categoryId: skill.categoryId,
+        proficiency: skill.proficiency, notes: skill.notes,
+        sources: skill.sources, usage: skill.usage,
+        createdAt: skill.createdAt, updatedAt: skill.updatedAt,
+      });
+    }
+
+    for (const goal of profile.goals) {
+      await db.insert(pgSchema.goals).values({
+        id: goal.id, profileId, name: goal.name, domainId: goal.domainId,
+        description: goal.description, priority: goal.priority, status: goal.status,
+        progress: goal.progress, resources: goal.resources,
+        targetDate: goal.targetDate, createdAt: goal.createdAt, updatedAt: goal.updatedAt,
+      });
+    }
+
+    for (const interest of profile.interests) {
+      await db.insert(pgSchema.interests).values({
+        id: interest.id, profileId, name: interest.name, domainId: interest.domainId,
+        description: interest.description, createdAt: interest.createdAt,
+      });
     }
   }
 
@@ -118,43 +111,16 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       updatedAt: now,
     }).where(eq(sqliteSchema.profiles.id, profileId));
 
-    // Sync skills
+    // Delete all children first (FK-safe order: leaves → parents)
     await db.delete(sqliteSchema.skills).where(eq(sqliteSchema.skills.profileId, profileId));
-    for (const skill of profile.skills) {
-      await db.insert(sqliteSchema.skills).values({
-        id: skill.id, profileId, slug: skill.slug, name: skill.name,
-        domainId: skill.domainId, categoryId: skill.categoryId,
-        proficiency: skill.proficiency, notes: skill.notes,
-        sources: skill.sources as unknown as string,
-        usage: skill.usage as unknown as string,
-        createdAt: skill.createdAt.toISOString(), updatedAt: skill.updatedAt.toISOString(),
-      });
-    }
-
-    // Sync goals
     await db.delete(sqliteSchema.goals).where(eq(sqliteSchema.goals.profileId, profileId));
-    for (const goal of profile.goals) {
-      await db.insert(sqliteSchema.goals).values({
-        id: goal.id, profileId, name: goal.name, domainId: goal.domainId,
-        description: goal.description, priority: goal.priority, status: goal.status,
-        progress: goal.progress as unknown as string,
-        resources: goal.resources as unknown as string,
-        targetDate: goal.targetDate?.toISOString(),
-        createdAt: goal.createdAt.toISOString(), updatedAt: goal.updatedAt.toISOString(),
-      });
-    }
-
-    // Sync interests
     await db.delete(sqliteSchema.interests).where(eq(sqliteSchema.interests.profileId, profileId));
-    for (const interest of profile.interests) {
-      await db.insert(sqliteSchema.interests).values({
-        id: interest.id, profileId, name: interest.name, domainId: interest.domainId,
-        description: interest.description, createdAt: interest.createdAt.toISOString(),
-      });
+    for (const domain of profile.domains) {
+      await db.delete(sqliteSchema.categories).where(eq(sqliteSchema.categories.domainId, domain.id));
     }
-
-    // Sync domains and categories
     await db.delete(sqliteSchema.domains).where(eq(sqliteSchema.domains.profileId, profileId));
+
+    // Re-insert in parent-first order
     for (const domain of profile.domains) {
       await db.insert(sqliteSchema.domains).values({
         id: domain.id, profileId, slug: domain.slug, name: domain.name,
@@ -166,6 +132,35 @@ export class DatabaseProfileRepository implements application.IProfileRepository
           description: cat.description,
         }).onConflictDoNothing();
       }
+    }
+
+    for (const skill of profile.skills) {
+      await db.insert(sqliteSchema.skills).values({
+        id: skill.id, profileId, slug: skill.slug, name: skill.name,
+        domainId: skill.domainId, categoryId: skill.categoryId,
+        proficiency: skill.proficiency, notes: skill.notes,
+        sources: skill.sources as unknown as string,
+        usage: skill.usage as unknown as string,
+        createdAt: skill.createdAt.toISOString(), updatedAt: skill.updatedAt.toISOString(),
+      });
+    }
+
+    for (const goal of profile.goals) {
+      await db.insert(sqliteSchema.goals).values({
+        id: goal.id, profileId, name: goal.name, domainId: goal.domainId,
+        description: goal.description, priority: goal.priority, status: goal.status,
+        progress: goal.progress as unknown as string,
+        resources: goal.resources as unknown as string,
+        targetDate: goal.targetDate?.toISOString(),
+        createdAt: goal.createdAt.toISOString(), updatedAt: goal.updatedAt.toISOString(),
+      });
+    }
+
+    for (const interest of profile.interests) {
+      await db.insert(sqliteSchema.interests).values({
+        id: interest.id, profileId, name: interest.name, domainId: interest.domainId,
+        description: interest.description, createdAt: interest.createdAt.toISOString(),
+      });
     }
   }
 }
