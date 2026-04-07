@@ -1,0 +1,28 @@
+services:
+  dossier-mcp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "${DOSSIER_PORT:-3100}:3100"
+    volumes:
+      - dossier-data:/data
+    environment:
+      - DOSSIER_TRANSPORT=http
+      - DOSSIER_PORT=3100
+      - DOSSIER_HOST=0.0.0.0
+      - DOSSIER_PROFILE=/data/profile.json
+      - DOSSIER_API_KEY=${DOSSIER_API_KEY:?Set DOSSIER_API_KEY in .env}
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3100/mcp', { method: 'OPTIONS' }).then(r => { if (r.status !== 204) process.exit(1) })"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  dossier-data:
