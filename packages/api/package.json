@@ -1,0 +1,43 @@
+{
+  "name": "@dossier/api",
+  "version": "0.0.1",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "bin": {
+    "dossier-api": "./dist/bin.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "node --import tsx ./src/bin.ts",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@dossier/core": "workspace:*",
+    "@hono/node-server": "^1.14.0",
+    "hono": "^4.7.0",
+    "drizzle-orm": "^0.44.0",
+    "postgres": "^3.4.0",
+    "better-sqlite3": "^11.8.0",
+    "bcrypt": "^6.0.0",
+    "jose": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/bcrypt": "^5.0.0",
+    "drizzle-kit": "^0.31.0"
+  }
+}
