@@ -1,21 +1,36 @@
 services:
+  # --- Database ---
+  postgres:
+    image: postgres:17-alpine
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-dossier}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      - POSTGRES_DB=${POSTGRES_DB:-dossier}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dossier}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # --- MCP Server (HTTP transport) ---
   dossier-mcp:
     build:
       context: ..
       dockerfile: docker/Dockerfile
     ports:
-      - "${DOSSIER_PORT:-3100}:3100"
+      - "${MCP_PORT:-3100}:3100"
     volumes:
-      - dossier-data:/data
+      - mcp-data:/data
     environment:
       - DOSSIER_TRANSPORT=http
       - DOSSIER_PORT=3100
       - DOSSIER_HOST=0.0.0.0
       - DOSSIER_PROFILE=/data/profile.json
       - DOSSIER_API_KEY=${DOSSIER_API_KEY:?Set DOSSIER_API_KEY in .env}
-    env_file:
-      - path: .env
-        required: false
     init: true
     restart: unless-stopped
     healthcheck:
@@ -25,5 +40,31 @@ services:
       retries: 3
       start_period: 10s
 
+  # --- REST API ---
+  dossier-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    ports:
+      - "${API_PORT:-3200}:3200"
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-dossier}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-dossier}
+      - PORT=3200
+      - HOST=0.0.0.0
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in .env}
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3200/health').then(r => { if (!r.ok) process.exit(1) })"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
 volumes:
-  dossier-data:
+  postgres-data:
+  mcp-data:
