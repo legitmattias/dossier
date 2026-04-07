@@ -31,7 +31,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         notes: z.string().optional().describe("Optional notes about this skill"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const profile = await deps.profileRepository.load();
       if (!profile) throw new Error("No profile found.");
       const domainId = resolveDomainId(profile, input.domainId);
@@ -39,7 +39,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       const categoryId = resolveCategoryId(domain, input.categoryId);
       const result = await application.addSkill(deps, { ...input, domainId, categoryId });
       return ok(`Added skill: ${result.skill.name} (${result.skill.proficiency})`);
-    },
+    }),
   );
 
   server.registerTool(
@@ -53,7 +53,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         proficiency: z.enum(PROFICIENCY_LEVELS).optional().describe("Filter by proficiency level"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const profile = await deps.profileRepository.load();
       if (!profile) throw new Error("No profile found.");
       const resolvedInput = input.domainId ? { ...input, domainId: resolveDomainId(profile, input.domainId) } : input;
@@ -70,7 +70,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         return `- ${s.name} (${s.proficiency}) [${domain} > ${category}]`;
       });
       return ok(lines.join("\n"));
-    },
+    }),
   );
 
   server.registerTool(
@@ -82,7 +82,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         status: z.enum(["active", "paused", "completed", "abandoned"]).optional().describe("Filter by goal status"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const profile = await deps.profileRepository.load();
       if (!profile) {
         return ok("No profile found.");
@@ -98,7 +98,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         `- ${g.name} (${g.status}, ${g.priority} priority)`,
       );
       return ok(lines.join("\n"));
-    },
+    }),
   );
 
   server.registerTool(
@@ -113,10 +113,10 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         notes: z.string().optional().describe("Updated notes"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const result = await application.updateSkill(deps, input);
       return ok(`Updated skill: ${result.skill.name} (${result.skill.proficiency})`);
-    },
+    }),
   );
 
   server.registerTool(
@@ -128,10 +128,10 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         skillId: z.string().describe("Skill ID to remove"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       await application.removeSkill(deps, input);
       return ok("Skill removed.");
-    },
+    }),
   );
 
   server.registerTool(
@@ -147,13 +147,13 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         targetDate: z.string().optional().describe("Target date in ISO format (e.g. '2026-12-31')"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const profile = await deps.profileRepository.load();
       if (!profile) throw new Error("No profile found.");
       const domainId = resolveDomainId(profile, input.domainId);
       const result = await application.addLearningGoal(deps, { ...input, domainId });
       return ok(`Added goal: ${result.goal.name} (${result.goal.priority} priority)`);
-    },
+    }),
   );
 
   server.registerTool(
@@ -167,11 +167,11 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         note: z.string().optional().describe("Progress note"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const result = await application.updateGoalProgress(deps, input);
       const latest = result.goal.progress[result.goal.progress.length - 1];
       return ok(`Updated goal: ${result.goal.name} → ${latest?.percentage ?? input.percentage}%`);
-    },
+    }),
   );
 
   server.registerTool(
@@ -185,7 +185,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         proficiency: z.enum(PROFICIENCY_LEVELS).optional().describe("Initial proficiency for the new skill (default: novice)"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const profile = await deps.profileRepository.load();
       if (!profile) throw new Error("No profile found.");
       // Resolve categoryId within the goal's domain
@@ -195,7 +195,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       const categoryId = resolveCategoryId(domain, input.categoryId);
       const result = await application.completeGoal(deps, { ...input, categoryId });
       return ok(`Completed goal: ${result.goal.name}. Created skill: ${result.skill.name} (${result.skill.proficiency})`);
-    },
+    }),
   );
 
   server.registerTool(
@@ -209,13 +209,13 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         description: z.string().optional().describe("Why you're interested"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const profile = await deps.profileRepository.load();
       if (!profile) throw new Error("No profile found.");
       const domainId = resolveDomainId(profile, input.domainId);
       const result = await application.addInterest(deps, { ...input, domainId });
       return ok(`Added interest: ${result.interest.name}`);
-    },
+    }),
   );
 
   server.registerTool(
@@ -228,7 +228,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         context: z.string().optional().describe("Usage context (e.g. 'work project', 'side project')"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const result = await application.updateSkill(deps, {
         skillId: input.skillId,
         addUsage: [{
@@ -237,7 +237,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         }],
       });
       return ok(`Marked as used: ${result.skill.name}`);
-    },
+    }),
   );
 
   server.registerTool(
@@ -250,7 +250,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         description: z.string().optional().describe("Brief description of the domain"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const profile = await deps.profileRepository.load();
       if (!profile) throw new Error("No profile found.");
 
@@ -260,7 +260,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       const updated = addDomainToProfile(profile, domain);
       await deps.profileRepository.save(updated);
       return ok(`Added domain: ${domain.name} (id: ${domain.id}, slug: ${domain.slug})`);
-    },
+    }),
   );
 
   server.registerTool(
@@ -274,7 +274,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         description: z.string().optional().describe("Brief description of the category"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const profile = await deps.profileRepository.load();
       if (!profile) throw new Error("No profile found.");
 
@@ -292,7 +292,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       };
       await deps.profileRepository.save(updatedProfile);
       return ok(`Added category: ${category.name} (id: ${categoryId}, slug: ${category.slug}) to domain ${domain.name}`);
-    },
+    }),
   );
 
   server.registerTool(
@@ -304,18 +304,36 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
         format: z.enum(["json", "markdown", "text", "claude"]).describe("Export format"),
       }),
     },
-    async (input): Promise<CallToolResult> => {
+    withErrorHandler(async (input) => {
       const exporter = infrastructure.createExporter(input.format);
       const result = await application.exportProfile(
         { profileRepository: deps.profileRepository, exporter },
       );
       return { content: [{ type: "text", text: result.content }] };
-    },
+    }),
   );
 }
 
 function ok(message: string): CallToolResult {
   return { content: [{ type: "text", text: message }] };
+}
+
+function fail(message: string): CallToolResult {
+  return { content: [{ type: "text", text: message }], isError: true };
+}
+
+type ToolHandler<T> = (input: T) => Promise<CallToolResult>;
+
+function withErrorHandler<T>(handler: ToolHandler<T>): ToolHandler<T> {
+  return async (input: T): Promise<CallToolResult> => {
+    try {
+      return await handler(input);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[dossier-mcp] Tool error: ${message}`);
+      return fail(message);
+    }
+  };
 }
 
 /**
