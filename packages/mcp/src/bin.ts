@@ -31,15 +31,17 @@ if (storage === "api") {
 // --- Transport ---
 
 const transport = process.env["DOSSIER_TRANSPORT"] ?? "stdio";
-const server = createDossierMcpServer(deps);
 
 if (transport === "http") {
+  // HTTP mode: pass a factory so each session gets a fresh McpServer instance
   const { startHttpServer } = await import("./http.js");
   const port = Number(process.env["DOSSIER_PORT"] ?? "3100");
   const host = process.env["DOSSIER_HOST"] ?? "0.0.0.0";
   const mcpApiKey = process.env["DOSSIER_MCP_API_KEY"] ?? process.env["DOSSIER_API_KEY"];
-  await startHttpServer(server, { port, host, apiKey: mcpApiKey });
+  await startHttpServer(() => createDossierMcpServer(deps), { port, host, apiKey: mcpApiKey });
 } else {
+  // stdio mode: single session, single server instance
+  const server = createDossierMcpServer(deps);
   const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
   const stdioTransport = new StdioServerTransport();
   await server.connect(stdioTransport);
