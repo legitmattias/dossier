@@ -1,0 +1,28 @@
+{
+  "name": "@dossier/web",
+  "version": "0.0.1",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "remix vite:build",
+    "dev": "remix vite:dev",
+    "start": "node ./build/server/index.js",
+    "clean": "rm -rf build .cache"
+  },
+  "dependencies": {
+    "@remix-run/node": "^2.16.0",
+    "@remix-run/react": "^2.16.0",
+    "@remix-run/serve": "^2.16.0",
+    "isbot": "^5.1.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "^2.16.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "vite": "^6.3.0"
+  }
+}
