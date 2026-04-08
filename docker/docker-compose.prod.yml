@@ -51,12 +51,15 @@ services:
       DOSSIER_TRANSPORT: http
       DOSSIER_PORT: "3100"
       DOSSIER_HOST: "0.0.0.0"
-      DOSSIER_API_KEY: ${MCP_API_KEY}
-      DOSSIER_PROFILE: /data/profile.json
+      DOSSIER_MCP_API_KEY: ${MCP_API_KEY}
+      DOSSIER_STORAGE: api
+      DOSSIER_API_URL: http://api:3200
+      DOSSIER_STORAGE_API_KEY: ${STORAGE_API_KEY}
     ports:
       - "${MCP_PORT:-3150}:3100"
-    volumes:
-      - mcpdata:/data
+    depends_on:
+      api:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3100/mcp', { method: 'OPTIONS' }).then(r => { if (r.status !== 204) process.exit(1) })"]
       interval: 30s

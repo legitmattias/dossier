@@ -10,14 +10,14 @@ let deps: DossierMcpDeps;
 
 if (storage === "api") {
   const apiUrl = process.env["DOSSIER_API_URL"];
-  const apiKey = process.env["DOSSIER_API_KEY"];
-  if (!apiUrl || !apiKey) {
-    console.error("DOSSIER_STORAGE=api requires DOSSIER_API_URL and DOSSIER_API_KEY");
+  const storageApiKey = process.env["DOSSIER_STORAGE_API_KEY"] ?? process.env["DOSSIER_API_KEY"];
+  if (!apiUrl || !storageApiKey) {
+    console.error("DOSSIER_STORAGE=api requires DOSSIER_API_URL and DOSSIER_STORAGE_API_KEY (or DOSSIER_API_KEY)");
     process.exit(1);
   }
   const { ApiProfileRepository } = await import("./api-profile-repository.js");
   deps = {
-    profileRepository: new ApiProfileRepository(apiUrl, apiKey),
+    profileRepository: new ApiProfileRepository(apiUrl, storageApiKey),
     idGenerator: new infrastructure.UuidIdGenerator(),
   };
 } else {
@@ -37,8 +37,8 @@ if (transport === "http") {
   const { startHttpServer } = await import("./http.js");
   const port = Number(process.env["DOSSIER_PORT"] ?? "3100");
   const host = process.env["DOSSIER_HOST"] ?? "0.0.0.0";
-  const apiKey = process.env["DOSSIER_API_KEY"];
-  await startHttpServer(server, { port, host, apiKey });
+  const mcpApiKey = process.env["DOSSIER_MCP_API_KEY"] ?? process.env["DOSSIER_API_KEY"];
+  await startHttpServer(server, { port, host, apiKey: mcpApiKey });
 } else {
   const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
   const stdioTransport = new StdioServerTransport();
