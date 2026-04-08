@@ -50,6 +50,7 @@ describe("ClaudeMdExporter", () => {
     const output = exporter.export(profile);
     expect(output).toContain("**Programming Languages:**");
     expect(output).toContain("Rust (novice)");
+    expect(output).not.toContain("[no usage recorded]");
   });
 
   it("shows freshness hints for skills with usage", () => {
@@ -98,11 +99,31 @@ describe("ClaudeMdExporter", () => {
     expect(output).toContain("- Machine Learning");
   });
 
-  it("includes guidance section for strong skills", () => {
+  it("includes compact guidance section", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
-    expect(output).toContain("## When suggesting solutions:");
-    expect(output).toContain("Prefer TypeScript — this is a strength");
+    expect(output).toContain("## Guidance");
+    expect(output).toContain("**Key strengths (advanced/expert):** TypeScript.");
+    expect(output).toContain("**Currently learning:** Learn Rust (high).");
+  });
+
+  it("suppresses freshness for skills without usage data", () => {
+    const domain = BUILT_IN_DOMAINS[0]!;
+    let profile = createProfile({ id: toProfileId("p"), name: "P" });
+    profile = addDomainToProfile(profile, domain);
+    const skill = createSkill({
+      id: toSkillId("s1"),
+      slug: slugify("Go"),
+      name: "Go",
+      domainId: domain.id,
+      categoryId: domain.categories[0]!.id,
+      proficiency: "familiar",
+    });
+    profile = addSkillToProfile(profile, skill);
+
+    const output = exporter.export(profile);
+    expect(output).toContain("Go (familiar)");
+    expect(output).not.toContain("[no usage recorded]");
   });
 
   it("handles empty profile", () => {

@@ -87,24 +87,28 @@ export class ClaudeMdExporter implements IExporter {
       }
     }
 
-    // Guidance section
+    // Guidance section — compact summary, not per-skill lines
     const strongSkills = profile.skills.filter(
       (s) => s.proficiency === "advanced" || s.proficiency === "expert",
     );
     const noviceSkills = profile.skills.filter(
       (s) => s.proficiency === "novice",
     );
+    const activeGoalNames = profile.goals
+      .filter((g) => g.status === "active")
+      .map((g) => `${g.name} (${g.priority})`);
 
-    if (strongSkills.length > 0 || noviceSkills.length > 0) {
+    if (strongSkills.length > 0 || noviceSkills.length > 0 || activeGoalNames.length > 0) {
       lines.push("");
-      lines.push("## When suggesting solutions:");
-      for (const skill of strongSkills) {
-        lines.push(`- Prefer ${skill.name} — this is a strength`);
+      lines.push("## Guidance");
+      if (strongSkills.length > 0) {
+        lines.push(`**Key strengths (advanced/expert):** ${strongSkills.map((s) => s.name).join(", ")}.`);
       }
-      for (const skill of noviceSkills) {
-        lines.push(
-          `- ${skill.name} is a novice skill — extra explanation welcome`,
-        );
+      if (activeGoalNames.length > 0) {
+        lines.push(`**Currently learning:** ${activeGoalNames.join(", ")}.`);
+      }
+      if (noviceSkills.length > 0) {
+        lines.push(`${noviceSkills.length} skills are at novice level — check proficiency above before assuming knowledge.`);
       }
     }
 
@@ -115,17 +119,16 @@ export class ClaudeMdExporter implements IExporter {
 
 function formatSkillLine(skill: Skill, now: Date): string {
   const lastUsed = getLastUsedDate(skill);
-  let freshness: string;
 
+  // Only show freshness when there IS usage data — suppress "[no usage recorded]"
   if (!lastUsed) {
-    freshness = "no usage recorded";
-  } else {
-    const timeSince = formatTimeSince(lastUsed, now);
-    freshness =
-      timeSince === "recently"
-        ? "last used: recently"
-        : `last used: ${timeSince} - may need refresher`;
+    return `${skill.name} (${skill.proficiency})`;
   }
+
+  const timeSince = formatTimeSince(lastUsed, now);
+  const freshness = timeSince === "recently"
+    ? "last used: recently"
+    : `last used: ${timeSince}`;
 
   return `${skill.name} (${skill.proficiency}) [${freshness}]`;
 }
