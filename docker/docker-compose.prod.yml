@@ -1,0 +1,74 @@
+services:
+  # --- Database ---
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - dossier
+
+  # --- REST API ---
+  api:
+    image: ghcr.io/legitmattias/dossier-api:latest
+    restart: unless-stopped
+    init: true
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: "3200"
+      HOST: "0.0.0.0"
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+    ports:
+      - "${API_PORT:-3200}:3200"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3200/health').then(r => { if (!r.ok) process.exit(1) })"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - dossier
+
+  # --- MCP Server (HTTP transport) ---
+  mcp:
+    image: ghcr.io/legitmattias/dossier-mcp:latest
+    restart: unless-stopped
+    init: true
+    environment:
+      DOSSIER_TRANSPORT: http
+      DOSSIER_PORT: "3100"
+      DOSSIER_HOST: "0.0.0.0"
+      DOSSIER_API_KEY: ${MCP_API_KEY}
+      DOSSIER_PROFILE: /data/profile.json
+    ports:
+      - "${MCP_PORT:-3150}:3100"
+    volumes:
+      - mcpdata:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3100/mcp', { method: 'OPTIONS' }).then(r => { if (r.status !== 204) process.exit(1) })"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - dossier
+
+volumes:
+  pgdata:
+  mcpdata:
+
+networks:
+  dossier:

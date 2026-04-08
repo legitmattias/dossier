@@ -1,0 +1,17 @@
+# Dossier API
+dossier.mattic.dev {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3200
+	log {
+		output file /var/log/caddy/dossier-access.log
+	}
+}
+
+# Dossier MCP Server (HTTP transport)
+mcp.dossier.mattic.dev {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3150
+	log {
+		output file /var/log/caddy/dossier-mcp-access.log
+	}
+}
