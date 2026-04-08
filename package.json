@@ -14,12 +14,18 @@
     "clean": "pnpm -r run clean"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["bcrypt", "better-sqlite3", "esbuild"]
+    "onlyBuiltDependencies": [
+      "bcrypt",
+      "better-sqlite3",
+      "esbuild"
+    ]
   },
   "devDependencies": {
     "@types/node": "^25.2.1",
     "tsdown": "^0.20.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.0",
-    "vitest": "^4.0.0"
+    "vitest": "^4.0.0",
+    "yaml": "^2.8.3"
   }
 }
