@@ -1,11 +1,36 @@
 import { infrastructure } from "@dossier/core";
 
-import { createDossierMcpServer, createDeps } from "./server.js";
+import { createDossierMcpServer } from "./server.js";
+import type { DossierMcpDeps } from "./server.js";
 
-const profilePath = process.env["DOSSIER_PROFILE"] ?? infrastructure.getDefaultProfilePath();
+// --- Storage backend ---
+
+const storage = process.env["DOSSIER_STORAGE"] ?? "file";
+let deps: DossierMcpDeps;
+
+if (storage === "api") {
+  const apiUrl = process.env["DOSSIER_API_URL"];
+  const apiKey = process.env["DOSSIER_API_KEY"];
+  if (!apiUrl || !apiKey) {
+    console.error("DOSSIER_STORAGE=api requires DOSSIER_API_URL and DOSSIER_API_KEY");
+    process.exit(1);
+  }
+  const { ApiProfileRepository } = await import("./api-profile-repository.js");
+  deps = {
+    profileRepository: new ApiProfileRepository(apiUrl, apiKey),
+    idGenerator: new infrastructure.UuidIdGenerator(),
+  };
+} else {
+  const profilePath = process.env["DOSSIER_PROFILE"] ?? infrastructure.getDefaultProfilePath();
+  deps = {
+    profileRepository: new infrastructure.FileProfileRepository(profilePath),
+    idGenerator: new infrastructure.UuidIdGenerator(),
+  };
+}
+
+// --- Transport ---
+
 const transport = process.env["DOSSIER_TRANSPORT"] ?? "stdio";
-
-const deps = createDeps(profilePath);
 const server = createDossierMcpServer(deps);
 
 if (transport === "http") {

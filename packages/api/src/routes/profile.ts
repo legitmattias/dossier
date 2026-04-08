@@ -38,6 +38,20 @@ profileRoutes.get("/", requireAuth, async (c) => {
   return c.json(serialized);
 });
 
+// PUT /profile — Replace entire profile data (used by MCP Cloud Mode)
+profileRoutes.put("/", requireAuth, async (c) => {
+  const body = await c.req.json();
+  const deps = getDeps(c);
+
+  // Parse the incoming profile through the schema (validates + converts dates)
+  const incoming = infrastructure.parseProfile(body);
+  if (!incoming) return c.json({ error: "Invalid profile data" }, 400);
+
+  // Save via the repository (handles delete-and-reinsert)
+  await deps.profileRepository.save(incoming);
+  return c.json({ ok: true });
+});
+
 // GET /profile/export?format=claude
 profileRoutes.get("/export", requireAuth, async (c) => {
   const format = c.req.query("format") ?? "json";
