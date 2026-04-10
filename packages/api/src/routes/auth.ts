@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { randomUUID } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import type { AppEnv } from "../app.js";
 import type { PgDatabase, SqliteDatabase } from "../db/connection.js";
@@ -251,13 +251,17 @@ authRoutes.delete("/api-keys/:id", requireAuth, async (c) => {
   if (dbConn.dialect === "postgres") {
     const db = dbConn.db as PgDatabase;
     const result = await db.delete(pgSchema.apiKeys)
-      .where(eq(pgSchema.apiKeys.id, keyId))
+      .where(and(eq(pgSchema.apiKeys.id, keyId), eq(pgSchema.apiKeys.userId, userId)))
       .returning();
     if (result.length === 0) return c.json({ error: "Key not found" }, 404);
   } else {
     const db = dbConn.db as SqliteDatabase;
+    const existing = await db.select({ id: sqliteSchema.apiKeys.id })
+      .from(sqliteSchema.apiKeys)
+      .where(and(eq(sqliteSchema.apiKeys.id, keyId), eq(sqliteSchema.apiKeys.userId, userId)));
+    if (existing.length === 0) return c.json({ error: "Key not found" }, 404);
     await db.delete(sqliteSchema.apiKeys)
-      .where(eq(sqliteSchema.apiKeys.id, keyId));
+      .where(and(eq(sqliteSchema.apiKeys.id, keyId), eq(sqliteSchema.apiKeys.userId, userId)));
   }
 
   return c.json({ revoked: true });

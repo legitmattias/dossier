@@ -2,7 +2,7 @@
  * Loads a full Profile domain entity from the database.
  * Bridges between Drizzle database rows and @dossier/core domain model.
  */
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import {
   createProfile,
   toProfileId,
@@ -35,7 +35,10 @@ async function loadProfilePg(db: PgDatabase, userId: string): Promise<Profile | 
   if (!profileRow) return null;
 
   const domainRows = await db.select().from(pgSchema.domains).where(eq(pgSchema.domains.profileId, profileRow.id));
-  const categoryRows = await db.select().from(pgSchema.categories);
+  const domainIds = domainRows.map((d) => d.id);
+  const categoryRows = domainIds.length > 0
+    ? await db.select().from(pgSchema.categories).where(inArray(pgSchema.categories.domainId, domainIds))
+    : [];
   const skillRows = await db.select().from(pgSchema.skills).where(eq(pgSchema.skills.profileId, profileRow.id));
   const goalRows = await db.select().from(pgSchema.goals).where(eq(pgSchema.goals.profileId, profileRow.id));
   const interestRows = await db.select().from(pgSchema.interests).where(eq(pgSchema.interests.profileId, profileRow.id));
@@ -49,7 +52,10 @@ async function loadProfileSqlite(db: SqliteDatabase, userId: string): Promise<Pr
   if (!profileRow) return null;
 
   const domainRows = await db.select().from(sqliteSchema.domains).where(eq(sqliteSchema.domains.profileId, profileRow.id));
-  const categoryRows = await db.select().from(sqliteSchema.categories);
+  const domainIds = domainRows.map((d) => d.id);
+  const categoryRows = domainIds.length > 0
+    ? await db.select().from(sqliteSchema.categories).where(inArray(sqliteSchema.categories.domainId, domainIds))
+    : [];
   const skillRows = await db.select().from(sqliteSchema.skills).where(eq(sqliteSchema.skills.profileId, profileRow.id));
   const goalRows = await db.select().from(sqliteSchema.goals).where(eq(sqliteSchema.goals.profileId, profileRow.id));
   const interestRows = await db.select().from(sqliteSchema.interests).where(eq(sqliteSchema.interests.profileId, profileRow.id));
