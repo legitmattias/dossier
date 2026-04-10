@@ -32,17 +32,7 @@ export function registerStaleCommand(
         const now = new Date();
 
         const staleSkills = result.skills.filter((s) => {
-          // Freshness is calculated from usage entries — skills with no usage have 0 freshness
-          const lastUsage = s.usage.length > 0
-            ? s.usage.reduce((latest, u) =>
-                u.lastUsed > latest.lastUsed ? u : latest,
-              )
-            : null;
-
-          if (!lastUsage) return true; // no usage = stale
-
-          const daysSinceUse = (now.getTime() - lastUsage.lastUsed.getTime()) / (1000 * 60 * 60 * 24);
-          const freshness = daysSinceUse <= 0 ? 1 : Math.pow(2, -daysSinceUse / 90);
+          const freshness = getSkillFreshness(s as Parameters<typeof getSkillFreshness>[0], now);
           return freshness < threshold;
         });
 
@@ -54,21 +44,19 @@ export function registerStaleCommand(
         table(
           ["Name", "Proficiency", "Freshness", "Last Used"],
           staleSkills.map((s) => {
+            const freshness = getSkillFreshness(s as Parameters<typeof getSkillFreshness>[0], now);
             const lastUsage = s.usage.length > 0
               ? s.usage.reduce((latest, u) =>
                   u.lastUsed > latest.lastUsed ? u : latest,
                 )
               : null;
 
-            let freshness = "0%";
-            let lastUsed = "never";
-            if (lastUsage) {
-              const daysSinceUse = (now.getTime() - lastUsage.lastUsed.getTime()) / (1000 * 60 * 60 * 24);
-              freshness = `${Math.round((daysSinceUse <= 0 ? 1 : Math.pow(2, -daysSinceUse / 90)) * 100)}%`;
-              lastUsed = lastUsage.lastUsed.toISOString().slice(0, 10);
-            }
-
-            return [s.name, s.proficiency, freshness, lastUsed];
+            return [
+              s.name,
+              s.proficiency,
+              `${Math.round(freshness * 100)}%`,
+              lastUsage ? lastUsage.lastUsed.toISOString().slice(0, 10) : "never",
+            ];
           }),
         );
       }),

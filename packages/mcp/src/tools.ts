@@ -10,7 +10,6 @@ import {
   addDomainToProfile,
   addCategoryToDomain,
   findDomainInProfile,
-  updateSkillInProfile,
   toDomainId,
   toCategoryId,
 } from "@dossier/core";

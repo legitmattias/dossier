@@ -108,7 +108,8 @@ export class ClaudeMdExporter implements IExporter {
         lines.push(`**Currently learning:** ${activeGoalNames.join(", ")}.`);
       }
       if (noviceSkills.length > 0) {
-        lines.push(`${noviceSkills.length} skills are at novice level — check proficiency above before assuming knowledge.`);
+        const n = noviceSkills.length;
+        lines.push(`${n} ${n === 1 ? "skill is" : "skills are"} at novice level — check proficiency above before assuming knowledge.`);
       }
     }
 
