@@ -19,6 +19,10 @@ export const authRoutes = new Hono<AppEnv>();
 
 // POST /auth/register
 authRoutes.post("/register", async (c) => {
+  if (process.env["REGISTRATION_ENABLED"] === "false") {
+    return c.json({ error: "Registration is currently disabled" }, 403);
+  }
+
   const body = await c.req.json<{ username: string; email: string; password: string; name?: string }>();
   const { username, email, password, name } = body;
 
