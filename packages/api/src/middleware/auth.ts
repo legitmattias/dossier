@@ -4,9 +4,8 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 import type { AppEnv } from "../app.js";
-import type { DbConnection, PgDatabase, SqliteDatabase } from "../db/connection.js";
-import * as pgSchema from "../db/schema.pg.js";
-import * as sqliteSchema from "../db/schema.sqlite.js";
+import type { Database } from "../db/connection.js";
+import * as schema from "../db/schema.js";
 
 const JWT_ALG = "HS256";
 const JWT_EXPIRY = "7d";
@@ -42,30 +41,15 @@ export async function verifyApiKey(key: string, hash: string): Promise<boolean> 
   return bcrypt.compare(key, hash);
 }
 
-async function resolveApiKeyUserId(dbConn: DbConnection, apiKey: string): Promise<string | null> {
+async function resolveApiKeyUserId(db: Database, apiKey: string): Promise<string | null> {
   const prefix = apiKey.slice(0, 8);
-
-  if (dbConn.dialect === "postgres") {
-    const db = dbConn.db as PgDatabase;
-    const rows = await db.select().from(pgSchema.apiKeys).where(eq(pgSchema.apiKeys.prefix, prefix));
-    for (const row of rows) {
-      if (await verifyApiKey(apiKey, row.keyHash)) {
-        // Update last used timestamp
-        await db.update(pgSchema.apiKeys).set({ lastUsedAt: new Date() }).where(eq(pgSchema.apiKeys.id, row.id));
-        return row.userId;
-      }
-    }
-  } else {
-    const db = dbConn.db as SqliteDatabase;
-    const rows = await db.select().from(sqliteSchema.apiKeys).where(eq(sqliteSchema.apiKeys.prefix, prefix));
-    for (const row of rows) {
-      if (await verifyApiKey(apiKey, row.keyHash)) {
-        await db.update(sqliteSchema.apiKeys).set({ lastUsedAt: new Date().toISOString() }).where(eq(sqliteSchema.apiKeys.id, row.id));
-        return row.userId;
-      }
+  const rows = await db.select().from(schema.apiKeys).where(eq(schema.apiKeys.prefix, prefix));
+  for (const row of rows) {
+    if (await verifyApiKey(apiKey, row.keyHash)) {
+      await db.update(schema.apiKeys).set({ lastUsedAt: new Date() }).where(eq(schema.apiKeys.id, row.id));
+      return row.userId;
     }
   }
-
   return null;
 }
 
@@ -89,8 +73,8 @@ export const optionalAuth = createMiddleware<AppEnv>(async (c, next) => {
 
   // API key (prefixed with "dsk_")
   if (token.startsWith("dsk_")) {
-    const dbConn = c.get("dbConnection");
-    const userId = await resolveApiKeyUserId(dbConn, token);
+    const { db } = c.get("dbConnection");
+    const userId = await resolveApiKeyUserId(db, token);
     if (userId) {
       c.set("userId", userId);
     }

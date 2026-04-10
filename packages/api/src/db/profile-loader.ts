@@ -15,62 +15,26 @@ import {
 } from "@dossier/core";
 import type { Profile, Domain, Category, Skill, LearningGoal, Interest } from "@dossier/core";
 
-import type { DbConnection, PgDatabase, SqliteDatabase } from "./connection.js";
-import * as pgSchema from "./schema.pg.js";
-import * as sqliteSchema from "./schema.sqlite.js";
+import type { Database } from "./connection.js";
+import * as schema from "./schema.js";
 
 /**
  * Load a full Profile for a user. Returns null if user has no profile.
  */
-export async function loadProfileFromDb(dbConn: DbConnection, userId: string): Promise<Profile | null> {
-  if (dbConn.dialect === "postgres") {
-    return loadProfilePg(dbConn.db as PgDatabase, userId);
-  }
-  return loadProfileSqlite(dbConn.db as SqliteDatabase, userId);
-}
-
-async function loadProfilePg(db: PgDatabase, userId: string): Promise<Profile | null> {
-  const profileRows = await db.select().from(pgSchema.profiles).where(eq(pgSchema.profiles.userId, userId));
+export async function loadProfileFromDb(db: Database, userId: string): Promise<Profile | null> {
+  const profileRows = await db.select().from(schema.profiles).where(eq(schema.profiles.userId, userId));
   const profileRow = profileRows[0];
   if (!profileRow) return null;
 
-  const domainRows = await db.select().from(pgSchema.domains).where(eq(pgSchema.domains.profileId, profileRow.id));
+  const domainRows = await db.select().from(schema.domains).where(eq(schema.domains.profileId, profileRow.id));
   const domainIds = domainRows.map((d) => d.id);
   const categoryRows = domainIds.length > 0
-    ? await db.select().from(pgSchema.categories).where(inArray(pgSchema.categories.domainId, domainIds))
+    ? await db.select().from(schema.categories).where(inArray(schema.categories.domainId, domainIds))
     : [];
-  const skillRows = await db.select().from(pgSchema.skills).where(eq(pgSchema.skills.profileId, profileRow.id));
-  const goalRows = await db.select().from(pgSchema.goals).where(eq(pgSchema.goals.profileId, profileRow.id));
-  const interestRows = await db.select().from(pgSchema.interests).where(eq(pgSchema.interests.profileId, profileRow.id));
+  const skillRows = await db.select().from(schema.skills).where(eq(schema.skills.profileId, profileRow.id));
+  const goalRows = await db.select().from(schema.goals).where(eq(schema.goals.profileId, profileRow.id));
+  const interestRows = await db.select().from(schema.interests).where(eq(schema.interests.profileId, profileRow.id));
 
-  return assembleProfile(profileRow, domainRows, categoryRows, skillRows, goalRows, interestRows);
-}
-
-async function loadProfileSqlite(db: SqliteDatabase, userId: string): Promise<Profile | null> {
-  const profileRows = await db.select().from(sqliteSchema.profiles).where(eq(sqliteSchema.profiles.userId, userId));
-  const profileRow = profileRows[0];
-  if (!profileRow) return null;
-
-  const domainRows = await db.select().from(sqliteSchema.domains).where(eq(sqliteSchema.domains.profileId, profileRow.id));
-  const domainIds = domainRows.map((d) => d.id);
-  const categoryRows = domainIds.length > 0
-    ? await db.select().from(sqliteSchema.categories).where(inArray(sqliteSchema.categories.domainId, domainIds))
-    : [];
-  const skillRows = await db.select().from(sqliteSchema.skills).where(eq(sqliteSchema.skills.profileId, profileRow.id));
-  const goalRows = await db.select().from(sqliteSchema.goals).where(eq(sqliteSchema.goals.profileId, profileRow.id));
-  const interestRows = await db.select().from(sqliteSchema.interests).where(eq(sqliteSchema.interests.profileId, profileRow.id));
-
-  return assembleProfile(profileRow, domainRows, categoryRows, skillRows, goalRows, interestRows);
-}
-
-function assembleProfile(
-  profileRow: { id: string; name: string; settings: unknown; createdAt: string | Date; updatedAt: string | Date },
-  domainRows: Array<{ id: string; slug: string; name: string; description: string | null; isBuiltIn: boolean }>,
-  categoryRows: Array<{ id: string; domainId: string; slug: string; name: string; description: string | null }>,
-  skillRows: Array<{ id: string; slug: string; name: string; domainId: string; categoryId: string; proficiency: string; notes: string | null; sources: unknown; usage: unknown; createdAt: string | Date; updatedAt: string | Date }>,
-  goalRows: Array<{ id: string; name: string; domainId: string; description: string | null; priority: string; status: string; progress: unknown; resources: unknown; targetDate: string | Date | null; createdAt: string | Date; updatedAt: string | Date }>,
-  interestRows: Array<{ id: string; name: string; domainId: string; description: string | null; createdAt: string | Date }>,
-): Profile {
   // Build domain → categories map
   const catsByDomain = new Map<string, Category[]>();
   for (const c of categoryRows) {
@@ -103,8 +67,8 @@ function assembleProfile(
     ...(s.notes != null && { notes: s.notes }),
     sources: (s.sources as Skill["sources"]) ?? [],
     usage: (s.usage as Skill["usage"]) ?? [],
-    createdAt: toDate(s.createdAt),
-    updatedAt: toDate(s.updatedAt),
+    createdAt: s.createdAt,
+    updatedAt: s.updatedAt,
   }));
 
   const goals: LearningGoal[] = goalRows.map((g) => ({
@@ -116,9 +80,9 @@ function assembleProfile(
     status: g.status as LearningGoal["status"],
     progress: (g.progress as LearningGoal["progress"]) ?? [],
     resources: (g.resources as LearningGoal["resources"]) ?? [],
-    ...(g.targetDate != null && { targetDate: toDate(g.targetDate) }),
-    createdAt: toDate(g.createdAt),
-    updatedAt: toDate(g.updatedAt),
+    ...(g.targetDate != null && { targetDate: g.targetDate }),
+    createdAt: g.createdAt,
+    updatedAt: g.updatedAt,
   }));
 
   const interests: Interest[] = interestRows.map((i) => ({
@@ -126,7 +90,7 @@ function assembleProfile(
     name: i.name,
     domainId: toDomainId(i.domainId),
     ...(i.description != null && { description: i.description }),
-    createdAt: toDate(i.createdAt),
+    createdAt: i.createdAt,
   }));
 
   return createProfile({
@@ -137,11 +101,7 @@ function assembleProfile(
     skills,
     goals,
     interests,
-    createdAt: toDate(profileRow.createdAt),
-    updatedAt: toDate(profileRow.updatedAt),
+    createdAt: profileRow.createdAt,
+    updatedAt: profileRow.updatedAt,
   });
-}
-
-function toDate(value: string | Date): Date {
-  return value instanceof Date ? value : new Date(value);
 }

@@ -1,55 +1,24 @@
-import { drizzle as drizzlePg } from "drizzle-orm/postgres-js";
-import { drizzle as drizzleSqlite } from "drizzle-orm/better-sqlite3";
+import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import Database from "better-sqlite3";
 
-import * as pgSchema from "./schema.pg.js";
-import * as sqliteSchema from "./schema.sqlite.js";
+import * as schema from "./schema.js";
 
-export type DbDialect = "postgres" | "sqlite";
-
-export type PgDatabase = ReturnType<typeof drizzlePg<typeof pgSchema>>;
-export type SqliteDatabase = ReturnType<typeof drizzleSqlite<typeof sqliteSchema>>;
-export type AnyDatabase = PgDatabase | SqliteDatabase;
+export type Database = ReturnType<typeof drizzle<typeof schema>>;
 
 export interface DbConnection {
-  readonly dialect: DbDialect;
-  readonly db: AnyDatabase;
+  readonly db: Database;
   readonly close: () => Promise<void>;
 }
 
-export function parseDialect(url: string): DbDialect {
-  if (url.startsWith("postgres://") || url.startsWith("postgresql://")) {
-    return "postgres";
-  }
-  if (url.startsWith("sqlite:")) {
-    return "sqlite";
-  }
-  throw new Error(`Unsupported DATABASE_URL format: "${url}". Use postgres://... or sqlite:...`);
-}
-
 export function createConnection(databaseUrl: string): DbConnection {
-  const dialect = parseDialect(databaseUrl);
-
-  if (dialect === "postgres") {
-    const client = postgres(databaseUrl);
-    const db = drizzlePg(client, { schema: pgSchema });
-    return {
-      dialect,
-      db,
-      close: async () => { await client.end(); },
-    };
+  if (!databaseUrl.startsWith("postgres://") && !databaseUrl.startsWith("postgresql://")) {
+    throw new Error(`DATABASE_URL must be a postgres:// URL. Got: "${databaseUrl}"`);
   }
 
-  // SQLite
-  const filePath = databaseUrl.replace(/^sqlite:/, "");
-  const client = new Database(filePath);
-  client.pragma("journal_mode = WAL");
-  client.pragma("foreign_keys = ON");
-  const db = drizzleSqlite(client, { schema: sqliteSchema });
+  const client = postgres(databaseUrl);
+  const db = drizzle(client, { schema });
   return {
-    dialect,
     db,
-    close: async () => { client.close(); },
+    close: async () => { await client.end(); },
   };
 }

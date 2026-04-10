@@ -15,8 +15,25 @@ jobs:
   # ── Test ───────────────────────────────────────────────────
   test:
     runs-on: ubuntu-24.04
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: dossier
+          POSTGRES_PASSWORD: dossier
+          POSTGRES_DB: dossier_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dossier"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      DATABASE_URL: postgres://dossier:dossier@localhost:5432/dossier_test
 
     steps:
       - uses: actions/checkout@v4

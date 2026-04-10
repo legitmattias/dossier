@@ -20,10 +20,10 @@ import { UuidIdGenerator } from "../db/id-generator.js";
 export const profileRoutes = new Hono<AppEnv>();
 
 function getDeps(c: { get(key: "dbConnection"): import("../db/connection.js").DbConnection; get(key: "userId"): string | undefined }) {
-  const dbConn = c.get("dbConnection");
+  const { db } = c.get("dbConnection");
   const userId = c.get("userId")!;
   return {
-    profileRepository: new DatabaseProfileRepository(dbConn, userId),
+    profileRepository: new DatabaseProfileRepository(db, userId),
     idGenerator: new UuidIdGenerator(),
   };
 }

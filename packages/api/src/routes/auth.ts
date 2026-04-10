@@ -3,9 +3,7 @@ import { randomUUID } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 
 import type { AppEnv } from "../app.js";
-import type { PgDatabase, SqliteDatabase } from "../db/connection.js";
-import * as pgSchema from "../db/schema.pg.js";
-import * as sqliteSchema from "../db/schema.sqlite.js";
+import * as schema from "../db/schema.js";
 import {
   createJwt,
   hashPassword,
@@ -38,67 +36,42 @@ authRoutes.post("/register", async (c) => {
     return c.json({ error: "Server misconfigured: JWT_SECRET not set" }, 500);
   }
 
-  const dbConn = c.get("dbConnection");
+  const { db } = c.get("dbConnection");
   const userId = randomUUID();
   const profileId = randomUUID();
   const passwordHash = await hashPassword(password);
-  const now = new Date();
 
   try {
-    if (dbConn.dialect === "postgres") {
-      const db = dbConn.db as PgDatabase;
+    await db.insert(schema.users).values({
+      id: userId, username, email, passwordHash,
+    });
 
-      await db.insert(pgSchema.users).values({
-        id: userId, username, email, passwordHash,
+    await db.insert(schema.profiles).values({
+      id: profileId, userId, name: name ?? username,
+    });
+
+    // Seed built-in domains
+    for (const domain of BUILT_IN_DOMAINS) {
+      await db.insert(schema.domains).values({
+        id: domain.id, profileId, slug: domain.slug, name: domain.name,
+        description: domain.description, isBuiltIn: true,
       });
-
-      await db.insert(pgSchema.profiles).values({
-        id: profileId, userId, name: name ?? username,
-      });
-
-      // Seed built-in domains
-      for (const domain of BUILT_IN_DOMAINS) {
-        await db.insert(pgSchema.domains).values({
-          id: domain.id, profileId, slug: domain.slug, name: domain.name,
-          description: domain.description, isBuiltIn: true,
+      for (const cat of domain.categories) {
+        await db.insert(schema.categories).values({
+          id: cat.id, domainId: domain.id, slug: cat.slug, name: cat.name,
+          description: cat.description,
         });
-        for (const cat of domain.categories) {
-          await db.insert(pgSchema.categories).values({
-            id: cat.id, domainId: domain.id, slug: cat.slug, name: cat.name,
-            description: cat.description,
-          });
-        }
-      }
-    } else {
-      const db = dbConn.db as SqliteDatabase;
-      const nowStr = now.toISOString();
-
-      await db.insert(sqliteSchema.users).values({
-        id: userId, username, email, passwordHash,
-        createdAt: nowStr, updatedAt: nowStr,
-      });
-
-      await db.insert(sqliteSchema.profiles).values({
-        id: profileId, userId, name: name ?? username,
-        createdAt: nowStr, updatedAt: nowStr,
-      });
-
-      for (const domain of BUILT_IN_DOMAINS) {
-        await db.insert(sqliteSchema.domains).values({
-          id: domain.id, profileId, slug: domain.slug, name: domain.name,
-          description: domain.description, isBuiltIn: true,
-        });
-        for (const cat of domain.categories) {
-          await db.insert(sqliteSchema.categories).values({
-            id: cat.id, domainId: domain.id, slug: cat.slug, name: cat.name,
-            description: cat.description,
-          });
-        }
       }
     }
   } catch (error: unknown) {
+    // Check for unique constraint violation (Postgres code 23505)
+    const pgCode = (error as { code?: string })?.code;
+    const cause = (error as { cause?: { code?: string } })?.cause;
+    if (pgCode === "23505" || cause?.code === "23505") {
+      return c.json({ error: "Username or email already exists" }, 409);
+    }
     const message = error instanceof Error ? error.message : String(error);
-    if (message.includes("unique") || message.includes("UNIQUE") || message.includes("duplicate")) {
+    if (message.includes("unique") || message.includes("duplicate") || message.includes("23505")) {
       return c.json({ error: "Username or email already exists" }, 409);
     }
     throw error;
@@ -122,18 +95,9 @@ authRoutes.post("/login", async (c) => {
     return c.json({ error: "Server misconfigured: JWT_SECRET not set" }, 500);
   }
 
-  const dbConn = c.get("dbConnection");
-  let user: { id: string; username: string; email: string; passwordHash: string } | undefined;
-
-  if (dbConn.dialect === "postgres") {
-    const db = dbConn.db as PgDatabase;
-    const rows = await db.select().from(pgSchema.users).where(eq(pgSchema.users.email, email));
-    user = rows[0];
-  } else {
-    const db = dbConn.db as SqliteDatabase;
-    const rows = await db.select().from(sqliteSchema.users).where(eq(sqliteSchema.users.email, email));
-    user = rows[0];
-  }
+  const { db } = c.get("dbConnection");
+  const rows = await db.select().from(schema.users).where(eq(schema.users.email, email));
+  const user = rows[0];
 
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return c.json({ error: "Invalid email or password" }, 401);
@@ -146,27 +110,14 @@ authRoutes.post("/login", async (c) => {
 // GET /auth/me
 authRoutes.get("/me", requireAuth, async (c) => {
   const userId = c.get("userId")!;
-  const dbConn = c.get("dbConnection");
+  const { db } = c.get("dbConnection");
 
-  let user: { id: string; username: string; email: string } | undefined;
-
-  if (dbConn.dialect === "postgres") {
-    const db = dbConn.db as PgDatabase;
-    const rows = await db.select({
-      id: pgSchema.users.id,
-      username: pgSchema.users.username,
-      email: pgSchema.users.email,
-    }).from(pgSchema.users).where(eq(pgSchema.users.id, userId));
-    user = rows[0];
-  } else {
-    const db = dbConn.db as SqliteDatabase;
-    const rows = await db.select({
-      id: sqliteSchema.users.id,
-      username: sqliteSchema.users.username,
-      email: sqliteSchema.users.email,
-    }).from(sqliteSchema.users).where(eq(sqliteSchema.users.id, userId));
-    user = rows[0];
-  }
+  const rows = await db.select({
+    id: schema.users.id,
+    username: schema.users.username,
+    email: schema.users.email,
+  }).from(schema.users).where(eq(schema.users.id, userId));
+  const user = rows[0];
 
   if (!user) {
     return c.json({ error: "User not found" }, 404);
@@ -189,22 +140,11 @@ authRoutes.post("/api-keys", requireAuth, async (c) => {
   const keyHash = await hashApiKey(rawKey);
   const id = randomUUID();
 
-  const dbConn = c.get("dbConnection");
-
-  if (dbConn.dialect === "postgres") {
-    const db = dbConn.db as PgDatabase;
-    await db.insert(pgSchema.apiKeys).values({
-      id, userId, name: body.name, keyHash, prefix,
-      scopes: body.scopes ?? "read",
-    });
-  } else {
-    const db = dbConn.db as SqliteDatabase;
-    await db.insert(sqliteSchema.apiKeys).values({
-      id, userId, name: body.name, keyHash, prefix,
-      scopes: body.scopes ?? "read",
-      createdAt: new Date().toISOString(),
-    });
-  }
+  const { db } = c.get("dbConnection");
+  await db.insert(schema.apiKeys).values({
+    id, userId, name: body.name, keyHash, prefix,
+    scopes: body.scopes ?? "read",
+  });
 
   // Return the raw key ONCE — it can't be retrieved later
   return c.json({ id, name: body.name, key: rawKey, prefix, scopes: body.scopes ?? "read" }, 201);
@@ -213,31 +153,16 @@ authRoutes.post("/api-keys", requireAuth, async (c) => {
 // GET /auth/api-keys — List all API keys (without hashes)
 authRoutes.get("/api-keys", requireAuth, async (c) => {
   const userId = c.get("userId")!;
-  const dbConn = c.get("dbConnection");
+  const { db } = c.get("dbConnection");
 
-  let keys: Array<{ id: string; name: string; prefix: string; scopes: string; lastUsedAt: string | Date | null; createdAt: string | Date }>;
-
-  if (dbConn.dialect === "postgres") {
-    const db = dbConn.db as PgDatabase;
-    keys = await db.select({
-      id: pgSchema.apiKeys.id,
-      name: pgSchema.apiKeys.name,
-      prefix: pgSchema.apiKeys.prefix,
-      scopes: pgSchema.apiKeys.scopes,
-      lastUsedAt: pgSchema.apiKeys.lastUsedAt,
-      createdAt: pgSchema.apiKeys.createdAt,
-    }).from(pgSchema.apiKeys).where(eq(pgSchema.apiKeys.userId, userId));
-  } else {
-    const db = dbConn.db as SqliteDatabase;
-    keys = await db.select({
-      id: sqliteSchema.apiKeys.id,
-      name: sqliteSchema.apiKeys.name,
-      prefix: sqliteSchema.apiKeys.prefix,
-      scopes: sqliteSchema.apiKeys.scopes,
-      lastUsedAt: sqliteSchema.apiKeys.lastUsedAt,
-      createdAt: sqliteSchema.apiKeys.createdAt,
-    }).from(sqliteSchema.apiKeys).where(eq(sqliteSchema.apiKeys.userId, userId));
-  }
+  const keys = await db.select({
+    id: schema.apiKeys.id,
+    name: schema.apiKeys.name,
+    prefix: schema.apiKeys.prefix,
+    scopes: schema.apiKeys.scopes,
+    lastUsedAt: schema.apiKeys.lastUsedAt,
+    createdAt: schema.apiKeys.createdAt,
+  }).from(schema.apiKeys).where(eq(schema.apiKeys.userId, userId));
 
   return c.json({ keys });
 });
@@ -246,22 +171,14 @@ authRoutes.get("/api-keys", requireAuth, async (c) => {
 authRoutes.delete("/api-keys/:id", requireAuth, async (c) => {
   const userId = c.get("userId")!;
   const keyId = c.req.param("id");
-  const dbConn = c.get("dbConnection");
+  const { db } = c.get("dbConnection");
 
-  if (dbConn.dialect === "postgres") {
-    const db = dbConn.db as PgDatabase;
-    const result = await db.delete(pgSchema.apiKeys)
-      .where(and(eq(pgSchema.apiKeys.id, keyId), eq(pgSchema.apiKeys.userId, userId)))
-      .returning();
-    if (result.length === 0) return c.json({ error: "Key not found" }, 404);
-  } else {
-    const db = dbConn.db as SqliteDatabase;
-    const existing = await db.select({ id: sqliteSchema.apiKeys.id })
-      .from(sqliteSchema.apiKeys)
-      .where(and(eq(sqliteSchema.apiKeys.id, keyId), eq(sqliteSchema.apiKeys.userId, userId)));
-    if (existing.length === 0) return c.json({ error: "Key not found" }, 404);
-    await db.delete(sqliteSchema.apiKeys)
-      .where(and(eq(sqliteSchema.apiKeys.id, keyId), eq(sqliteSchema.apiKeys.userId, userId)));
+  const result = await db.delete(schema.apiKeys)
+    .where(and(eq(schema.apiKeys.id, keyId), eq(schema.apiKeys.userId, userId)))
+    .returning();
+
+  if (result.length === 0) {
+    return c.json({ error: "Key not found" }, 404);
   }
 
   return c.json({ revoked: true });
