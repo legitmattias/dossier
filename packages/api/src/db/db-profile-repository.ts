@@ -26,61 +26,63 @@ export class DatabaseProfileRepository implements application.IProfileRepository
     if (!profileRow[0]) return;
     const profileId = profileRow[0].id;
 
-    // Update profile metadata
-    await this.db.update(schema.profiles).set({
-      name: profile.name,
-      settings: profile.settings,
-      updatedAt: new Date(),
-    }).where(eq(schema.profiles.id, profileId));
+    await this.db.transaction(async (tx) => {
+      // Update profile metadata
+      await tx.update(schema.profiles).set({
+        name: profile.name,
+        settings: profile.settings,
+        updatedAt: new Date(),
+      }).where(eq(schema.profiles.id, profileId));
 
-    // Delete all children first (FK-safe order: leaves → parents)
-    await this.db.delete(schema.skills).where(eq(schema.skills.profileId, profileId));
-    await this.db.delete(schema.goals).where(eq(schema.goals.profileId, profileId));
-    await this.db.delete(schema.interests).where(eq(schema.interests.profileId, profileId));
-    for (const domain of profile.domains) {
-      await this.db.delete(schema.categories).where(eq(schema.categories.domainId, domain.id));
-    }
-    await this.db.delete(schema.domains).where(eq(schema.domains.profileId, profileId));
-
-    // Re-insert in parent-first order: domains → categories → skills, goals, interests
-    for (const domain of profile.domains) {
-      await this.db.insert(schema.domains).values({
-        id: domain.id, profileId, slug: domain.slug, name: domain.name,
-        description: domain.description, isBuiltIn: domain.isBuiltIn,
-      }).onConflictDoNothing();
-      for (const cat of domain.categories) {
-        await this.db.insert(schema.categories).values({
-          id: cat.id, domainId: domain.id, slug: cat.slug, name: cat.name,
-          description: cat.description,
-        }).onConflictDoNothing();
+      // Delete all children first (FK-safe order: leaves → parents)
+      await tx.delete(schema.skills).where(eq(schema.skills.profileId, profileId));
+      await tx.delete(schema.goals).where(eq(schema.goals.profileId, profileId));
+      await tx.delete(schema.interests).where(eq(schema.interests.profileId, profileId));
+      for (const domain of profile.domains) {
+        await tx.delete(schema.categories).where(eq(schema.categories.domainId, domain.id));
       }
-    }
+      await tx.delete(schema.domains).where(eq(schema.domains.profileId, profileId));
 
-    for (const skill of profile.skills) {
-      await this.db.insert(schema.skills).values({
-        id: skill.id, profileId, slug: skill.slug, name: skill.name,
-        domainId: skill.domainId, categoryId: skill.categoryId,
-        proficiency: skill.proficiency, notes: skill.notes,
-        sources: skill.sources, usage: skill.usage,
-        createdAt: skill.createdAt, updatedAt: skill.updatedAt,
-      });
-    }
+      // Re-insert in parent-first order: domains → categories → skills, goals, interests
+      for (const domain of profile.domains) {
+        await tx.insert(schema.domains).values({
+          id: domain.id, profileId, slug: domain.slug, name: domain.name,
+          description: domain.description, isBuiltIn: domain.isBuiltIn,
+        }).onConflictDoNothing();
+        for (const cat of domain.categories) {
+          await tx.insert(schema.categories).values({
+            id: cat.id, domainId: domain.id, slug: cat.slug, name: cat.name,
+            description: cat.description,
+          }).onConflictDoNothing();
+        }
+      }
 
-    for (const goal of profile.goals) {
-      await this.db.insert(schema.goals).values({
-        id: goal.id, profileId, name: goal.name, domainId: goal.domainId,
-        description: goal.description, priority: goal.priority, status: goal.status,
-        progress: goal.progress, resources: goal.resources,
-        targetDate: goal.targetDate, createdAt: goal.createdAt, updatedAt: goal.updatedAt,
-      });
-    }
+      for (const skill of profile.skills) {
+        await tx.insert(schema.skills).values({
+          id: skill.id, profileId, slug: skill.slug, name: skill.name,
+          domainId: skill.domainId, categoryId: skill.categoryId,
+          proficiency: skill.proficiency, notes: skill.notes,
+          sources: skill.sources, usage: skill.usage,
+          createdAt: skill.createdAt, updatedAt: skill.updatedAt,
+        });
+      }
 
-    for (const interest of profile.interests) {
-      await this.db.insert(schema.interests).values({
-        id: interest.id, profileId, name: interest.name, domainId: interest.domainId,
-        description: interest.description, createdAt: interest.createdAt,
-      });
-    }
+      for (const goal of profile.goals) {
+        await tx.insert(schema.goals).values({
+          id: goal.id, profileId, name: goal.name, domainId: goal.domainId,
+          description: goal.description, priority: goal.priority, status: goal.status,
+          progress: goal.progress, resources: goal.resources,
+          targetDate: goal.targetDate, createdAt: goal.createdAt, updatedAt: goal.updatedAt,
+        });
+      }
+
+      for (const interest of profile.interests) {
+        await tx.insert(schema.interests).values({
+          id: interest.id, profileId, name: interest.name, domainId: interest.domainId,
+          description: interest.description, createdAt: interest.createdAt,
+        });
+      }
+    });
   }
 
   async exists(): Promise<boolean> {
