@@ -205,3 +205,56 @@ authRoutes.post("/api-keys", requireAuth, async (c) => {
   // Return the raw key ONCE — it can't be retrieved later
   return c.json({ id, name: body.name, key: rawKey, prefix, scopes: body.scopes ?? "read" }, 201);
 });
+
+// GET /auth/api-keys — List all API keys (without hashes)
+authRoutes.get("/api-keys", requireAuth, async (c) => {
+  const userId = c.get("userId")!;
+  const dbConn = c.get("dbConnection");
+
+  let keys: Array<{ id: string; name: string; prefix: string; scopes: string; lastUsedAt: string | Date | null; createdAt: string | Date }>;
+
+  if (dbConn.dialect === "postgres") {
+    const db = dbConn.db as PgDatabase;
+    keys = await db.select({
+      id: pgSchema.apiKeys.id,
+      name: pgSchema.apiKeys.name,
+      prefix: pgSchema.apiKeys.prefix,
+      scopes: pgSchema.apiKeys.scopes,
+      lastUsedAt: pgSchema.apiKeys.lastUsedAt,
+      createdAt: pgSchema.apiKeys.createdAt,
+    }).from(pgSchema.apiKeys).where(eq(pgSchema.apiKeys.userId, userId));
+  } else {
+    const db = dbConn.db as SqliteDatabase;
+    keys = await db.select({
+      id: sqliteSchema.apiKeys.id,
+      name: sqliteSchema.apiKeys.name,
+      prefix: sqliteSchema.apiKeys.prefix,
+      scopes: sqliteSchema.apiKeys.scopes,
+      lastUsedAt: sqliteSchema.apiKeys.lastUsedAt,
+      createdAt: sqliteSchema.apiKeys.createdAt,
+    }).from(sqliteSchema.apiKeys).where(eq(sqliteSchema.apiKeys.userId, userId));
+  }
+
+  return c.json({ keys });
+});
+
+// DELETE /auth/api-keys/:id — Revoke an API key
+authRoutes.delete("/api-keys/:id", requireAuth, async (c) => {
+  const userId = c.get("userId")!;
+  const keyId = c.req.param("id");
+  const dbConn = c.get("dbConnection");
+
+  if (dbConn.dialect === "postgres") {
+    const db = dbConn.db as PgDatabase;
+    const result = await db.delete(pgSchema.apiKeys)
+      .where(eq(pgSchema.apiKeys.id, keyId))
+      .returning();
+    if (result.length === 0) return c.json({ error: "Key not found" }, 404);
+  } else {
+    const db = dbConn.db as SqliteDatabase;
+    await db.delete(sqliteSchema.apiKeys)
+      .where(eq(sqliteSchema.apiKeys.id, keyId));
+  }
+
+  return c.json({ revoked: true });
+});
