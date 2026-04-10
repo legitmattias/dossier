@@ -1,0 +1,50 @@
+# Stage 1: Build
+FROM node:22-slim AS builder
+
+RUN corepack enable pnpm
+
+WORKDIR /app
+
+# Copy workspace config and lockfile
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+
+# Copy package.json for web package only
+COPY packages/web/package.json packages/web/
+
+# Install dependencies
+RUN CI=true pnpm install --frozen-lockfile
+
+# Copy source
+COPY packages/web/ packages/web/
+
+# Build Remix app
+RUN pnpm --filter @dossier/web run build
+
+# Stage 2: Production
+FROM node:22-slim AS runtime
+
+RUN groupadd --system dossier && useradd --system --gid dossier dossier
+
+WORKDIR /app
+
+# Copy package files and lockfile for remix-serve
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/pnpm-lock.yaml ./
+COPY --from=builder /app/packages/web/package.json packages/web/
+COPY --from=builder /app/packages/web/build packages/web/build
+
+# Install production deps only
+RUN corepack enable pnpm && CI=true pnpm install --frozen-lockfile --prod
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOST=0.0.0.0
+
+EXPOSE 3000
+
+USER dossier
+
+WORKDIR /app/packages/web
+
+CMD ["npx", "remix-serve", "./build/server/index.js"]

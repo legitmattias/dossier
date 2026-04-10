@@ -9,6 +9,7 @@ env:
   REGISTRY: ghcr.io
   API_IMAGE: ghcr.io/legitmattias/dossier-api
   MCP_IMAGE: ghcr.io/legitmattias/dossier-mcp
+  WEB_IMAGE: ghcr.io/legitmattias/dossier-web
 
 jobs:
   # ── Test ───────────────────────────────────────────────────
@@ -76,6 +77,18 @@ jobs:
           cache-from: type=gha,scope=mcp
           cache-to: type=gha,scope=mcp,mode=max
 
+      - name: Build and push Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.web
+          push: true
+          tags: |
+            ${{ env.WEB_IMAGE }}:${{ github.sha }}
+            ${{ env.WEB_IMAGE }}:latest
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+
   # ── Deploy ────────────────────────────────────────────────
   deploy:
     needs: build-and-push
@@ -105,4 +118,5 @@ jobs:
             sleep 10
             curl -sf http://localhost:3200/health || (echo "API health check failed" && exit 1)
             curl -sf -X OPTIONS http://localhost:3150/mcp || (echo "MCP health check failed" && exit 1)
+            curl -sf http://localhost:3300 || (echo "Web health check failed" && exit 1)
             echo "Deploy complete."
