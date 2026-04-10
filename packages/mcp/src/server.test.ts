@@ -10,8 +10,9 @@ import {
 import type { Profile } from "@dossier/core";
 import { application } from "@dossier/core";
 
+import { infrastructure } from "@dossier/core";
 import { createDossierMcpServer } from "./server.js";
-import type { DossierMcpDeps } from "./server.js";
+import type { DossierOperations } from "./operations.js";
 
 // --- Test infrastructure ---
 
@@ -44,6 +45,39 @@ class StubIdGenerator implements application.IIdGenerator {
   }
 }
 
+/** Test operations backed by in-memory repository */
+function createTestOperations(repo: InMemoryProfileRepository, idGen: StubIdGenerator): DossierOperations {
+  const deps = { profileRepository: repo, idGenerator: idGen };
+  const readDeps = { profileRepository: repo };
+  return {
+    getProfile: () => repo.load(),
+    getDomains: async () => { const p = await repo.load(); return p ? [...p.domains] : []; },
+    addSkill: (input) => application.addSkill(deps, input),
+    listSkills: (input) => application.listSkills(readDeps, input),
+    updateSkill: (input) => application.updateSkill(readDeps, input),
+    removeSkill: (input) => application.removeSkill(readDeps, input),
+    addGoal: (input) => application.addLearningGoal(deps, input),
+    listGoals: async (input) => {
+      const p = await repo.load();
+      if (!p) return { goals: [] };
+      let goals = [...p.goals];
+      if (input?.status) goals = goals.filter((g) => g.status === input.status);
+      return { goals: goals.map(application.toGoalOutput) };
+    },
+    updateGoalProgress: (input) => application.updateGoalProgress(readDeps, input),
+    completeGoal: (input) => application.completeGoal(deps, input),
+    addInterest: (input) => application.addInterest(deps, input),
+    removeInterest: (input) => application.removeInterest(readDeps, input),
+    addDomain: (input) => application.addDomain(deps, input),
+    addCategory: (input) => application.addCategory(deps, input),
+    exportProfile: async (format) => {
+      const exporter = infrastructure.createExporter(format);
+      const result = await application.exportProfile({ profileRepository: repo, exporter });
+      return result.content;
+    },
+  };
+}
+
 function createTestProfile(): Profile {
   let profile = createProfile({
     id: toProfileId("test-profile"),
@@ -59,14 +93,14 @@ function createTestProfile(): Profile {
 
 let client: Client;
 let repo: InMemoryProfileRepository;
-let deps: DossierMcpDeps;
 
 beforeEach(async () => {
   repo = new InMemoryProfileRepository();
-  deps = { profileRepository: repo, idGenerator: new StubIdGenerator() };
+  const idGen = new StubIdGenerator();
   await repo.save(createTestProfile());
 
-  const server = createDossierMcpServer(deps);
+  const ops = createTestOperations(repo, idGen);
+  const server = createDossierMcpServer(ops);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await server.connect(serverTransport);
 

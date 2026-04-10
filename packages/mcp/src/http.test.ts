@@ -10,11 +10,12 @@ import {
 import type { Profile } from "@dossier/core";
 import { application } from "@dossier/core";
 
+import { infrastructure } from "@dossier/core";
 import { createDossierMcpServer } from "./server.js";
 import { startHttpServer } from "./http.js";
-import type { DossierMcpDeps } from "./server.js";
+import type { DossierOperations } from "./operations.js";
 
-// --- Test infrastructure (same as server.test.ts) ---
+// --- Test infrastructure ---
 
 class InMemoryProfileRepository implements application.IProfileRepository {
   private profile: Profile | null = null;
@@ -41,6 +42,39 @@ class StubIdGenerator implements application.IIdGenerator {
   }
 }
 
+function createTestOps(repo: InMemoryProfileRepository): DossierOperations {
+  const idGen = new StubIdGenerator();
+  const deps = { profileRepository: repo, idGenerator: idGen };
+  const readDeps = { profileRepository: repo };
+  return {
+    getProfile: () => repo.load(),
+    getDomains: async () => { const p = await repo.load(); return p ? [...p.domains] : []; },
+    addSkill: (input) => application.addSkill(deps, input),
+    listSkills: (input) => application.listSkills(readDeps, input),
+    updateSkill: (input) => application.updateSkill(readDeps, input),
+    removeSkill: (input) => application.removeSkill(readDeps, input),
+    addGoal: (input) => application.addLearningGoal(deps, input),
+    listGoals: async (input) => {
+      const p = await repo.load();
+      if (!p) return { goals: [] };
+      let goals = [...p.goals];
+      if (input?.status) goals = goals.filter((g) => g.status === input.status);
+      return { goals: goals.map(application.toGoalOutput) };
+    },
+    updateGoalProgress: (input) => application.updateGoalProgress(readDeps, input),
+    completeGoal: (input) => application.completeGoal(deps, input),
+    addInterest: (input) => application.addInterest(deps, input),
+    removeInterest: (input) => application.removeInterest(readDeps, input),
+    addDomain: (input) => application.addDomain(deps, input),
+    addCategory: (input) => application.addCategory(deps, input),
+    exportProfile: async (format) => {
+      const exporter = infrastructure.createExporter(format);
+      const result = await application.exportProfile({ profileRepository: repo, exporter });
+      return result.content;
+    },
+  };
+}
+
 function createTestProfile(): Profile {
   let profile = createProfile({
     id: toProfileId("test-profile"),
@@ -65,18 +99,10 @@ describe("HTTP transport", () => {
   beforeEach(async () => {
     testPort++;
     repo = new InMemoryProfileRepository();
-    const deps: DossierMcpDeps = {
-      profileRepository: repo,
-      idGenerator: new StubIdGenerator(),
-    };
     await repo.save(createTestProfile());
 
-    // Start HTTP server — we use a factory function since each session creates a new server
-    const serverFactory = () => createDossierMcpServer(deps);
-
-    // We need to capture the http server for cleanup. Since startHttpServer
-    // doesn't return it, we'll use the MCP client directly.
-    await startHttpServer(createDossierMcpServer(deps), {
+    const ops = createTestOps(repo);
+    await startHttpServer(createDossierMcpServer(ops), {
       port: testPort,
       host: "127.0.0.1",
       apiKey: "test-secret",

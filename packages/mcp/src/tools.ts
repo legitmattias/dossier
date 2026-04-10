@@ -1,23 +1,12 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import {
-  application,
-  infrastructure,
-  PROFICIENCY_LEVELS,
-  createDomain,
-  createCategory,
-  addDomainToProfile,
-  addCategoryToDomain,
-  findDomainInProfile,
-  toDomainId,
-  toCategoryId,
-} from "@dossier/core";
+import { PROFICIENCY_LEVELS, application } from "@dossier/core";
 
-import type { DossierMcpDeps } from "./server.js";
+import type { DossierOperations } from "./operations.js";
 import { log } from "./logger.js";
 
-export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
+export function registerTools(server: McpServer, ops: DossierOperations): void {
   server.registerTool(
     "dossier_add_skill",
     {
@@ -32,12 +21,8 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     withErrorHandler(async (input) => {
-      const profile = await deps.profileRepository.load();
-      if (!profile) throw new Error("No profile found.");
-      const domainId = resolveDomainId(profile, input.domainId);
-      const domain = findDomainInProfile(profile, domainId);
-      const categoryId = resolveCategoryId(domain, input.categoryId);
-      const result = await application.addSkill(deps, { ...input, domainId, categoryId });
+      const { domainId, categoryId } = await resolveIds(ops, input.domainId, input.categoryId);
+      const result = await ops.addSkill({ ...input, domainId, categoryId });
       return ok(`Added skill: ${result.skill.name} (${result.skill.proficiency})`);
     }),
   );
@@ -48,55 +33,32 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       title: "List Skills",
       description: "List skills with optional filters. Returns skill names, proficiency levels, domain, and category.",
       inputSchema: z.object({
-        domainId: z.string().optional().describe("Filter by domain ID"),
+        domainId: z.string().optional().describe("Filter by domain ID, slug, or name"),
         categoryId: z.string().optional().describe("Filter by category ID"),
         proficiency: z.enum(PROFICIENCY_LEVELS).optional().describe("Filter by proficiency level"),
       }),
     },
     withErrorHandler(async (input) => {
-      const profile = await deps.profileRepository.load();
-      if (!profile) throw new Error("No profile found.");
-      const resolvedInput = input.domainId ? { ...input, domainId: resolveDomainId(profile, input.domainId) } : input;
-      const result = await application.listSkills(deps, resolvedInput);
+      let resolvedDomainId: string | undefined;
+      if (input.domainId) {
+        const profile = await ops.getProfile();
+        if (profile) {
+          const domain = application.resolveDomainInProfile(profile, input.domainId);
+          resolvedDomainId = domain.id;
+        }
+      }
+      const result = await ops.listSkills({ ...input, domainId: resolvedDomainId });
       if (result.skills.length === 0) {
         return ok("No skills found matching the filters.");
       }
-      // Build name lookup maps
-      const domainNames = new Map(profile.domains.map((d) => [d.id, d.name]));
-      const categoryNames = new Map(profile.domains.flatMap((d) => d.categories.map((c) => [c.id, c.name])));
+      const domains = await ops.getDomains();
+      const domainNames = new Map(domains.map((d) => [d.id, d.name]));
+      const categoryNames = new Map(domains.flatMap((d) => d.categories.map((c) => [c.id, c.name])));
       const lines = result.skills.map((s) => {
         const domain = domainNames.get(s.domainId) ?? s.domainId;
         const category = categoryNames.get(s.categoryId) ?? s.categoryId;
         return `- ${s.name} (${s.proficiency}) [${domain} > ${category}]`;
       });
-      return ok(lines.join("\n"));
-    }),
-  );
-
-  server.registerTool(
-    "dossier_list_goals",
-    {
-      title: "List Learning Goals",
-      description: "List learning goals with optional status filter.",
-      inputSchema: z.object({
-        status: z.enum(["active", "paused", "completed", "abandoned"]).optional().describe("Filter by goal status"),
-      }),
-    },
-    withErrorHandler(async (input) => {
-      const profile = await deps.profileRepository.load();
-      if (!profile) {
-        return ok("No profile found.");
-      }
-      let goals = [...profile.goals];
-      if (input.status) {
-        goals = goals.filter((g) => g.status === input.status);
-      }
-      if (goals.length === 0) {
-        return ok("No goals found matching the filter.");
-      }
-      const lines = goals.map((g) =>
-        `- ${g.name} (${g.status}, ${g.priority} priority)`,
-      );
       return ok(lines.join("\n"));
     }),
   );
@@ -114,7 +76,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     withErrorHandler(async (input) => {
-      const result = await application.updateSkill(deps, input);
+      const result = await ops.updateSkill(input);
       return ok(`Updated skill: ${result.skill.name} (${result.skill.proficiency})`);
     }),
   );
@@ -129,7 +91,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     withErrorHandler(async (input) => {
-      await application.removeSkill(deps, input);
+      await ops.removeSkill(input);
       return ok("Skill removed.");
     }),
   );
@@ -148,11 +110,32 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     withErrorHandler(async (input) => {
-      const profile = await deps.profileRepository.load();
+      const profile = await ops.getProfile();
       if (!profile) throw new Error("No profile found.");
-      const domainId = resolveDomainId(profile, input.domainId);
-      const result = await application.addLearningGoal(deps, { ...input, domainId });
+      const domain = application.resolveDomainInProfile(profile, input.domainId);
+      const result = await ops.addGoal({ ...input, domainId: domain.id });
       return ok(`Added goal: ${result.goal.name} (${result.goal.priority} priority)`);
+    }),
+  );
+
+  server.registerTool(
+    "dossier_list_goals",
+    {
+      title: "List Learning Goals",
+      description: "List learning goals with optional status filter.",
+      inputSchema: z.object({
+        status: z.enum(["active", "paused", "completed", "abandoned"]).optional().describe("Filter by goal status"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.listGoals(input);
+      if (result.goals.length === 0) {
+        return ok("No goals found matching the filter.");
+      }
+      const lines = result.goals.map((g) =>
+        `- ${g.name} (${g.status}, ${g.priority} priority)`,
+      );
+      return ok(lines.join("\n"));
     }),
   );
 
@@ -168,7 +151,7 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     withErrorHandler(async (input) => {
-      const result = await application.updateGoalProgress(deps, input);
+      const result = await ops.updateGoalProgress(input);
       const latest = result.goal.progress[result.goal.progress.length - 1];
       return ok(`Updated goal: ${result.goal.name} → ${latest?.percentage ?? input.percentage}%`);
     }),
@@ -181,19 +164,19 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       description: "Mark a learning goal as completed and create a corresponding skill.",
       inputSchema: z.object({
         goalId: z.string().describe("Goal ID to complete"),
-        categoryId: z.string().describe("Category ID for the new skill"),
-        proficiency: z.enum(PROFICIENCY_LEVELS).optional().describe("Initial proficiency for the new skill (default: novice)"),
+        categoryId: z.string().describe("Category ID, slug, or name for the new skill"),
+        proficiency: z.enum(PROFICIENCY_LEVELS).optional().describe("Initial proficiency (default: novice)"),
       }),
     },
     withErrorHandler(async (input) => {
-      const profile = await deps.profileRepository.load();
+      const profile = await ops.getProfile();
       if (!profile) throw new Error("No profile found.");
-      // Resolve categoryId within the goal's domain
       const goal = profile.goals.find((g) => g.id === input.goalId);
       if (!goal) throw new Error(`Goal not found: ${input.goalId}`);
-      const domain = findDomainInProfile(profile, goal.domainId);
-      const categoryId = resolveCategoryId(domain, input.categoryId);
-      const result = await application.completeGoal(deps, { ...input, categoryId });
+      const domain = profile.domains.find((d) => d.id === goal.domainId);
+      if (!domain) throw new Error("Domain not found for goal");
+      const category = application.resolveCategoryInDomain(domain, input.categoryId);
+      const result = await ops.completeGoal({ ...input, categoryId: category.id });
       return ok(`Completed goal: ${result.goal.name}. Created skill: ${result.skill.name} (${result.skill.proficiency})`);
     }),
   );
@@ -210,10 +193,10 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     withErrorHandler(async (input) => {
-      const profile = await deps.profileRepository.load();
+      const profile = await ops.getProfile();
       if (!profile) throw new Error("No profile found.");
-      const domainId = resolveDomainId(profile, input.domainId);
-      const result = await application.addInterest(deps, { ...input, domainId });
+      const domain = application.resolveDomainInProfile(profile, input.domainId);
+      const result = await ops.addInterest({ ...input, domainId: domain.id });
       return ok(`Added interest: ${result.interest.name}`);
     }),
   );
@@ -222,19 +205,16 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
     "dossier_mark_used",
     {
       title: "Mark Skill Used",
-      description: "Record that a skill was used recently. Updates the skill's usage freshness.",
+      description: "Record that a skill was used recently.",
       inputSchema: z.object({
         skillId: z.string().describe("Skill ID to mark as used"),
-        context: z.string().optional().describe("Usage context (e.g. 'work project', 'side project')"),
+        context: z.string().optional().describe("Usage context (e.g. 'work project')"),
       }),
     },
     withErrorHandler(async (input) => {
-      const result = await application.updateSkill(deps, {
+      const result = await ops.updateSkill({
         skillId: input.skillId,
-        addUsage: [{
-          context: input.context ?? "Used",
-          lastUsed: new Date(),
-        }],
+        addUsage: [{ context: input.context ?? "Used", lastUsed: new Date() }],
       });
       return ok(`Marked as used: ${result.skill.name}`);
     }),
@@ -244,22 +224,15 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
     "dossier_add_domain",
     {
       title: "Add Custom Domain",
-      description: "Add a new custom knowledge domain (e.g. 'Music', 'Design'). Domains organize skills and goals into broad fields.",
+      description: "Add a new custom knowledge domain (e.g. 'Music', 'Design').",
       inputSchema: z.object({
-        name: z.string().describe("Domain name (e.g. 'Music', 'Design', 'Data Science')"),
-        description: z.string().optional().describe("Brief description of the domain"),
+        name: z.string().describe("Domain name"),
+        description: z.string().optional().describe("Brief description"),
       }),
     },
     withErrorHandler(async (input) => {
-      const profile = await deps.profileRepository.load();
-      if (!profile) throw new Error("No profile found.");
-
-      const id = toDomainId(deps.idGenerator.generate("domain"));
-      const slug = application.slugify(input.name);
-      const domain = createDomain({ id, slug, name: input.name, description: input.description });
-      const updated = addDomainToProfile(profile, domain);
-      await deps.profileRepository.save(updated);
-      return ok(`Added domain: ${domain.name} (id: ${domain.id}, slug: ${domain.slug})`);
+      const result = await ops.addDomain(input);
+      return ok(`Added domain: ${result.domain.name} (id: ${result.domain.id}, slug: ${result.domain.slug})`);
     }),
   );
 
@@ -267,31 +240,19 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
     "dossier_add_category",
     {
       title: "Add Category to Domain",
-      description: "Add a new category to an existing domain (e.g. add 'instrument' to 'Music'). Categories classify skills within a domain.",
+      description: "Add a new category to an existing domain.",
       inputSchema: z.object({
         domainId: z.string().describe("Domain ID, slug, or name"),
-        name: z.string().describe("Category name (e.g. 'Instrument', 'Genre', 'Cloud Service')"),
-        description: z.string().optional().describe("Brief description of the category"),
+        name: z.string().describe("Category name"),
+        description: z.string().optional().describe("Brief description"),
       }),
     },
     withErrorHandler(async (input) => {
-      const profile = await deps.profileRepository.load();
+      const profile = await ops.getProfile();
       if (!profile) throw new Error("No profile found.");
-
-      const domainId = resolveDomainId(profile, input.domainId);
-      const domain = findDomainInProfile(profile, domainId);
-      const categoryId = toCategoryId(deps.idGenerator.generate("category"));
-      const slug = application.slugify(input.name);
-      const category = createCategory({ id: categoryId, slug, name: input.name, description: input.description });
-      const updatedDomain = addCategoryToDomain(domain, category);
-
-      const updatedProfile = {
-        ...profile,
-        domains: profile.domains.map((d) => d.id === domainId ? updatedDomain : d),
-        updatedAt: new Date(),
-      };
-      await deps.profileRepository.save(updatedProfile);
-      return ok(`Added category: ${category.name} (id: ${categoryId}, slug: ${category.slug}) to domain ${domain.name}`);
+      const domain = application.resolveDomainInProfile(profile, input.domainId);
+      const result = await ops.addCategory({ ...input, domainId: domain.id });
+      return ok(`Added category: ${result.category.name} (id: ${result.category.id}) to domain ${domain.name}`);
     }),
   );
 
@@ -305,11 +266,8 @@ export function registerTools(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     withErrorHandler(async (input) => {
-      const exporter = infrastructure.createExporter(input.format);
-      const result = await application.exportProfile(
-        { profileRepository: deps.profileRepository, exporter },
-      );
-      return { content: [{ type: "text", text: result.content }] };
+      const content = await ops.exportProfile(input.format);
+      return { content: [{ type: "text", text: content }] };
     }),
   );
 }
@@ -336,40 +294,14 @@ function withErrorHandler<T>(handler: ToolHandler<T>): ToolHandler<T> {
   };
 }
 
-/**
- * Resolve a domain by ID or slug. Accepts either the full internal ID
- * (e.g. "domain-7607c507-...") or the human-friendly slug (e.g. "hobbies").
- */
-function resolveDomainId(profile: import("@dossier/core").Profile, idOrSlug: string): import("@dossier/core").DomainId {
-  // Try exact ID match first
-  const byId = profile.domains.find((d) => d.id === idOrSlug);
-  if (byId) return byId.id;
-
-  // Fall back to slug match
-  const bySlug = profile.domains.find((d) => d.slug === idOrSlug);
-  if (bySlug) return bySlug.id;
-
-  // Fall back to case-insensitive name match
-  const lower = idOrSlug.toLowerCase();
-  const byName = profile.domains.find((d) => d.name.toLowerCase() === lower);
-  if (byName) return byName.id;
-
-  throw new Error(`Domain not found: "${idOrSlug}". Use dossier://domains resource to see available domains.`);
-}
-
-/**
- * Resolve a category by ID or slug within a domain.
- */
-function resolveCategoryId(domain: import("@dossier/core").Domain, idOrSlug: string): import("@dossier/core").CategoryId {
-  const byId = domain.categories.find((c) => c.id === idOrSlug);
-  if (byId) return byId.id;
-
-  const bySlug = domain.categories.find((c) => c.slug === idOrSlug);
-  if (bySlug) return bySlug.id;
-
-  const lower = idOrSlug.toLowerCase();
-  const byName = domain.categories.find((c) => c.name.toLowerCase() === lower);
-  if (byName) return byName.id;
-
-  throw new Error(`Category not found: "${idOrSlug}" in domain "${domain.name}". Available: ${domain.categories.map((c) => c.slug).join(", ")}`);
+async function resolveIds(
+  ops: DossierOperations,
+  domainIdOrSlug: string,
+  categoryIdOrSlug: string,
+): Promise<{ domainId: string; categoryId: string }> {
+  const profile = await ops.getProfile();
+  if (!profile) throw new Error("No profile found.");
+  const domain = application.resolveDomainInProfile(profile, domainIdOrSlug);
+  const category = application.resolveCategoryInDomain(domain, categoryIdOrSlug);
+  return { domainId: domain.id, categoryId: category.id };
 }

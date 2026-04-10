@@ -3,11 +3,9 @@ import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ReadResourceResult } from "@modelcontextprotocol/sdk/types.js";
 import { infrastructure } from "@dossier/core";
 
-import type { DossierMcpDeps } from "./server.js";
+import type { DossierOperations } from "./operations.js";
 
-export function registerResources(server: McpServer, deps: DossierMcpDeps): void {
-  const { profileRepository } = deps;
-
+export function registerResources(server: McpServer, ops: DossierOperations): void {
   // Full profile as JSON
   server.registerResource(
     "profile",
@@ -18,7 +16,8 @@ export function registerResources(server: McpServer, deps: DossierMcpDeps): void
       mimeType: "application/json",
     },
     async (uri): Promise<ReadResourceResult> => {
-      const profile = await loadProfileOrThrow(profileRepository);
+      const profile = await ops.getProfile();
+      if (!profile) throw new Error("No Dossier profile found. Run 'dossier init' to create one.");
       const serialized = infrastructure.serializeProfile(profile);
       return {
         contents: [{ uri: uri.href, text: JSON.stringify(serialized, null, 2) }],
@@ -36,11 +35,8 @@ export function registerResources(server: McpServer, deps: DossierMcpDeps): void
       mimeType: "text/markdown",
     },
     async (uri): Promise<ReadResourceResult> => {
-      const profile = await loadProfileOrThrow(profileRepository);
-      const exporter = new infrastructure.ClaudeMdExporter();
-      return {
-        contents: [{ uri: uri.href, text: exporter.export(profile) }],
-      };
+      const text = await ops.exportProfile("claude");
+      return { contents: [{ uri: uri.href, text }] };
     },
   );
 
@@ -54,7 +50,8 @@ export function registerResources(server: McpServer, deps: DossierMcpDeps): void
       mimeType: "application/json",
     },
     async (uri): Promise<ReadResourceResult> => {
-      const profile = await loadProfileOrThrow(profileRepository);
+      const profile = await ops.getProfile();
+      if (!profile) throw new Error("No profile found.");
       return {
         contents: [{ uri: uri.href, text: JSON.stringify(profile.skills, null, 2) }],
       };
@@ -66,10 +63,9 @@ export function registerResources(server: McpServer, deps: DossierMcpDeps): void
     "skills-by-domain",
     new ResourceTemplate("dossier://skills/{domainSlug}", {
       list: async () => {
-        const profile = await profileRepository.load();
-        if (!profile) return { resources: [] };
+        const domains = await ops.getDomains();
         return {
-          resources: profile.domains.map((d) => ({
+          resources: domains.map((d) => ({
             uri: `dossier://skills/${d.slug}`,
             name: `${d.name} Skills`,
           })),
@@ -82,7 +78,8 @@ export function registerResources(server: McpServer, deps: DossierMcpDeps): void
       mimeType: "application/json",
     },
     async (uri, { domainSlug }): Promise<ReadResourceResult> => {
-      const profile = await loadProfileOrThrow(profileRepository);
+      const profile = await ops.getProfile();
+      if (!profile) throw new Error("No profile found.");
       const domain = profile.domains.find((d) => d.slug === domainSlug);
       if (!domain) {
         return { contents: [{ uri: uri.href, text: JSON.stringify({ error: `Domain not found: ${domainSlug}` }) }] };
@@ -104,7 +101,8 @@ export function registerResources(server: McpServer, deps: DossierMcpDeps): void
       mimeType: "application/json",
     },
     async (uri): Promise<ReadResourceResult> => {
-      const profile = await loadProfileOrThrow(profileRepository);
+      const profile = await ops.getProfile();
+      if (!profile) throw new Error("No profile found.");
       return {
         contents: [{ uri: uri.href, text: JSON.stringify(profile.goals, null, 2) }],
       };
@@ -121,38 +119,11 @@ export function registerResources(server: McpServer, deps: DossierMcpDeps): void
       mimeType: "application/json",
     },
     async (uri): Promise<ReadResourceResult> => {
-      const profile = await loadProfileOrThrow(profileRepository);
+      const profile = await ops.getProfile();
+      if (!profile) throw new Error("No profile found.");
       const active = profile.goals.filter((g) => g.status === "active");
       return {
         contents: [{ uri: uri.href, text: JSON.stringify(active, null, 2) }],
-      };
-    },
-  );
-
-  // All domains with categories (taxonomy discovery)
-  server.registerResource(
-    "domains",
-    "dossier://domains",
-    {
-      title: "Domains & Categories",
-      description: "All available domains and their categories — use this to discover valid domainId and categoryId values when adding skills or goals",
-      mimeType: "application/json",
-    },
-    async (uri): Promise<ReadResourceResult> => {
-      const profile = await loadProfileOrThrow(profileRepository);
-      const domains = profile.domains.map((d) => ({
-        id: d.id,
-        slug: d.slug,
-        name: d.name,
-        isBuiltIn: d.isBuiltIn,
-        categories: d.categories.map((c) => ({
-          id: c.id,
-          slug: c.slug,
-          name: c.name,
-        })),
-      }));
-      return {
-        contents: [{ uri: uri.href, text: JSON.stringify(domains, null, 2) }],
       };
     },
   );
@@ -167,18 +138,32 @@ export function registerResources(server: McpServer, deps: DossierMcpDeps): void
       mimeType: "application/json",
     },
     async (uri): Promise<ReadResourceResult> => {
-      const profile = await loadProfileOrThrow(profileRepository);
+      const profile = await ops.getProfile();
+      if (!profile) throw new Error("No profile found.");
       return {
         contents: [{ uri: uri.href, text: JSON.stringify(profile.interests, null, 2) }],
       };
     },
   );
-}
 
-async function loadProfileOrThrow(repo: { load(): Promise<unknown> }) {
-  const profile = await repo.load();
-  if (!profile) {
-    throw new Error("No Dossier profile found. Run 'dossier init' to create one.");
-  }
-  return profile as import("@dossier/core").Profile;
+  // All domains with categories (taxonomy discovery)
+  server.registerResource(
+    "domains",
+    "dossier://domains",
+    {
+      title: "Domains & Categories",
+      description: "All available domains and their categories — use this to discover valid domainId and categoryId values",
+      mimeType: "application/json",
+    },
+    async (uri): Promise<ReadResourceResult> => {
+      const domains = await ops.getDomains();
+      const result = domains.map((d) => ({
+        id: d.id, slug: d.slug, name: d.name, isBuiltIn: d.isBuiltIn,
+        categories: d.categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name })),
+      }));
+      return {
+        contents: [{ uri: uri.href, text: JSON.stringify(result, null, 2) }],
+      };
+    },
+  );
 }

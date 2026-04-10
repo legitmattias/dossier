@@ -1,11 +1,9 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { infrastructure } from "@dossier/core";
 
-import type { DossierMcpDeps } from "./server.js";
+import type { DossierOperations } from "./operations.js";
 
-export function registerPrompts(server: McpServer, deps: DossierMcpDeps): void {
-  const { profileRepository } = deps;
+export function registerPrompts(server: McpServer, ops: DossierOperations): void {
 
   server.registerPrompt(
     "suggest-learning",
@@ -14,7 +12,7 @@ export function registerPrompts(server: McpServer, deps: DossierMcpDeps): void {
       description: "Suggest what to learn next based on current skills, goals, and interests",
     },
     async () => {
-      const context = await getProfileContext(profileRepository);
+      const context = await getProfileContext(ops);
       return {
         messages: [{
           role: "user" as const,
@@ -37,7 +35,7 @@ export function registerPrompts(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     async ({ project }) => {
-      const context = await getProfileContext(profileRepository);
+      const context = await getProfileContext(ops);
       return {
         messages: [{
           role: "user" as const,
@@ -60,7 +58,7 @@ export function registerPrompts(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     async ({ topic }) => {
-      const context = await getProfileContext(profileRepository);
+      const context = await getProfileContext(ops);
       return {
         messages: [{
           role: "user" as const,
@@ -80,7 +78,7 @@ export function registerPrompts(server: McpServer, deps: DossierMcpDeps): void {
       description: "Review skills that haven't been used recently and suggest which to refresh or deprecate",
     },
     async () => {
-      const context = await getProfileContext(profileRepository);
+      const context = await getProfileContext(ops);
       return {
         messages: [{
           role: "user" as const,
@@ -103,7 +101,7 @@ export function registerPrompts(server: McpServer, deps: DossierMcpDeps): void {
       }),
     },
     async ({ goal }) => {
-      const context = await getProfileContext(profileRepository);
+      const context = await getProfileContext(ops);
       return {
         messages: [{
           role: "user" as const,
@@ -117,11 +115,10 @@ export function registerPrompts(server: McpServer, deps: DossierMcpDeps): void {
   );
 }
 
-async function getProfileContext(repo: { load(): Promise<unknown> }): Promise<string> {
-  const profile = await repo.load();
-  if (!profile) {
+async function getProfileContext(ops: DossierOperations): Promise<string> {
+  try {
+    return await ops.exportProfile("claude");
+  } catch {
     return "No Dossier profile found. The user hasn't set up their profile yet.";
   }
-  const exporter = new infrastructure.ClaudeMdExporter();
-  return exporter.export(profile as import("@dossier/core").Profile);
 }
