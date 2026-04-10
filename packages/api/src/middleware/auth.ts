@@ -9,6 +9,8 @@ import * as schema from "../db/schema.js";
 
 const JWT_ALG = "HS256";
 const JWT_EXPIRY = "7d";
+const JWT_ISSUER = "dossier";
+const JWT_AUDIENCE = "dossier-api";
 
 // --- JWT helpers ---
 
@@ -17,6 +19,8 @@ export async function createJwt(userId: string, secret: string): Promise<string>
   return new jose.SignJWT({ sub: userId })
     .setProtectedHeader({ alg: JWT_ALG })
     .setIssuedAt()
+    .setIssuer(JWT_ISSUER)
+    .setAudience(JWT_AUDIENCE)
     .setExpirationTime(JWT_EXPIRY)
     .sign(key);
 }
@@ -24,7 +28,10 @@ export async function createJwt(userId: string, secret: string): Promise<string>
 export async function verifyJwt(token: string, secret: string): Promise<string | null> {
   try {
     const key = new TextEncoder().encode(secret);
-    const { payload } = await jose.jwtVerify(token, key);
+    const { payload } = await jose.jwtVerify(token, key, {
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+    });
     return payload.sub ?? null;
   } catch {
     return null;

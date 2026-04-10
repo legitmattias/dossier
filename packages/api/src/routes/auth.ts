@@ -27,6 +27,9 @@ authRoutes.post("/register", async (c) => {
   if (!username || !email || !password) {
     return c.json({ error: "username, email, and password are required" }, 400);
   }
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{1,28}[a-zA-Z0-9]$/.test(username)) {
+    return c.json({ error: "Username must be 3-30 characters, alphanumeric with dashes/underscores" }, 400);
+  }
   if (password.length < 8) {
     return c.json({ error: "Password must be at least 8 characters" }, 400);
   }

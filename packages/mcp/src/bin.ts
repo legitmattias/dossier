@@ -38,7 +38,8 @@ if (transport === "http") {
   const port = Number(process.env["DOSSIER_PORT"] ?? "3100");
   const host = process.env["DOSSIER_HOST"] ?? "0.0.0.0";
   const mcpApiKey = process.env["DOSSIER_MCP_API_KEY"] ?? process.env["DOSSIER_API_KEY"];
-  await startHttpServer(() => createDossierMcpServer(deps), { port, host, apiKey: mcpApiKey });
+  const corsOrigin = process.env["DOSSIER_MCP_CORS_ORIGIN"];
+  await startHttpServer(() => createDossierMcpServer(deps), { port, host, apiKey: mcpApiKey, corsOrigin });
 } else {
   // stdio mode: single session, single server instance
   const server = createDossierMcpServer(deps);

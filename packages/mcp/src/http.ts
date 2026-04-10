@@ -1,5 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { randomUUID } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,13 +9,14 @@ export interface HttpServerOptions {
   readonly port: number;
   readonly host: string;
   readonly apiKey?: string;
+  readonly corsOrigin?: string;
 }
 
 export async function startHttpServer(
   serverFactory: McpServer | (() => McpServer),
   options: HttpServerOptions,
 ): Promise<void> {
-  const { port, host, apiKey } = options;
+  const { port, host, apiKey, corsOrigin } = options;
   const transports: Record<string, StreamableHTTPServerTransport> = {};
 
   const getServer = typeof serverFactory === "function"
@@ -24,7 +25,7 @@ export async function startHttpServer(
 
   const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     // CORS headers
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Origin", corsOrigin ?? "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, mcp-session-id, Authorization");
     res.setHeader("Access-Control-Expose-Headers", "mcp-session-id");
@@ -35,10 +36,13 @@ export async function startHttpServer(
       return;
     }
 
-    // API key check
+    // API key check (timing-safe comparison to prevent timing attacks)
     if (apiKey) {
-      const authHeader = req.headers["authorization"];
-      if (authHeader !== `Bearer ${apiKey}`) {
+      const authHeader = req.headers["authorization"] ?? "";
+      const expected = `Bearer ${apiKey}`;
+      const valid = authHeader.length === expected.length
+        && timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected));
+      if (!valid) {
         log.warn(`Unauthorized ${req.method} ${req.url}`);
         res.writeHead(401, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Unauthorized" }));
@@ -136,10 +140,21 @@ export async function startHttpServer(
   });
 }
 
+const MAX_BODY_SIZE = 1024 * 1024; // 1 MB
+
 function readBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
-    req.on("data", (chunk: Buffer) => chunks.push(chunk));
+    let totalSize = 0;
+    req.on("data", (chunk: Buffer) => {
+      totalSize += chunk.length;
+      if (totalSize > MAX_BODY_SIZE) {
+        req.destroy();
+        reject(new Error("Request body too large"));
+        return;
+      }
+      chunks.push(chunk);
+    });
     req.on("end", () => {
       const raw = Buffer.concat(chunks).toString("utf-8");
       try {
