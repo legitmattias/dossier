@@ -1,16 +1,5 @@
 import { Hono } from "hono";
-import {
-  application,
-  infrastructure,
-  createDomain,
-  createCategory,
-  addDomainToProfile,
-  addCategoryToDomain,
-  findDomainInProfile,
-  toDomainId,
-  toCategoryId,
-  createSlug,
-} from "@dossier/core";
+import { application, infrastructure } from "@dossier/core";
 
 import type { AppEnv } from "../app.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -173,38 +162,33 @@ profileRoutes.delete("/interests/:id", requireAuth, async (c) => {
 profileRoutes.post("/domains", requireAuth, async (c) => {
   const body = await c.req.json<{ name: string; description?: string }>();
   const deps = getDeps(c);
-  const profile = await deps.profileRepository.load();
-  if (!profile) return c.json({ error: "Profile not found" }, 404);
+  const result = await application.addDomain(deps, body);
+  return c.json(result, 201);
+});
 
-  const id = toDomainId(deps.idGenerator.generate("domain"));
-  const slug = createSlug(application.slugify(body.name));
-  const domain = createDomain({ id, slug, name: body.name, description: body.description });
-  const updated = addDomainToProfile(profile, domain);
-  await deps.profileRepository.save(updated);
-  return c.json({ domain: { id: domain.id, slug: domain.slug, name: domain.name } }, 201);
+// DELETE /profile/domains/:domainId
+profileRoutes.delete("/domains/:domainId", requireAuth, async (c) => {
+  const deps = getDeps(c);
+  await application.removeDomain(deps, { domainId: c.req.param("domainId") });
+  return c.json({ removed: true });
 });
 
 // POST /profile/domains/:domainId/categories
 profileRoutes.post("/domains/:domainId/categories", requireAuth, async (c) => {
   const body = await c.req.json<{ name: string; description?: string }>();
   const deps = getDeps(c);
-  const profile = await deps.profileRepository.load();
-  if (!profile) return c.json({ error: "Profile not found" }, 404);
+  const result = await application.addCategory(deps, { domainId: c.req.param("domainId"), ...body });
+  return c.json(result, 201);
+});
 
-  const domainId = toDomainId(c.req.param("domainId"));
-  const domain = findDomainInProfile(profile, domainId);
-  const categoryId = toCategoryId(deps.idGenerator.generate("category"));
-  const slug = createSlug(application.slugify(body.name));
-  const category = createCategory({ id: categoryId, slug, name: body.name, description: body.description });
-  const updatedDomain = addCategoryToDomain(domain, category);
-
-  const updatedProfile = {
-    ...profile,
-    domains: profile.domains.map((d) => d.id === domainId ? updatedDomain : d),
-    updatedAt: new Date(),
-  };
-  await deps.profileRepository.save(updatedProfile);
-  return c.json({ category: { id: categoryId, slug: category.slug, name: category.name } }, 201);
+// DELETE /profile/domains/:domainId/categories/:categoryId
+profileRoutes.delete("/domains/:domainId/categories/:categoryId", requireAuth, async (c) => {
+  const deps = getDeps(c);
+  await application.removeCategory(deps, {
+    domainId: c.req.param("domainId"),
+    categoryId: c.req.param("categoryId"),
+  });
+  return c.json({ removed: true });
 });
 
 // GET /profile/domains

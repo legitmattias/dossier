@@ -82,6 +82,19 @@ export type { RemoveInterestDeps } from "./use-cases/remove-interest.js";
 export { promoteInterest } from "./use-cases/promote-interest.js";
 export type { PromoteInterestDeps } from "./use-cases/promote-interest.js";
 
+// Use Cases — Domains & Categories
+export { addDomain } from "./use-cases/add-domain.js";
+export type { AddDomainDeps, AddDomainInput, AddDomainOutput } from "./use-cases/add-domain.js";
+export { removeDomain } from "./use-cases/remove-domain.js";
+export type { RemoveDomainDeps, RemoveDomainInput } from "./use-cases/remove-domain.js";
+export { addCategory } from "./use-cases/add-category.js";
+export type { AddCategoryDeps, AddCategoryInput, AddCategoryOutput } from "./use-cases/add-category.js";
+export { removeCategory } from "./use-cases/remove-category.js";
+export type { RemoveCategoryDeps, RemoveCategoryInput } from "./use-cases/remove-category.js";
+
+// Helpers — Resolve
+export { resolveDomainInProfile, resolveCategoryInDomain } from "./helpers/resolve.js";
+
 // Use Cases — Export
 export { exportProfile } from "./use-cases/export-profile.js";
 export type { ExportProfileDeps } from "./use-cases/export-profile.js";
