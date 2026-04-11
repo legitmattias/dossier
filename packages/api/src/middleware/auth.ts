@@ -48,13 +48,13 @@ export async function verifyApiKey(key: string, hash: string): Promise<boolean> 
   return bcrypt.compare(key, hash);
 }
 
-async function resolveApiKeyUserId(db: Database, apiKey: string): Promise<string | null> {
+async function resolveApiKey(db: Database, apiKey: string): Promise<{ userId: string; scopes: string } | null> {
   const prefix = apiKey.slice(0, 8);
   const rows = await db.select().from(schema.apiKeys).where(eq(schema.apiKeys.prefix, prefix));
   for (const row of rows) {
     if (await verifyApiKey(apiKey, row.keyHash)) {
       await db.update(schema.apiKeys).set({ lastUsedAt: new Date() }).where(eq(schema.apiKeys.id, row.id));
-      return row.userId;
+      return { userId: row.userId, scopes: row.scopes };
     }
   }
   return null;
@@ -81,9 +81,10 @@ export const optionalAuth = createMiddleware<AppEnv>(async (c, next) => {
   // API key (prefixed with "dsk_")
   if (token.startsWith("dsk_")) {
     const { db } = c.get("dbConnection");
-    const userId = await resolveApiKeyUserId(db, token);
-    if (userId) {
-      c.set("userId", userId);
+    const result = await resolveApiKey(db, token);
+    if (result) {
+      c.set("userId", result.userId);
+      c.set("apiKeyScopes", result.scopes);
     }
     await next();
     return;
@@ -110,6 +111,21 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   }
   await next();
 });
+
+/**
+ * Require a specific scope. JWT users bypass (full access).
+ * API key users must have the declared scope.
+ */
+export function requireScope(scope: string) {
+  return createMiddleware<AppEnv>(async (c, next) => {
+    const scopes = c.get("apiKeyScopes");
+    // No scopes set = JWT auth (full access) or no auth (handled by requireAuth)
+    if (scopes !== undefined && !scopes.split(",").includes(scope)) {
+      return c.json({ error: `Insufficient scope: requires "${scope}"` }, 403);
+    }
+    await next();
+  });
+}
 
 // --- Password helpers ---
 

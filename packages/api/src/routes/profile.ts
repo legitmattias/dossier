@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { application, infrastructure } from "@dossier/core";
 
 import type { AppEnv } from "../app.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireScope } from "../middleware/auth.js";
 import { DatabaseProfileRepository } from "../db/db-profile-repository.js";
 import { UuidIdGenerator } from "../db/id-generator.js";
 
@@ -18,7 +18,7 @@ function getDeps(c: { get(key: "dbConnection"): import("../db/connection.js").Db
 }
 
 // GET /profile
-profileRoutes.get("/", requireAuth, async (c) => {
+profileRoutes.get("/", requireAuth, requireScope("read"), async (c) => {
   const deps = getDeps(c);
   const profile = await deps.profileRepository.load();
   if (!profile) return c.json({ error: "Profile not found" }, 404);
@@ -28,7 +28,7 @@ profileRoutes.get("/", requireAuth, async (c) => {
 });
 
 // GET /profile/export?format=claude
-profileRoutes.get("/export", requireAuth, async (c) => {
+profileRoutes.get("/export", requireAuth, requireScope("read"), async (c) => {
   const format = c.req.query("format") ?? "json";
   const deps = getDeps(c);
 
@@ -42,7 +42,7 @@ profileRoutes.get("/export", requireAuth, async (c) => {
 // --- Skills ---
 
 // GET /profile/skills
-profileRoutes.get("/skills", requireAuth, async (c) => {
+profileRoutes.get("/skills", requireAuth, requireScope("read"), async (c) => {
   const deps = getDeps(c);
   const result = await application.listSkills(deps, {
     domainId: c.req.query("domainId"),
@@ -53,7 +53,7 @@ profileRoutes.get("/skills", requireAuth, async (c) => {
 });
 
 // POST /profile/skills
-profileRoutes.post("/skills", requireAuth, async (c) => {
+profileRoutes.post("/skills", requireAuth, requireScope("write"), async (c) => {
   const body = await c.req.json();
   const deps = getDeps(c);
   const result = await application.addSkill(deps, body);
@@ -61,7 +61,7 @@ profileRoutes.post("/skills", requireAuth, async (c) => {
 });
 
 // PUT /profile/skills/:id
-profileRoutes.put("/skills/:id", requireAuth, async (c) => {
+profileRoutes.put("/skills/:id", requireAuth, requireScope("write"), async (c) => {
   const body = await c.req.json();
   const deps = getDeps(c);
   const result = await application.updateSkill(deps, { skillId: c.req.param("id"), ...body });
@@ -69,7 +69,7 @@ profileRoutes.put("/skills/:id", requireAuth, async (c) => {
 });
 
 // DELETE /profile/skills/:id
-profileRoutes.delete("/skills/:id", requireAuth, async (c) => {
+profileRoutes.delete("/skills/:id", requireAuth, requireScope("write"), async (c) => {
   const deps = getDeps(c);
   await application.removeSkill(deps, { skillId: c.req.param("id") });
   return c.json({ removed: true });
@@ -78,7 +78,7 @@ profileRoutes.delete("/skills/:id", requireAuth, async (c) => {
 // --- Goals ---
 
 // GET /profile/goals
-profileRoutes.get("/goals", requireAuth, async (c) => {
+profileRoutes.get("/goals", requireAuth, requireScope("read"), async (c) => {
   const deps = getDeps(c);
   const profile = await deps.profileRepository.load();
   if (!profile) return c.json({ error: "Profile not found" }, 404);
@@ -92,7 +92,7 @@ profileRoutes.get("/goals", requireAuth, async (c) => {
 });
 
 // POST /profile/goals
-profileRoutes.post("/goals", requireAuth, async (c) => {
+profileRoutes.post("/goals", requireAuth, requireScope("write"), async (c) => {
   const body = await c.req.json();
   const deps = getDeps(c);
   const result = await application.addLearningGoal(deps, body);
@@ -100,7 +100,7 @@ profileRoutes.post("/goals", requireAuth, async (c) => {
 });
 
 // PUT /profile/goals/:id/progress
-profileRoutes.put("/goals/:id/progress", requireAuth, async (c) => {
+profileRoutes.put("/goals/:id/progress", requireAuth, requireScope("write"), async (c) => {
   const body = await c.req.json();
   const deps = getDeps(c);
   const result = await application.updateGoalProgress(deps, { goalId: c.req.param("id"), ...body });
@@ -108,7 +108,7 @@ profileRoutes.put("/goals/:id/progress", requireAuth, async (c) => {
 });
 
 // POST /profile/goals/:id/complete
-profileRoutes.post("/goals/:id/complete", requireAuth, async (c) => {
+profileRoutes.post("/goals/:id/complete", requireAuth, requireScope("write"), async (c) => {
   const body = await c.req.json();
   const deps = getDeps(c);
   const result = await application.completeGoal(deps, { goalId: c.req.param("id"), ...body });
@@ -118,7 +118,7 @@ profileRoutes.post("/goals/:id/complete", requireAuth, async (c) => {
 // --- Interests ---
 
 // GET /profile/interests
-profileRoutes.get("/interests", requireAuth, async (c) => {
+profileRoutes.get("/interests", requireAuth, requireScope("read"), async (c) => {
   const deps = getDeps(c);
   const profile = await deps.profileRepository.load();
   if (!profile) return c.json({ error: "Profile not found" }, 404);
@@ -127,7 +127,7 @@ profileRoutes.get("/interests", requireAuth, async (c) => {
 });
 
 // POST /profile/interests
-profileRoutes.post("/interests", requireAuth, async (c) => {
+profileRoutes.post("/interests", requireAuth, requireScope("write"), async (c) => {
   const body = await c.req.json();
   const deps = getDeps(c);
   const result = await application.addInterest(deps, body);
@@ -135,7 +135,7 @@ profileRoutes.post("/interests", requireAuth, async (c) => {
 });
 
 // DELETE /profile/interests/:id
-profileRoutes.delete("/interests/:id", requireAuth, async (c) => {
+profileRoutes.delete("/interests/:id", requireAuth, requireScope("write"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const deps = getDeps(c);
   await application.removeInterest(deps, { interestId: c.req.param("id"), ...body });
@@ -145,7 +145,7 @@ profileRoutes.delete("/interests/:id", requireAuth, async (c) => {
 // --- Domains ---
 
 // POST /profile/domains
-profileRoutes.post("/domains", requireAuth, async (c) => {
+profileRoutes.post("/domains", requireAuth, requireScope("write"), async (c) => {
   const body = await c.req.json<{ name: string; description?: string }>();
   const deps = getDeps(c);
   const result = await application.addDomain(deps, body);
@@ -153,14 +153,14 @@ profileRoutes.post("/domains", requireAuth, async (c) => {
 });
 
 // DELETE /profile/domains/:domainId
-profileRoutes.delete("/domains/:domainId", requireAuth, async (c) => {
+profileRoutes.delete("/domains/:domainId", requireAuth, requireScope("write"), async (c) => {
   const deps = getDeps(c);
   await application.removeDomain(deps, { domainId: c.req.param("domainId") });
   return c.json({ removed: true });
 });
 
 // POST /profile/domains/:domainId/categories
-profileRoutes.post("/domains/:domainId/categories", requireAuth, async (c) => {
+profileRoutes.post("/domains/:domainId/categories", requireAuth, requireScope("write"), async (c) => {
   const body = await c.req.json<{ name: string; description?: string }>();
   const deps = getDeps(c);
   const result = await application.addCategory(deps, { domainId: c.req.param("domainId"), ...body });
@@ -168,7 +168,7 @@ profileRoutes.post("/domains/:domainId/categories", requireAuth, async (c) => {
 });
 
 // DELETE /profile/domains/:domainId/categories/:categoryId
-profileRoutes.delete("/domains/:domainId/categories/:categoryId", requireAuth, async (c) => {
+profileRoutes.delete("/domains/:domainId/categories/:categoryId", requireAuth, requireScope("write"), async (c) => {
   const deps = getDeps(c);
   await application.removeCategory(deps, {
     domainId: c.req.param("domainId"),
@@ -178,7 +178,7 @@ profileRoutes.delete("/domains/:domainId/categories/:categoryId", requireAuth, a
 });
 
 // GET /profile/domains
-profileRoutes.get("/domains", requireAuth, async (c) => {
+profileRoutes.get("/domains", requireAuth, requireScope("read"), async (c) => {
   const deps = getDeps(c);
   const profile = await deps.profileRepository.load();
   if (!profile) return c.json({ error: "Profile not found" }, 404);

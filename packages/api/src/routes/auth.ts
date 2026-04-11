@@ -10,6 +10,7 @@ import {
   verifyPassword,
   hashApiKey,
   requireAuth,
+  requireScope,
 } from "../middleware/auth.js";
 import { BUILT_IN_DOMAINS } from "@dossier/core";
 
@@ -111,7 +112,7 @@ authRoutes.post("/login", async (c) => {
 });
 
 // GET /auth/me
-authRoutes.get("/me", requireAuth, async (c) => {
+authRoutes.get("/me", requireAuth, requireScope("read"), async (c) => {
   const userId = c.get("userId")!;
   const { db } = c.get("dbConnection");
 
@@ -130,7 +131,7 @@ authRoutes.get("/me", requireAuth, async (c) => {
 });
 
 // POST /auth/api-keys — Generate a new API key
-authRoutes.post("/api-keys", requireAuth, async (c) => {
+authRoutes.post("/api-keys", requireAuth, requireScope("write"), async (c) => {
   const userId = c.get("userId")!;
   const body = await c.req.json<{ name: string; scopes?: string }>();
 
@@ -154,7 +155,7 @@ authRoutes.post("/api-keys", requireAuth, async (c) => {
 });
 
 // GET /auth/api-keys — List all API keys (without hashes)
-authRoutes.get("/api-keys", requireAuth, async (c) => {
+authRoutes.get("/api-keys", requireAuth, requireScope("read"), async (c) => {
   const userId = c.get("userId")!;
   const { db } = c.get("dbConnection");
 
@@ -171,7 +172,7 @@ authRoutes.get("/api-keys", requireAuth, async (c) => {
 });
 
 // DELETE /auth/api-keys/:id — Revoke an API key
-authRoutes.delete("/api-keys/:id", requireAuth, async (c) => {
+authRoutes.delete("/api-keys/:id", requireAuth, requireScope("write"), async (c) => {
   const userId = c.get("userId")!;
   const keyId = c.req.param("id");
   const { db } = c.get("dbConnection");

@@ -12,6 +12,7 @@ export interface AppEnv {
   Variables: {
     dbConnection: DbConnection;
     userId?: string;
+    apiKeyScopes?: string;
   };
 }
 
