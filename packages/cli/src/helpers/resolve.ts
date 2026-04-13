@@ -6,6 +6,7 @@ import type {
   SkillId,
   GoalId,
   InterestId,
+  ProjectId,
 } from "@dossier/core";
 
 export class ResolveError extends Error {
@@ -88,4 +89,15 @@ export function resolveInterestId(profile: Profile, name: string): InterestId {
     throw new ResolveError(`Interest '${name}' not found.`);
   }
   return interest.id;
+}
+
+export function resolveProjectId(profile: Profile, name: string): ProjectId {
+  const lower = name.toLowerCase();
+  const project = profile.projects.find(
+    (p) => p.name.toLowerCase() === lower || p.slug === lower,
+  );
+  if (!project) {
+    throw new ResolveError(`Project '${name}' not found.`);
+  }
+  return project.id;
 }

@@ -14,6 +14,7 @@ import { registerGoalsCommand } from "./commands/goals.js";
 import { registerProgressCommand } from "./commands/progress.js";
 import { registerInterestCommand } from "./commands/interest.js";
 import { registerExportCommand } from "./commands/export.js";
+import { registerProjectCommand } from "./commands/project.js";
 
 function getContainer(program: Command): Container {
   const opts = program.opts<{ profile?: string }>();
@@ -44,6 +45,7 @@ export function createProgram(): Command {
   registerProgressCommand(program, lazyContainer);
   registerInterestCommand(program, lazyContainer);
   registerExportCommand(program, lazyContainer);
+  registerProjectCommand(program, lazyContainer);
 
   return program;
 }
