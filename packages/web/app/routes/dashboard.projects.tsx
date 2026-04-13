@@ -129,70 +129,49 @@ export default function ProjectsPage() {
           No projects yet. Add your first project to get started.
         </p>
       ) : (
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th title="Project name, description, and role">Name</th>
-              <th title="active, completed, paused, or ideation">Status</th>
-              <th title="low, medium, or high">Priority</th>
-              <th title="Showcase project, shown prominently in exports">Featured</th>
-              <th title="Public items appear in exports; private items are hidden">Visibility</th>
-              <th title="Internal notes (not exported to LLMs)">Notes</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {projects.map((project) => (
-              <tr key={project.id}>
-                <td>
-                  {project.url ? (
-                    <a href={project.url} target="_blank" rel="noopener noreferrer">
-                      {project.name}
-                    </a>
-                  ) : (
-                    project.name
-                  )}
-                  {project.description && (
-                    <div style={{ fontSize: "0.85em", color: "var(--color-text-muted)", marginTop: "2px" }}>
-                      {project.description}
-                    </div>
-                  )}
-                  {project.role && (
-                    <div style={{ fontSize: "0.8em", color: "var(--color-text-muted)", fontStyle: "italic" }} title="Role">
-                      Role: {project.role}
-                    </div>
-                  )}
-                </td>
-                <td>
-                  <span className={styles.proficiency} data-level={project.status}>
-                    {project.status}
-                  </span>
-                </td>
-                <td>
-                  <span className={styles.proficiency} data-level={project.priority}>
-                    {project.priority}
-                  </span>
-                </td>
-                <td>{project.featured ? "\u2605" : ""}</td>
-                <td className={styles.categoryName}>{project.visibility}</td>
-                <td>{project.notes ?? ""}</td>
-                <td className={styles.actions}>
-                  <button
-                    className={styles.deleteButton}
-                    onClick={() => setSearchParams({ edit: project.id })}
-                  >
-                    Edit
-                  </button>
-                  <Form method="post">
-                    <input type="hidden" name="intent" value="delete" />
-                    <input type="hidden" name="projectId" value={project.id} />
-                    <button type="submit" className={styles.deleteButton}>Remove</button>
-                  </Form>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className={styles.cardGrid}>
+          {projects.map((project) => (
+            <div className={styles.card} key={project.id}>
+              <div className={styles.cardHeader}>
+                {project.url ? (
+                  <a href={project.url} target="_blank" rel="noopener noreferrer" className={styles.cardNameLink}>
+                    {project.name}
+                  </a>
+                ) : (
+                  <span className={styles.cardName}>{project.name}</span>
+                )}
+                {project.featured && <span className={styles.featuredBadge}>Featured</span>}
+              </div>
+              {project.description && <div className={styles.cardDescription}>{project.description}</div>}
+              {project.role && (
+                <div className={styles.cardMeta}>
+                  <span className={styles.cardMetaLabel}>Role:</span> {project.role}
+                </div>
+              )}
+              <div className={styles.cardBadges}>
+                <span className={styles.proficiency} data-level={project.status}>{project.status}</span>
+                <span className={styles.proficiency} data-level={project.priority}>{project.priority}</span>
+                {project.visibility === "private" && (
+                  <span className={styles.proficiency} data-level="private">private</span>
+                )}
+              </div>
+              {project.notes && <div className={styles.cardNotes}>{project.notes}</div>}
+              <div className={styles.cardActions}>
+                <button
+                  className={styles.editButton}
+                  onClick={() => setSearchParams({ edit: project.id })}
+                >
+                  Edit
+                </button>
+                <Form method="post">
+                  <input type="hidden" name="intent" value="delete" />
+                  <input type="hidden" name="projectId" value={project.id} />
+                  <button type="submit" className={styles.deleteButton}>Remove</button>
+                </Form>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Add Project Modal */}

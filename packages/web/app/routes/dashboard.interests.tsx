@@ -107,24 +107,15 @@ export default function InterestsPage() {
       {interests.length === 0 ? (
         <p className={styles.emptyState}>No interests yet. Track topics you're curious about.</p>
       ) : (
-        <table className={styles.table}>
-          <thead>
-            <tr><th>Interest</th><th>Domain</th><th>Description</th><th>Visibility</th><th></th></tr>
-          </thead>
-          <tbody>
-            {interests.map((interest) => (
-              <tr key={interest.id}>
-                <td>{interest.name}</td>
-                <td className={styles.categoryName}>{domainMap.get(interest.domainId) ?? "—"}</td>
-                <td className={styles.categoryName}>{interest.description ?? "—"}</td>
-                <td>
-                  {interest.visibility === "private" && (
-                    <span className={styles.proficiency} data-level="private">private</span>
-                  )}
-                </td>
-                <td className={styles.actions}>
+        <div className={styles.cardGrid}>
+          {interests.map((interest) => (
+            <div key={interest.id} className={styles.card}>
+              <div className={styles.cardHeader}>
+                <span className={styles.cardName}>{interest.name}</span>
+                <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                   <button
-                    className={styles.deleteButton}
+                    type="button"
+                    className={styles.editButton}
                     onClick={() => setSearchParams({ edit: interest.id })}
                   >
                     Edit
@@ -134,11 +125,18 @@ export default function InterestsPage() {
                     <input type="hidden" name="interestId" value={interest.id} />
                     <button type="submit" className={styles.deleteButton}>Remove</button>
                   </Form>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              </div>
+              {interest.domainId && <div className={styles.cardMeta}>{domainMap.get(interest.domainId) ?? "—"}</div>}
+              <div className={styles.cardBadges}>
+                {interest.visibility === "private" && (
+                  <span className={styles.proficiency} data-level="private">private</span>
+                )}
+              </div>
+              {interest.description && <div className={styles.cardDescription}>{interest.description}</div>}
+            </div>
+          ))}
+        </div>
       )}
 
       {showAdd && (

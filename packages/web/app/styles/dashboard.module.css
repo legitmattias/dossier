@@ -4,8 +4,8 @@
 }
 
 .sidebar {
-  width: 240px;
-  background: var(--color-surface);
+  width: 260px;
+  background: var(--color-bg-deep);
   border-right: 1px solid var(--color-border);
   padding: var(--space-lg);
   display: flex;
@@ -13,18 +13,34 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  overflow-y: auto;
 }
 
 .logo {
-  font-size: 1.25rem;
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-text);
   text-decoration: none;
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-xs);
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
 }
 
 .logo:hover {
   text-decoration: none;
+  opacity: 0.85;
+}
+
+.username {
+  font-size: 0.8125rem;
+  color: var(--color-text-faint);
+  font-family: var(--font-mono);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .nav {
@@ -39,22 +55,24 @@
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
   color: var(--color-text-muted);
-  text-decoration: none;
   font-size: 0.9375rem;
   font-weight: 500;
-  transition: background 0.1s, color 0.1s;
+  transition: all var(--transition-base);
+  text-decoration: none;
+  border-left: 3px solid transparent;
 }
 
 .navLink:hover {
-  background: var(--color-bg);
+  background: var(--color-surface-hover);
   color: var(--color-text);
   text-decoration: none;
 }
 
 .navLinkActive {
   composes: navLink;
-  background: var(--color-bg);
-  color: var(--color-primary);
+  background: var(--color-primary-muted);
+  color: var(--color-primary-hover);
+  border-left-color: var(--color-primary);
 }
 
 .logoutForm {
@@ -72,30 +90,26 @@
   border-radius: var(--radius-md);
   color: var(--color-text-muted);
   font-size: 0.875rem;
-  font-family: var(--font-sans);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: all var(--transition-base);
 }
 
 .logoutButton:hover {
   border-color: var(--color-danger);
   color: var(--color-danger);
+  background: var(--color-danger-muted);
 }
 
 .main {
   flex: 1;
   padding: var(--space-xl) var(--space-2xl);
-  max-width: calc(var(--max-width) - 240px);
+  max-width: calc(var(--max-width) - 260px);
+  min-height: 100vh;
 }
 
 .pageTitle {
+  font-family: var(--font-heading);
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: var(--space-lg);
-}
-
-.username {
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-md);
 }

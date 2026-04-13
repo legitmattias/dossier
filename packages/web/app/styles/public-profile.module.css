@@ -10,19 +10,25 @@
 }
 
 .name {
-  font-size: 2rem;
-  font-weight: 800;
+  font-family: var(--font-heading);
+  font-size: 2.25rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .badge {
   display: inline-block;
   margin-top: var(--space-sm);
   padding: var(--space-xs) var(--space-md);
-  background: var(--color-bg);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 0.8125rem;
+  font-family: var(--font-mono);
   color: var(--color-text-muted);
 }
 
@@ -31,11 +37,13 @@
 }
 
 .sectionTitle {
+  font-family: var(--font-heading);
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: var(--space-md);
   padding-bottom: var(--space-sm);
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
 }
 
 .domainBlock {
@@ -43,10 +51,12 @@
 }
 
 .domainName {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-muted);
   margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .skillGrid {
@@ -62,13 +72,18 @@
   padding: var(--space-xs) var(--space-md);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   font-size: 0.875rem;
+  transition: all var(--transition-base);
+}
+
+.skillChip:hover {
+  border-color: var(--color-border-hover);
 }
 
 .skillLevel {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
 }
 
 .goalItem {
@@ -76,21 +91,33 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   margin-bottom: var(--space-sm);
+  transition: all var(--transition-base);
+}
+
+.goalItem:hover {
+  border-color: var(--color-border-hover);
 }
 
 .goalMeta {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
 }
 
 .projectItem {
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   margin-bottom: var(--space-sm);
+  transition: all var(--transition-base);
+}
+
+.projectItem:hover {
+  border-color: var(--color-border-hover);
 }
 
 .projectHeader {
@@ -100,17 +127,22 @@
 }
 
 .projectName {
+  font-family: var(--font-heading);
   font-weight: 600;
+  color: var(--color-text);
 }
 
 .projectLink {
+  font-family: var(--font-heading);
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-primary-hover);
   text-decoration: none;
+  transition: color var(--transition-base);
 }
 
 .projectLink:hover {
-  text-decoration: underline;
+  color: var(--color-teal);
+  text-decoration: none;
 }
 
 .projectMeta {
@@ -122,8 +154,8 @@
 .featuredBadge {
   font-size: 0.75rem;
   padding: 2px var(--space-sm);
-  border-radius: 999px;
-  background: var(--color-primary);
+  border-radius: var(--radius-pill);
+  background: var(--gradient-accent);
   color: white;
   font-weight: 600;
 }
@@ -143,22 +175,28 @@
 .interestChip {
   display: inline-block;
   padding: var(--space-xs) var(--space-md);
-  background: var(--color-bg);
-  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
   font-size: 0.875rem;
   color: var(--color-text-muted);
+  transition: all var(--transition-base);
+}
+
+.interestChip:hover {
+  border-color: var(--color-border-hover);
 }
 
 .footer {
   text-align: center;
   padding: var(--space-xl) 0;
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
   border-top: 1px solid var(--color-border);
 }
 
 .notFound {
   text-align: center;
-  padding: var(--space-2xl);
+  padding: var(--space-3xl);
   color: var(--color-text-muted);
 }

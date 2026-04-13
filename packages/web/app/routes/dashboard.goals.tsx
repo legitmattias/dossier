@@ -119,64 +119,63 @@ export default function GoalsPage() {
     return goal.progress[goal.progress.length - 1].percentage;
   }
 
-  function renderGoalRow(goal: Goal) {
+  function renderGoalCard(goal: Goal) {
+    const percentage = getProgress(goal);
     return (
-      <tr key={goal.id}>
-        <td>
-          {goal.name}
-          {goal.description && (
-            <div className={styles.categoryName} style={{ marginTop: "2px" }}>{goal.description}</div>
-          )}
-        </td>
-        <td className={styles.categoryName}>{domainMap.get(goal.domainId) ?? "—"}</td>
-        <td>
-          <span className={styles.proficiency} data-level={goal.priority}>
-            {goal.priority}
-          </span>
-        </td>
-        <td>{getProgress(goal)}%</td>
-        <td>
+      <div className={styles.card} key={goal.id}>
+        <div className={styles.cardHeader}>
+          <span className={styles.cardName}>{goal.name}</span>
+          <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+            <button
+              className={styles.editButton}
+              onClick={() => setSearchParams({ edit: goal.id })}
+            >
+              Edit
+            </button>
+            <Form method="post">
+              <input type="hidden" name="intent" value="delete" />
+              <input type="hidden" name="goalId" value={goal.id} />
+              <button
+                type="submit"
+                className={styles.deleteButton}
+                onClick={(e) => {
+                  if (!confirm(`Delete goal "${goal.name}"?`)) e.preventDefault();
+                }}
+              >
+                Remove
+              </button>
+            </Form>
+          </div>
+        </div>
+        {goal.description && <div className={styles.cardDescription}>{goal.description}</div>}
+        <div className={styles.cardBadges}>
+          <span className={styles.proficiency} data-level={goal.priority}>{goal.priority}</span>
+          <span className={styles.proficiency} data-level={goal.status}>{goal.status}</span>
           {goal.visibility === "private" && (
             <span className={styles.proficiency} data-level="private">private</span>
           )}
-        </td>
-        <td className={styles.actions}>
-          <Form method="post" style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+        </div>
+        <div className={styles.progressBar}>
+          <div className={styles.progressFill} style={{ width: `${percentage}%` }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span className={styles.progressLabel}>{percentage}%</span>
+          <Form method="post" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
             <input type="hidden" name="intent" value="progress" />
             <input type="hidden" name="goalId" value={goal.id} />
             <input
               type="number"
               name="percentage"
-              min={0}
-              max={100}
-              defaultValue={getProgress(goal)}
+              min="0"
+              max="100"
+              defaultValue={percentage}
               className={styles.input}
-              style={{ width: "70px", padding: "4px 8px" }}
+              style={{ width: '60px', padding: '2px 6px', fontSize: '0.75rem' }}
             />
-            <button type="submit" className={styles.editButton}>Update</button>
+            <button type="submit" className={styles.editButton}>Set</button>
           </Form>
-          <button
-            className={styles.editButton}
-            onClick={() => setSearchParams({ edit: goal.id })}
-          >
-            Edit
-          </button>
-          <Form method="post" style={{ display: "inline" }}>
-            <input type="hidden" name="intent" value="delete" />
-            <input type="hidden" name="goalId" value={goal.id} />
-            <button
-              type="submit"
-              className={styles.editButton}
-              style={{ color: "var(--color-danger, #c0392b)" }}
-              onClick={(e) => {
-                if (!confirm(`Delete goal "${goal.name}"?`)) e.preventDefault();
-              }}
-            >
-              Delete
-            </button>
-          </Form>
-        </td>
-      </tr>
+        </div>
+      </div>
     );
   }
 
@@ -185,12 +184,9 @@ export default function GoalsPage() {
     return (
       <div className={styles.domainGroup}>
         <h2 className={styles.domainName}>{title}</h2>
-        <table className={styles.table}>
-          <thead>
-            <tr><th>Goal</th><th>Domain</th><th title="low, medium, or high">Priority</th><th title="Learning progress (0-100%)">Progress</th><th title="Public items appear in exports; private items are hidden">Visibility</th><th></th></tr>
-          </thead>
-          <tbody>{items.map(renderGoalRow)}</tbody>
-        </table>
+        <div className={styles.cardGrid}>
+          {items.map(renderGoalCard)}
+        </div>
       </div>
     );
   }

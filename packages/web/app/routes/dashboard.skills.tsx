@@ -138,54 +138,42 @@ export default function SkillsPage() {
           return (
             <div key={domainId} className={styles.domainGroup}>
               <h2 className={styles.domainName}>{domain?.name ?? domainId}</h2>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Skill</th>
-                    <th title="novice, familiar, proficient, advanced, or expert">Proficiency</th>
-                    <th title="Category within the domain">Category</th>
-                    <th title="Personal notes about this skill">Notes</th>
-                    <th title="Public items appear in exports; private items are hidden">Visibility</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
+              <div className={styles.cardGrid}>
                   {domainSkills.map((skill) => {
                     const category = domain?.categories.find((c) => c.id === skill.categoryId);
                     return (
-                      <tr key={skill.id}>
-                        <td>{skill.name}</td>
-                        <td>
+                      <div key={skill.id} className={styles.card}>
+                        <div className={styles.cardHeader}>
+                          <span className={styles.cardName}>{skill.name}</span>
+                          <div className={styles.cardActions} style={{ borderTop: 'none', paddingTop: 0, marginTop: 0 }}>
+                            <button
+                              type="button"
+                              className={styles.editButton}
+                              onClick={() => setSearchParams({ edit: skill.id })}
+                            >
+                              Edit
+                            </button>
+                            <Form method="post">
+                              <input type="hidden" name="intent" value="delete" />
+                              <input type="hidden" name="skillId" value={skill.id} />
+                              <button type="submit" className={styles.deleteButton}>Remove</button>
+                            </Form>
+                          </div>
+                        </div>
+                        <div className={styles.cardBadges}>
                           <span className={styles.proficiency} data-level={skill.proficiency}>
                             {skill.proficiency}
                           </span>
-                        </td>
-                        <td className={styles.categoryName}>{category?.name ?? "—"}</td>
-                        <td className={styles.categoryName}>{skill.notes ?? "—"}</td>
-                        <td>
+                          <span className={styles.cardMeta}>{category?.name ?? "—"}</span>
                           {skill.visibility === "private" && (
                             <span className={styles.proficiency} data-level="private">private</span>
                           )}
-                        </td>
-                        <td className={styles.actions}>
-                          <button
-                            type="button"
-                            className={styles.cancelButton}
-                            onClick={() => setSearchParams({ edit: skill.id })}
-                          >
-                            Edit
-                          </button>
-                          <Form method="post">
-                            <input type="hidden" name="intent" value="delete" />
-                            <input type="hidden" name="skillId" value={skill.id} />
-                            <button type="submit" className={styles.deleteButton}>Remove</button>
-                          </Form>
-                        </td>
-                      </tr>
+                        </div>
+                        {skill.notes && <div className={styles.cardNotes}>{skill.notes}</div>}
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
             </div>
           );
         })

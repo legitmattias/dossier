@@ -41,23 +41,23 @@ export default function DashboardOverview() {
       <h1 className={styles.title}>{profile.name}</h1>
 
       <div className={styles.stats}>
-        <Link to="/dashboard/skills" className={styles.statCard}>
+        <Link to="/dashboard/skills" className={styles.statCard} data-entity="skills">
           <span className={styles.statNumber}>{profile.skills.length}</span>
           <span className={styles.statLabel}>Skills</span>
         </Link>
-        <Link to="/dashboard/goals" className={styles.statCard}>
+        <Link to="/dashboard/goals" className={styles.statCard} data-entity="goals">
           <span className={styles.statNumber}>{activeGoals.length}</span>
           <span className={styles.statLabel}>Active Goals</span>
         </Link>
-        <Link to="/dashboard/interests" className={styles.statCard}>
+        <Link to="/dashboard/interests" className={styles.statCard} data-entity="interests">
           <span className={styles.statNumber}>{profile.interests.length}</span>
           <span className={styles.statLabel}>Interests</span>
         </Link>
-        <div className={styles.statCard}>
+        <div className={styles.statCard} data-entity="domains">
           <span className={styles.statNumber}>{profile.domains.length}</span>
           <span className={styles.statLabel}>Domains</span>
         </div>
-        <Link to="/dashboard/projects" className={styles.statCard}>
+        <Link to="/dashboard/projects" className={styles.statCard} data-entity="projects">
           <span className={styles.statNumber}>{profile.projects.length}</span>
           <span className={styles.statLabel}>Projects</span>
         </Link>

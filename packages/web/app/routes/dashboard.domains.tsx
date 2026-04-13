@@ -114,22 +114,14 @@ export default function DomainsPage() {
       {domains.length === 0 ? (
         <p className={styles.emptyState}>No domains yet. Add a domain to organize your skills and interests.</p>
       ) : (
-        domains.map((domain) => (
-          <div key={domain.id} className={styles.domainGroup}>
-            <div className={styles.header}>
-              <h2 className={styles.domainName}>
-                {domain.name}
-                {domain.isBuiltIn && (
-                  <span className={styles.categoryName}> (built-in)</span>
-                )}
-              </h2>
-              <div className={styles.actions}>
-                <button
-                  className={styles.editButton}
-                  onClick={() => setSearchParams({ addCat: domain.id })}
-                >
-                  Add Category
-                </button>
+        <div className={styles.cardGrid}>
+          {domains.map((domain) => (
+            <div key={domain.id} className={styles.card}>
+              <div className={styles.cardHeader}>
+                <span className={styles.cardName}>
+                  {domain.name}
+                  {domain.isBuiltIn && <span className={styles.cardMeta}> (built-in)</span>}
+                </span>
                 {!domain.isBuiltIn && (
                   <Form method="post">
                     <input type="hidden" name="intent" value="delete-domain" />
@@ -138,39 +130,37 @@ export default function DomainsPage() {
                   </Form>
                 )}
               </div>
+
+              {domain.description && (
+                <div className={styles.cardDescription}>{domain.description}</div>
+              )}
+
+              <div className={styles.chipGrid}>
+                {domain.categories.map((cat) => (
+                  <span className={styles.chip} key={cat.id}>
+                    {cat.name}
+                    {!domain.isBuiltIn && (
+                      <Form method="post" style={{ display: "inline" }}>
+                        <input type="hidden" name="intent" value="delete-category" />
+                        <input type="hidden" name="domainId" value={domain.id} />
+                        <input type="hidden" name="categoryId" value={cat.id} />
+                        <button type="submit" className={styles.chipAction}>x</button>
+                      </Form>
+                    )}
+                  </span>
+                ))}
+              </div>
+
+              <button
+                className={styles.editButton}
+                onClick={() => setSearchParams({ addCat: domain.id })}
+                style={{ marginTop: "var(--space-sm)" }}
+              >
+                Add Category
+              </button>
             </div>
-
-            {domain.description && (
-              <p className={styles.categoryName}>{domain.description}</p>
-            )}
-
-            {domain.categories.length > 0 && (
-              <table className={styles.table}>
-                <thead>
-                  <tr><th>Name</th><th>Description</th><th></th></tr>
-                </thead>
-                <tbody>
-                  {domain.categories.map((cat) => (
-                    <tr key={cat.id}>
-                      <td>{cat.name}</td>
-                      <td className={styles.categoryName}>{cat.description ?? "—"}</td>
-                      <td className={styles.actions}>
-                        {!domain.isBuiltIn && (
-                          <Form method="post">
-                            <input type="hidden" name="intent" value="delete-category" />
-                            <input type="hidden" name="domainId" value={domain.id} />
-                            <input type="hidden" name="categoryId" value={cat.id} />
-                            <button type="submit" className={styles.deleteButton}>Remove</button>
-                          </Form>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        ))
+          ))}
+        </div>
       )}
 
       {/* Add Domain modal */}

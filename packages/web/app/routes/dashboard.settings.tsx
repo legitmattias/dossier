@@ -100,15 +100,7 @@ export default function SettingsPage() {
         <h2 className={styles.domainName}>Profile</h2>
 
         {actionData && "profileSaved" in actionData && (
-          <div style={{
-            padding: "var(--space-sm) var(--space-md)",
-            background: "#f0fdf4",
-            border: "1px solid #86efac",
-            borderRadius: "var(--radius-md)",
-            color: "#16a34a",
-            fontSize: "0.875rem",
-            marginBottom: "var(--space-md)",
-          }}>
+          <div className={styles.successBanner}>
             Profile updated successfully.
           </div>
         )}
@@ -162,13 +154,18 @@ export default function SettingsPage() {
       {/* Account */}
       <div className={styles.domainGroup}>
         <h2 className={styles.domainName}>Account</h2>
-        <table className={styles.table}>
-          <tbody>
-            <tr><td>Username</td><td>@{user.username}</td></tr>
-            <tr><td>Email</td><td>{user.email}</td></tr>
-            <tr><td>Public Profile</td><td>/u/{user.username}</td></tr>
-          </tbody>
-        </table>
+        <div className={styles.accountRow}>
+          <span className={styles.accountLabel}>Username</span>
+          <span className={styles.accountValue}>@{user.username}</span>
+        </div>
+        <div className={styles.accountRow}>
+          <span className={styles.accountLabel}>Email</span>
+          <span className={styles.accountValue}>{user.email}</span>
+        </div>
+        <div className={styles.accountRow}>
+          <span className={styles.accountLabel}>Public Profile</span>
+          <span className={styles.accountValue}>/u/{user.username}</span>
+        </div>
       </div>
 
       {/* API Keys */}
@@ -251,57 +248,36 @@ export default function SettingsPage() {
         {keys.length === 0 ? (
           <p className={styles.emptyState}>No API keys. Generate one to allow external services to access your profile.</p>
         ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Prefix</th>
-                <th>Scopes</th>
-                <th>Last Used</th>
-                <th>Created</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {keys.map((key) => (
-                <tr key={key.id}>
-                  <td>{key.name}</td>
-                  <td><code>{key.prefix}...</code></td>
-                  <td>{key.scopes}</td>
-                  <td className={styles.categoryName}>
-                    {key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : "Never"}
-                  </td>
-                  <td className={styles.categoryName}>
-                    {new Date(key.createdAt).toLocaleDateString()}
-                  </td>
-                  <td>
-                    <Form method="post">
-                      <input type="hidden" name="intent" value="revoke-key" />
-                      <input type="hidden" name="keyId" value={key.id} />
-                      <button type="submit" className={styles.deleteButton}>Revoke</button>
-                    </Form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className={styles.cardGrid}>
+            {keys.map((key) => (
+              <div className={styles.card} key={key.id}>
+                <div className={styles.cardHeader}>
+                  <span className={styles.cardName}>{key.name}</span>
+                  <Form method="post">
+                    <input type="hidden" name="intent" value="revoke-key" />
+                    <input type="hidden" name="keyId" value={key.id} />
+                    <button type="submit" className={styles.deleteButton}>Revoke</button>
+                  </Form>
+                </div>
+                <div className={styles.cardMeta}>
+                  <code style={{ fontFamily: "var(--font-mono)" }}>{key.prefix}...</code>
+                </div>
+                <div className={styles.cardBadges}>
+                  <span className={styles.proficiency} data-level="familiar">{key.scopes}</span>
+                </div>
+                <div className={styles.cardMeta}>
+                  Last used: {key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : "Never"} | Created: {new Date(key.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
       {/* Export Preview */}
       <div className={styles.domainGroup}>
         <h2 className={styles.domainName}>Export Preview (Claude format)</h2>
-        <pre style={{
-          padding: "var(--space-md)",
-          background: "var(--color-bg)",
-          border: "1px solid var(--color-border)",
-          borderRadius: "var(--radius-md)",
-          fontSize: "0.8125rem",
-          lineHeight: 1.6,
-          overflow: "auto",
-          maxHeight: "400px",
-          whiteSpace: "pre-wrap",
-        }}>
+        <pre className={styles.exportPreview}>
           {exportPreview}
         </pre>
       </div>
