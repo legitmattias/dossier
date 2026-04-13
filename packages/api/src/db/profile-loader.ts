@@ -11,9 +11,10 @@ import {
   toSkillId,
   toGoalId,
   toInterestId,
+  toProjectId,
   createSlug,
 } from "@dossier/core";
-import type { Profile, Domain, Category, Skill, LearningGoal, Interest } from "@dossier/core";
+import type { Profile, Domain, Category, Skill, LearningGoal, Interest, Project } from "@dossier/core";
 
 import type { Database } from "./connection.js";
 import * as schema from "./schema.js";
@@ -34,6 +35,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
   const skillRows = await db.select().from(schema.skills).where(eq(schema.skills.profileId, profileRow.id));
   const goalRows = await db.select().from(schema.goals).where(eq(schema.goals.profileId, profileRow.id));
   const interestRows = await db.select().from(schema.interests).where(eq(schema.interests.profileId, profileRow.id));
+  const projectRows = await db.select().from(schema.projects).where(eq(schema.projects.profileId, profileRow.id));
 
   // Build domain → categories map
   const catsByDomain = new Map<string, Category[]>();
@@ -76,6 +78,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     name: g.name,
     domainId: toDomainId(g.domainId),
     ...(g.description != null && { description: g.description }),
+    ...(g.motivation != null && { motivation: g.motivation }),
     priority: g.priority as LearningGoal["priority"],
     status: g.status as LearningGoal["status"],
     progress: (g.progress as LearningGoal["progress"]) ?? [],
@@ -93,6 +96,24 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     createdAt: i.createdAt,
   }));
 
+  const projects: Project[] = projectRows.map((p) => ({
+    id: toProjectId(p.id),
+    slug: createSlug(p.slug),
+    name: p.name,
+    ...(p.description != null && { description: p.description }),
+    ...(p.url != null && { url: p.url }),
+    ...(p.role != null && { role: p.role }),
+    status: p.status as Project["status"],
+    priority: p.priority as Project["priority"],
+    featured: p.featured,
+    skillIds: (p.skillIds as string[]) ?? [],
+    highlights: (p.highlights as string[]) ?? [],
+    ...(p.startDate != null && { startDate: p.startDate }),
+    ...(p.endDate != null && { endDate: p.endDate }),
+    createdAt: p.createdAt,
+    updatedAt: p.updatedAt,
+  }));
+
   return createProfile({
     id: toProfileId(profileRow.id),
     name: profileRow.name,
@@ -104,6 +125,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     skills,
     goals,
     interests,
+    projects,
     createdAt: profileRow.createdAt,
     updatedAt: profileRow.updatedAt,
   });

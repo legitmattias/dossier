@@ -38,6 +38,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       }).where(eq(schema.profiles.id, profileId));
 
       // Delete all children first (FK-safe order: leaves → parents)
+      await tx.delete(schema.projects).where(eq(schema.projects.profileId, profileId));
       await tx.delete(schema.skills).where(eq(schema.skills.profileId, profileId));
       await tx.delete(schema.goals).where(eq(schema.goals.profileId, profileId));
       await tx.delete(schema.interests).where(eq(schema.interests.profileId, profileId));
@@ -73,7 +74,8 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       for (const goal of profile.goals) {
         await tx.insert(schema.goals).values({
           id: goal.id, profileId, name: goal.name, domainId: goal.domainId,
-          description: goal.description, priority: goal.priority, status: goal.status,
+          description: goal.description, motivation: goal.motivation,
+          priority: goal.priority, status: goal.status,
           progress: goal.progress, resources: goal.resources,
           targetDate: goal.targetDate, createdAt: goal.createdAt, updatedAt: goal.updatedAt,
         });
@@ -83,6 +85,17 @@ export class DatabaseProfileRepository implements application.IProfileRepository
         await tx.insert(schema.interests).values({
           id: interest.id, profileId, name: interest.name, domainId: interest.domainId,
           description: interest.description, createdAt: interest.createdAt,
+        });
+      }
+
+      for (const project of profile.projects) {
+        await tx.insert(schema.projects).values({
+          id: project.id, profileId, slug: project.slug, name: project.name,
+          description: project.description, url: project.url, role: project.role,
+          status: project.status, priority: project.priority, featured: project.featured,
+          skillIds: project.skillIds, highlights: project.highlights,
+          startDate: project.startDate, endDate: project.endDate,
+          createdAt: project.createdAt, updatedAt: project.updatedAt,
         });
       }
     });

@@ -126,6 +126,7 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   skills: many(skills),
   goals: many(goals),
   interests: many(interests),
+  projects: many(projects),
 }));
 
 export const domainsRelations = relations(domains, ({ one, many }) => ({
@@ -155,4 +156,29 @@ export const interestsRelations = relations(interests, ({ one }) => ({
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
   user: one(users, { fields: [apiKeys.userId], references: [users.id] }),
+}));
+
+// --- Projects ---
+
+export const projects = pgTable("projects", {
+  id: text("id").primaryKey(),
+  profileId: text("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  slug: text("slug").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  url: text("url"),
+  role: text("role"),
+  status: text("status").notNull().default("active"),
+  priority: text("priority").notNull().default("medium"),
+  featured: boolean("featured").notNull().default(false),
+  skillIds: jsonb("skill_ids").notNull().default([]),
+  highlights: jsonb("highlights").notNull().default([]),
+  startDate: timestamp("start_date", { withTimezone: true }),
+  endDate: timestamp("end_date", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const projectsRelations = relations(projects, ({ one }) => ({
+  profile: one(profiles, { fields: [projects.profileId], references: [profiles.id] }),
 }));

@@ -244,6 +244,41 @@ profileRoutes.delete("/domains/:domainId/categories/:categoryId", requireAuth, r
   return c.json({ removed: true });
 });
 
+// --- Projects ---
+
+// GET /profile/projects
+profileRoutes.get("/projects", requireAuth, requireScope("read"), async (c) => {
+  const deps = getDeps(c);
+  const result = await application.listProjects(deps, {
+    status: c.req.query("status"),
+    featured: c.req.query("featured") === "true" ? true : c.req.query("featured") === "false" ? false : undefined,
+  });
+  return c.json(result);
+});
+
+// POST /profile/projects
+profileRoutes.post("/projects", requireAuth, requireScope("write"), async (c) => {
+  const body = await c.req.json();
+  const deps = getDeps(c);
+  const result = await application.addProject(deps, body);
+  return c.json(result, 201);
+});
+
+// PUT /profile/projects/:id
+profileRoutes.put("/projects/:id", requireAuth, requireScope("write"), async (c) => {
+  const body = await c.req.json();
+  const deps = getDeps(c);
+  const result = await application.updateProject(deps, { projectId: c.req.param("id"), ...body });
+  return c.json(result);
+});
+
+// DELETE /profile/projects/:id
+profileRoutes.delete("/projects/:id", requireAuth, requireScope("write"), async (c) => {
+  const deps = getDeps(c);
+  await application.removeProject(deps, { projectId: c.req.param("id") });
+  return c.json({ removed: true });
+});
+
 // GET /profile/domains
 profileRoutes.get("/domains", requireAuth, requireScope("read"), async (c) => {
   const deps = getDeps(c);

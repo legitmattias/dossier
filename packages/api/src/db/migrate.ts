@@ -122,4 +122,25 @@ export async function ensureTables(db: Database): Promise<void> {
   `);
   // Allow null domain_id on existing databases
   await db.execute(sql`ALTER TABLE interests ALTER COLUMN domain_id DROP NOT NULL`);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS projects (
+      id TEXT PRIMARY KEY,
+      profile_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      slug TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      url TEXT,
+      role TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      priority TEXT NOT NULL DEFAULT 'medium',
+      featured BOOLEAN NOT NULL DEFAULT FALSE,
+      skill_ids JSONB NOT NULL DEFAULT '[]',
+      highlights JSONB NOT NULL DEFAULT '[]',
+      start_date TIMESTAMPTZ,
+      end_date TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
 }
