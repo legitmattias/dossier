@@ -96,6 +96,9 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
   return createProfile({
     id: toProfileId(profileRow.id),
     name: profileRow.name,
+    ...(profileRow.bio != null && { bio: profileRow.bio }),
+    ...(profileRow.preferredLanguage != null && { preferredLanguage: profileRow.preferredLanguage }),
+    ...(profileRow.customInstructions != null && { customInstructions: profileRow.customInstructions }),
     settings: (profileRow.settings as Profile["settings"]) ?? {},
     domains,
     skills,

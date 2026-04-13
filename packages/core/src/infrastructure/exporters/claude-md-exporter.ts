@@ -15,6 +15,25 @@ export class ClaudeMdExporter implements IExporter {
 
     lines.push(`# Dossier Profile: ${profile.name}`);
 
+    // Bio
+    if (profile.bio) {
+      lines.push("");
+      lines.push(profile.bio);
+    }
+
+    // Custom instructions — rendered prominently for LLM consumption
+    if (profile.customInstructions) {
+      lines.push("");
+      lines.push("## Instructions");
+      lines.push(profile.customInstructions);
+    }
+
+    // Preferred language
+    if (profile.preferredLanguage) {
+      lines.push("");
+      lines.push(`**Preferred language:** ${profile.preferredLanguage}`);
+    }
+
     // Skills grouped by domain > category
     const groups = groupByDomain(profile);
     const hasSkills = groups.some((g) => g.skills.length > 0);
@@ -52,9 +71,14 @@ export class ClaudeMdExporter implements IExporter {
       lines.push("## Currently Learning");
       for (const goal of activeGoals) {
         const progress = getLatestProgress(goal);
-        lines.push(
-          `- **${goal.name}** — ${goal.priority} priority, ${progress}% complete`,
-        );
+        let line = `- **${goal.name}** — ${goal.priority} priority, ${progress}% complete`;
+        if (goal.motivation) {
+          line += ` (${goal.motivation})`;
+        }
+        if (goal.description) {
+          line += `\n  ${goal.description}`;
+        }
+        lines.push(line);
       }
     }
 
@@ -83,7 +107,11 @@ export class ClaudeMdExporter implements IExporter {
       lines.push("");
       lines.push("## On My Radar");
       for (const interest of profile.interests) {
-        lines.push(`- ${interest.name}`);
+        if (interest.description) {
+          lines.push(`- ${interest.name} — ${interest.description}`);
+        } else {
+          lines.push(`- ${interest.name}`);
+        }
       }
     }
 
@@ -120,10 +148,11 @@ export class ClaudeMdExporter implements IExporter {
 
 function formatSkillLine(skill: Skill, now: Date): string {
   const lastUsed = getLastUsedDate(skill);
+  const notesSuffix = skill.notes ? ` — ${skill.notes}` : "";
 
-  // Only show freshness when there IS usage data — suppress "[no usage recorded]"
+  // Only show freshness when there IS usage data
   if (!lastUsed) {
-    return `${skill.name} (${skill.proficiency})`;
+    return `${skill.name} (${skill.proficiency})${notesSuffix}`;
   }
 
   const timeSince = formatTimeSince(lastUsed, now);
@@ -131,5 +160,5 @@ function formatSkillLine(skill: Skill, now: Date): string {
     ? "last used: recently"
     : `last used: ${timeSince}`;
 
-  return `${skill.name} (${skill.proficiency}) [${freshness}]`;
+  return `${skill.name} (${skill.proficiency}) [${freshness}]${notesSuffix}`;
 }

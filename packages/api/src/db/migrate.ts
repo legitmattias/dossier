@@ -35,12 +35,20 @@ export async function ensureTables(db: Database): Promise<void> {
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
+      bio TEXT,
+      preferred_language TEXT,
+      custom_instructions TEXT,
       is_public BOOLEAN NOT NULL DEFAULT FALSE,
       settings JSONB NOT NULL DEFAULT '{}',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+
+  // Add columns if they don't exist (for existing databases)
+  await db.execute(sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT`);
+  await db.execute(sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS preferred_language TEXT`);
+  await db.execute(sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS custom_instructions TEXT`);
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS domains (
@@ -90,6 +98,7 @@ export async function ensureTables(db: Database): Promise<void> {
       name TEXT NOT NULL,
       domain_id TEXT NOT NULL REFERENCES domains(id),
       description TEXT,
+      motivation TEXT,
       priority TEXT NOT NULL DEFAULT 'medium',
       status TEXT NOT NULL DEFAULT 'active',
       progress JSONB NOT NULL DEFAULT '[]',
@@ -99,6 +108,7 @@ export async function ensureTables(db: Database): Promise<void> {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+  await db.execute(sql`ALTER TABLE goals ADD COLUMN IF NOT EXISTS motivation TEXT`);
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS interests (

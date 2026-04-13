@@ -25,6 +25,9 @@ export interface ProfileSettings {
 export interface Profile {
   readonly id: ProfileId;
   readonly name: string;
+  readonly bio?: string;
+  readonly preferredLanguage?: string;
+  readonly customInstructions?: string;
   readonly settings: ProfileSettings;
   readonly domains: readonly Domain[];
   readonly skills: readonly Skill[];
@@ -37,6 +40,9 @@ export interface Profile {
 export interface CreateProfileInput {
   readonly id: ProfileId;
   readonly name: string;
+  readonly bio?: string;
+  readonly preferredLanguage?: string;
+  readonly customInstructions?: string;
   readonly settings?: ProfileSettings;
   readonly domains?: readonly Domain[];
   readonly skills?: readonly Skill[];
@@ -55,6 +61,9 @@ export function createProfile(input: CreateProfileInput): Readonly<Profile> {
   return {
     id: input.id,
     name: input.name.trim(),
+    ...(input.bio !== undefined && { bio: input.bio }),
+    ...(input.preferredLanguage !== undefined && { preferredLanguage: input.preferredLanguage }),
+    ...(input.customInstructions !== undefined && { customInstructions: input.customInstructions }),
     settings: input.settings ?? {},
     domains: input.domains ?? [],
     skills: input.skills ?? [],

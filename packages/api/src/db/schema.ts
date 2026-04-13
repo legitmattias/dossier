@@ -31,6 +31,9 @@ export const profiles = pgTable("profiles", {
   id: text("id").primaryKey(), // UUID
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
   name: text("name").notNull(),
+  bio: text("bio"),
+  preferredLanguage: text("preferred_language"),
+  customInstructions: text("custom_instructions"),
   isPublic: boolean("is_public").notNull().default(false),
   settings: jsonb("settings").notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -89,6 +92,7 @@ export const goals = pgTable("goals", {
   name: text("name").notNull(),
   domainId: text("domain_id").notNull().references(() => domains.id),
   description: text("description"),
+  motivation: text("motivation"),
   priority: text("priority").notNull().default("medium"), // low | medium | high
   status: text("status").notNull().default("active"), // active | paused | completed | abandoned
   progress: jsonb("progress").notNull().default([]),

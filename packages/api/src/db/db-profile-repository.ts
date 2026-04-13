@@ -30,6 +30,9 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       // Update profile metadata
       await tx.update(schema.profiles).set({
         name: profile.name,
+        bio: profile.bio ?? null,
+        preferredLanguage: profile.preferredLanguage ?? null,
+        customInstructions: profile.customInstructions ?? null,
         settings: profile.settings,
         updatedAt: new Date(),
       }).where(eq(schema.profiles.id, profileId));

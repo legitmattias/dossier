@@ -22,6 +22,7 @@ export interface LearningGoal {
   readonly name: string;
   readonly domainId: DomainId;
   readonly description?: string;
+  readonly motivation?: string;
   readonly priority: Priority;
   readonly status: GoalStatus;
   readonly progress: readonly Progress[];
@@ -36,6 +37,7 @@ export interface CreateLearningGoalInput {
   readonly name: string;
   readonly domainId: DomainId;
   readonly description?: string;
+  readonly motivation?: string;
   readonly priority?: Priority;
   readonly status?: GoalStatus;
   readonly resources?: readonly Resource[];
@@ -55,6 +57,7 @@ export function createLearningGoal(input: CreateLearningGoalInput): Readonly<Lea
     name: input.name.trim(),
     domainId: input.domainId,
     ...(input.description !== undefined && { description: input.description }),
+    ...(input.motivation !== undefined && { motivation: input.motivation }),
     priority: input.priority ?? "medium",
     status: input.status ?? "active",
     progress: [],
