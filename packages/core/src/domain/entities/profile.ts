@@ -4,6 +4,7 @@ import {
   GoalNotFoundError,
   InterestNotFoundError,
   InvalidNameError,
+  ProjectNotFoundError,
   SkillNotFoundError,
 } from "../errors/domain-errors.js";
 import type {
@@ -11,10 +12,12 @@ import type {
   GoalId,
   InterestId,
   ProfileId,
+  ProjectId,
   SkillId,
 } from "../value-objects/identifiers.js";
 import type { Domain } from "./domain-entity.js";
 import type { Interest } from "./interest.js";
+import type { Project } from "./project.js";
 import type { LearningGoal } from "./learning-goal.js";
 import type { Skill } from "./skill.js";
 
@@ -33,6 +36,7 @@ export interface Profile {
   readonly skills: readonly Skill[];
   readonly goals: readonly LearningGoal[];
   readonly interests: readonly Interest[];
+  readonly projects: readonly Project[];
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -48,6 +52,7 @@ export interface CreateProfileInput {
   readonly skills?: readonly Skill[];
   readonly goals?: readonly LearningGoal[];
   readonly interests?: readonly Interest[];
+  readonly projects?: readonly Project[];
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
 }
@@ -69,6 +74,7 @@ export function createProfile(input: CreateProfileInput): Readonly<Profile> {
     skills: input.skills ?? [],
     goals: input.goals ?? [],
     interests: input.interests ?? [],
+    projects: input.projects ?? [],
     createdAt: input.createdAt ?? now,
     updatedAt: input.updatedAt ?? now,
   };
@@ -271,6 +277,66 @@ export function removeInterestFromProfile(
   return {
     ...profile,
     interests: profile.interests.filter((i) => i.id !== interestId),
+    updatedAt: new Date(),
+  };
+}
+
+// --- Project operations ---
+
+export function addProjectToProfile(
+  profile: Profile,
+  project: Project,
+): Readonly<Profile> {
+  return {
+    ...profile,
+    projects: [...profile.projects, project],
+    updatedAt: new Date(),
+  };
+}
+
+export function findProjectInProfile(
+  profile: Profile,
+  projectId: ProjectId,
+): Readonly<Project> {
+  const project = profile.projects.find((p) => p.id === projectId);
+  if (!project) {
+    throw new ProjectNotFoundError(projectId);
+  }
+  return project;
+}
+
+export function updateProjectInProfile(
+  profile: Profile,
+  projectId: ProjectId,
+  updatedProject: Project,
+): Readonly<Profile> {
+  const index = profile.projects.findIndex((p) => p.id === projectId);
+  if (index === -1) {
+    throw new ProjectNotFoundError(projectId);
+  }
+
+  const newProjects = [...profile.projects];
+  newProjects[index] = updatedProject;
+
+  return {
+    ...profile,
+    projects: newProjects,
+    updatedAt: new Date(),
+  };
+}
+
+export function removeProjectFromProfile(
+  profile: Profile,
+  projectId: ProjectId,
+): Readonly<Profile> {
+  const exists = profile.projects.some((p) => p.id === projectId);
+  if (!exists) {
+    throw new ProjectNotFoundError(projectId);
+  }
+
+  return {
+    ...profile,
+    projects: profile.projects.filter((p) => p.id !== projectId),
     updatedAt: new Date(),
   };
 }

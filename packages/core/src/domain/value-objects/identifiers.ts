@@ -6,6 +6,7 @@ export type DomainId = string & { readonly __brand: "DomainId" };
 export type CategoryId = string & { readonly __brand: "CategoryId" };
 export type GoalId = string & { readonly __brand: "GoalId" };
 export type InterestId = string & { readonly __brand: "InterestId" };
+export type ProjectId = string & { readonly __brand: "ProjectId" };
 export type ProfileId = string & { readonly __brand: "ProfileId" };
 
 function validateId(value: string, typeName: string): void {
@@ -37,6 +38,11 @@ export function toGoalId(value: string): GoalId {
 export function toInterestId(value: string): InterestId {
   validateId(value, "InterestId");
   return value as InterestId;
+}
+
+export function toProjectId(value: string): ProjectId {
+  validateId(value, "ProjectId");
+  return value as ProjectId;
 }
 
 export function toProfileId(value: string): ProfileId {

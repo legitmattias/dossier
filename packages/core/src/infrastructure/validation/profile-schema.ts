@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Category } from "../../domain/entities/category.js";
 import type { Domain } from "../../domain/entities/domain-entity.js";
 import type { Interest } from "../../domain/entities/interest.js";
+import type { Project } from "../../domain/entities/project.js";
 import type {
   GoalStatus,
   LearningGoal,
@@ -94,6 +95,24 @@ const interestSchema = z.object({
   createdAt: z.coerce.date(),
 });
 
+const projectSchema = z.object({
+  id: z.string().min(1),
+  slug: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  url: z.string().optional(),
+  role: z.string().optional(),
+  status: z.literal(["active", "completed", "paused", "ideation"]),
+  priority: z.literal(["low", "medium", "high"]),
+  featured: z.boolean(),
+  skillIds: z.array(z.string()),
+  highlights: z.array(z.string()),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+});
+
 const profileSettingsSchema = z.object({
   defaultDomainId: z.string().min(1).optional(),
 });
@@ -109,6 +128,7 @@ const profileSchema = z.object({
   skills: z.array(skillSchema),
   goals: z.array(learningGoalSchema),
   interests: z.array(interestSchema),
+  projects: z.array(projectSchema).optional().default([]),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -246,6 +266,26 @@ function serializeInterest(interest: Interest): object {
   };
 }
 
+function serializeProject(project: Project): object {
+  return {
+    id: project.id,
+    slug: project.slug,
+    name: project.name,
+    ...(project.description !== undefined && { description: project.description }),
+    ...(project.url !== undefined && { url: project.url }),
+    ...(project.role !== undefined && { role: project.role }),
+    status: project.status,
+    priority: project.priority,
+    featured: project.featured,
+    skillIds: project.skillIds,
+    highlights: project.highlights,
+    ...(project.startDate !== undefined && { startDate: serializeDate(project.startDate) }),
+    ...(project.endDate !== undefined && { endDate: serializeDate(project.endDate) }),
+    createdAt: serializeDate(project.createdAt),
+    updatedAt: serializeDate(project.updatedAt),
+  };
+}
+
 function serializeSettings(settings: ProfileSettings): object {
   return {
     ...(settings.defaultDomainId !== undefined && {
@@ -270,6 +310,7 @@ export function serializeProfile(profile: Profile): object {
     skills: profile.skills.map(serializeSkill),
     goals: profile.goals.map(serializeGoal),
     interests: profile.interests.map(serializeInterest),
+    projects: profile.projects.map(serializeProject),
     createdAt: serializeDate(profile.createdAt),
     updatedAt: serializeDate(profile.updatedAt),
   };

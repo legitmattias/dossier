@@ -102,6 +102,38 @@ export class ClaudeMdExporter implements IExporter {
       }
     }
 
+    // Featured projects — shown prominently
+    const featuredProjects = profile.projects.filter((p) => p.featured);
+    if (featuredProjects.length > 0) {
+      lines.push("");
+      lines.push("## Featured Projects");
+      for (const project of featuredProjects) {
+        let line = `- **${project.name}**`;
+        if (project.description) line += ` — ${project.description}`;
+        if (project.role) line += ` (${project.role})`;
+        if (project.url) line += ` [${project.url}]`;
+        if (project.highlights.length > 0) {
+          for (const highlight of project.highlights) {
+            line += `\n  - ${highlight}`;
+          }
+        }
+        lines.push(line);
+      }
+    }
+
+    // Other active projects
+    const otherProjects = profile.projects.filter((p) => !p.featured && p.status === "active");
+    if (otherProjects.length > 0) {
+      lines.push("");
+      lines.push("## Active Projects");
+      for (const project of otherProjects) {
+        let line = `- ${project.name}`;
+        if (project.description) line += ` — ${project.description}`;
+        if (project.role) line += ` (${project.role})`;
+        lines.push(line);
+      }
+    }
+
     // Interests
     if (profile.interests.length > 0) {
       lines.push("");

@@ -10,6 +10,7 @@ export {
   CategoryNotFoundError,
   GoalNotFoundError,
   InterestNotFoundError,
+  ProjectNotFoundError,
 } from "./errors/domain-errors.js";
 
 // Value Objects — Identifiers
@@ -19,6 +20,7 @@ export type {
   CategoryId,
   GoalId,
   InterestId,
+  ProjectId,
   ProfileId,
 } from "./value-objects/identifiers.js";
 export {
@@ -27,6 +29,7 @@ export {
   toCategoryId,
   toGoalId,
   toInterestId,
+  toProjectId,
   toProfileId,
 } from "./value-objects/identifiers.js";
 
@@ -49,6 +52,10 @@ export { createCategory } from "./entities/category.js";
 // Entities — Interest
 export type { Interest, CreateInterestInput } from "./entities/interest.js";
 export { createInterest } from "./entities/interest.js";
+
+// Entities — Project
+export type { Project, CreateProjectInput, ProjectStatus, ProjectPriority } from "./entities/project.js";
+export { createProject } from "./entities/project.js";
 
 // Entities — Domain
 export type { Domain, CreateDomainInput } from "./entities/domain-entity.js";
@@ -105,6 +112,10 @@ export {
   addInterestToProfile,
   findInterestInProfile,
   removeInterestFromProfile,
+  addProjectToProfile,
+  findProjectInProfile,
+  updateProjectInProfile,
+  removeProjectFromProfile,
 } from "./entities/profile.js";
 
 // Built-in Domains

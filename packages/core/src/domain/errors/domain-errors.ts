@@ -77,3 +77,10 @@ export class InterestNotFoundError extends DomainError {
     this.name = "InterestNotFoundError";
   }
 }
+
+export class ProjectNotFoundError extends DomainError {
+  constructor(projectIdentifier: string) {
+    super("PROJECT_NOT_FOUND", `Project not found: "${projectIdentifier}".`);
+    this.name = "ProjectNotFoundError";
+  }
+}

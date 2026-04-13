@@ -1,6 +1,7 @@
-import type { Interest, LearningGoal, Skill } from "../../domain/index.js";
+import type { Interest, LearningGoal, Project, Skill } from "../../domain/index.js";
 import type { GoalOutput } from "../dtos/goal-dtos.js";
 import type { InterestOutput } from "../dtos/interest-dtos.js";
+import type { ProjectOutput } from "../dtos/project-dtos.js";
 import type { SkillOutput } from "../dtos/skill-dtos.js";
 
 /** Map a Skill entity to a SkillOutput DTO. */
@@ -50,5 +51,26 @@ export function toInterestOutput(interest: Interest): InterestOutput {
       description: interest.description,
     }),
     createdAt: interest.createdAt.toISOString(),
+  };
+}
+
+/** Map a Project entity to a ProjectOutput DTO. */
+export function toProjectOutput(project: Project): ProjectOutput {
+  return {
+    id: project.id,
+    slug: project.slug,
+    name: project.name,
+    ...(project.description !== undefined && { description: project.description }),
+    ...(project.url !== undefined && { url: project.url }),
+    ...(project.role !== undefined && { role: project.role }),
+    status: project.status,
+    priority: project.priority,
+    featured: project.featured,
+    skillIds: project.skillIds,
+    highlights: project.highlights,
+    ...(project.startDate !== undefined && { startDate: project.startDate.toISOString() }),
+    ...(project.endDate !== undefined && { endDate: project.endDate.toISOString() }),
+    createdAt: project.createdAt.toISOString(),
+    updatedAt: project.updatedAt.toISOString(),
   };
 }

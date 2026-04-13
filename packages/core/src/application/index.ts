@@ -45,6 +45,19 @@ export type {
   InterestOutput,
 } from "./dtos/interest-dtos.js";
 
+// DTOs — Projects
+export type {
+  AddProjectInput,
+  AddProjectOutput,
+  UpdateProjectInput,
+  UpdateProjectOutput,
+  RemoveProjectInput,
+  RemoveProjectOutput,
+  ListProjectsInput,
+  ListProjectsOutput,
+  ProjectOutput,
+} from "./dtos/project-dtos.js";
+
 // DTOs — Export
 export type {
   ExportProfileInput,
@@ -53,7 +66,7 @@ export type {
 
 // Helpers
 export { slugify } from "./helpers/slugify.js";
-export { toSkillOutput, toGoalOutput, toInterestOutput } from "./helpers/mappers.js";
+export { toSkillOutput, toGoalOutput, toInterestOutput, toProjectOutput } from "./helpers/mappers.js";
 export { validateProficiency, validatePriority } from "./helpers/validation.js";
 
 // Use Cases — Skills
@@ -97,6 +110,16 @@ export { addCategory } from "./use-cases/add-category.js";
 export type { AddCategoryDeps, AddCategoryInput, AddCategoryOutput } from "./use-cases/add-category.js";
 export { removeCategory } from "./use-cases/remove-category.js";
 export type { RemoveCategoryDeps, RemoveCategoryInput } from "./use-cases/remove-category.js";
+
+// Use Cases — Projects
+export { addProject } from "./use-cases/add-project.js";
+export type { AddProjectDeps } from "./use-cases/add-project.js";
+export { updateProject } from "./use-cases/update-project.js";
+export type { UpdateProjectDeps } from "./use-cases/update-project.js";
+export { removeProject } from "./use-cases/remove-project.js";
+export type { RemoveProjectDeps } from "./use-cases/remove-project.js";
+export { listProjects } from "./use-cases/list-projects.js";
+export type { ListProjectsDeps } from "./use-cases/list-projects.js";
 
 // Helpers — Resolve
 export { resolveDomainInProfile, resolveCategoryInDomain } from "./helpers/resolve.js";
