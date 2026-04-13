@@ -55,6 +55,7 @@
   padding: var(--space-sm) var(--space-md);
   border-bottom: 1px solid var(--color-border);
   font-size: 0.9375rem;
+  vertical-align: middle;
 }
 
 .proficiency {
