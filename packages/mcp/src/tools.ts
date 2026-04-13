@@ -257,6 +257,93 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
   );
 
   server.registerTool(
+    "dossier_add_project",
+    {
+      title: "Add Project",
+      description: "Add a project to the profile — something you're working on or have worked on.",
+      inputSchema: z.object({
+        name: z.string().describe("Project name"),
+        description: z.string().optional().describe("Brief description"),
+        url: z.string().optional().describe("Project URL (repository, website, etc.)"),
+        role: z.string().optional().describe("Your role in the project"),
+        status: z.enum(["active", "completed", "paused", "ideation"]).optional().describe("Project status (default: active)"),
+        priority: z.enum(["low", "medium", "high"]).optional().describe("Project priority (default: medium)"),
+        featured: z.boolean().optional().describe("Whether this is a featured/showcase project"),
+        skillIds: z.array(z.string()).optional().describe("IDs of skills used in this project"),
+        highlights: z.array(z.string()).optional().describe("Key achievements or highlights"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.addProject(input);
+      return ok(`Added project: ${result.project.name} (${result.project.status})`);
+    }),
+  );
+
+  server.registerTool(
+    "dossier_list_projects",
+    {
+      title: "List Projects",
+      description: "List projects with optional filters by status or featured flag.",
+      inputSchema: z.object({
+        status: z.enum(["active", "completed", "paused", "ideation"]).optional().describe("Filter by project status"),
+        featured: z.boolean().optional().describe("Filter by featured flag"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.listProjects(input);
+      if (result.projects.length === 0) {
+        return ok("No projects found matching the filters.");
+      }
+      const lines = result.projects.map((p) => {
+        let line = `- ${p.name} (${p.status}, ${p.priority} priority)`;
+        if (p.featured) line += " ★";
+        if (p.description) line += ` — ${p.description}`;
+        return line;
+      });
+      return ok(lines.join("\n"));
+    }),
+  );
+
+  server.registerTool(
+    "dossier_update_project",
+    {
+      title: "Update Project",
+      description: "Update an existing project's details.",
+      inputSchema: z.object({
+        projectId: z.string().describe("Project ID to update"),
+        name: z.string().optional().describe("New name"),
+        description: z.string().optional().describe("Updated description"),
+        url: z.string().optional().describe("Updated URL"),
+        role: z.string().optional().describe("Updated role"),
+        status: z.enum(["active", "completed", "paused", "ideation"]).optional().describe("New status"),
+        priority: z.enum(["low", "medium", "high"]).optional().describe("New priority"),
+        featured: z.boolean().optional().describe("Set featured flag"),
+        skillIds: z.array(z.string()).optional().describe("Updated skill IDs"),
+        highlights: z.array(z.string()).optional().describe("Updated highlights"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.updateProject(input);
+      return ok(`Updated project: ${result.project.name} (${result.project.status})`);
+    }),
+  );
+
+  server.registerTool(
+    "dossier_remove_project",
+    {
+      title: "Remove Project",
+      description: "Remove a project from the profile.",
+      inputSchema: z.object({
+        projectId: z.string().describe("Project ID to remove"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      await ops.removeProject(input);
+      return ok("Project removed.");
+    }),
+  );
+
+  server.registerTool(
     "dossier_export",
     {
       title: "Export Profile",

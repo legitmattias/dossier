@@ -101,6 +101,28 @@ export class RemoteOperations implements DossierOperations {
     return this.api<application.RemoveInterestOutput>(`/profile/interests/${input.interestId}`, { method: "DELETE" });
   }
 
+  // Projects
+  async addProject(input: application.AddProjectInput) {
+    return this.api<application.AddProjectOutput>("/profile/projects", { method: "POST", body: input });
+  }
+
+  async listProjects(input?: application.ListProjectsInput) {
+    const params = new URLSearchParams();
+    if (input?.status) params.set("status", input.status);
+    if (input?.featured !== undefined) params.set("featured", String(input.featured));
+    const query = params.toString();
+    return this.api<application.ListProjectsOutput>(`/profile/projects${query ? `?${query}` : ""}`);
+  }
+
+  async updateProject(input: application.UpdateProjectInput) {
+    const { projectId, ...body } = input;
+    return this.api<application.UpdateProjectOutput>(`/profile/projects/${projectId}`, { method: "PUT", body });
+  }
+
+  async removeProject(input: application.RemoveProjectInput) {
+    return this.api<application.RemoveProjectOutput>(`/profile/projects/${input.projectId}`, { method: "DELETE" });
+  }
+
   // Domains & Categories
   async addDomain(input: application.AddDomainInput) {
     return this.api<application.AddDomainOutput>("/profile/domains", { method: "POST", body: input });

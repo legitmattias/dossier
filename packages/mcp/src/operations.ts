@@ -26,6 +26,12 @@ export interface DossierOperations {
   addInterest(input: application.AddInterestInput): Promise<application.AddInterestOutput>;
   removeInterest(input: application.RemoveInterestInput): Promise<application.RemoveInterestOutput>;
 
+  // Projects
+  addProject(input: application.AddProjectInput): Promise<application.AddProjectOutput>;
+  listProjects(input?: application.ListProjectsInput): Promise<application.ListProjectsOutput>;
+  updateProject(input: application.UpdateProjectInput): Promise<application.UpdateProjectOutput>;
+  removeProject(input: application.RemoveProjectInput): Promise<application.RemoveProjectOutput>;
+
   // Domains & Categories
   addDomain(input: application.AddDomainInput): Promise<application.AddDomainOutput>;
   addCategory(input: application.AddCategoryInput): Promise<application.AddCategoryOutput>;

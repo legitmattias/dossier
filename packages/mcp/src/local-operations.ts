@@ -83,6 +83,23 @@ export class LocalOperations implements DossierOperations {
     return application.removeInterest(this.readDeps, input);
   }
 
+  // Projects
+  async addProject(input: application.AddProjectInput) {
+    return application.addProject(this.deps, input);
+  }
+
+  async listProjects(input?: application.ListProjectsInput) {
+    return application.listProjects(this.readDeps, input);
+  }
+
+  async updateProject(input: application.UpdateProjectInput) {
+    return application.updateProject(this.readDeps, input);
+  }
+
+  async removeProject(input: application.RemoveProjectInput) {
+    return application.removeProject(this.readDeps, input);
+  }
+
   // Domains & Categories
   async addDomain(input: application.AddDomainInput) {
     return application.addDomain(this.deps, input);
