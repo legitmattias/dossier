@@ -108,7 +108,7 @@ export const interests = pgTable("interests", {
   id: text("id").primaryKey(),
   profileId: text("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
-  domainId: text("domain_id").notNull().references(() => domains.id),
+  domainId: text("domain_id").references(() => domains.id),
   description: text("description"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

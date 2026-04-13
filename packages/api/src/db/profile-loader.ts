@@ -88,7 +88,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
   const interests: Interest[] = interestRows.map((i) => ({
     id: toInterestId(i.id),
     name: i.name,
-    domainId: toDomainId(i.domainId),
+    ...(i.domainId != null && { domainId: toDomainId(i.domainId) }),
     ...(i.description != null && { description: i.description }),
     createdAt: i.createdAt,
   }));

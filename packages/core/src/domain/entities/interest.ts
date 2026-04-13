@@ -4,7 +4,7 @@ import type { DomainId, InterestId } from "../value-objects/identifiers.js";
 export interface Interest {
   readonly id: InterestId;
   readonly name: string;
-  readonly domainId: DomainId;
+  readonly domainId?: DomainId;
   readonly description?: string;
   readonly createdAt: Date;
 }
@@ -12,7 +12,7 @@ export interface Interest {
 export interface CreateInterestInput {
   readonly id: InterestId;
   readonly name: string;
-  readonly domainId: DomainId;
+  readonly domainId?: DomainId;
   readonly description?: string;
   readonly createdAt?: Date;
 }
@@ -25,7 +25,7 @@ export function createInterest(input: CreateInterestInput): Readonly<Interest> {
   return {
     id: input.id,
     name: input.name.trim(),
-    domainId: input.domainId,
+    ...(input.domainId !== undefined && { domainId: input.domainId }),
     ...(input.description !== undefined && { description: input.description }),
     createdAt: input.createdAt ?? new Date(),
   };

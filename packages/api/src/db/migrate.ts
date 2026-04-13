@@ -115,9 +115,11 @@ export async function ensureTables(db: Database): Promise<void> {
       id TEXT PRIMARY KEY,
       profile_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
-      domain_id TEXT NOT NULL REFERENCES domains(id),
+      domain_id TEXT REFERENCES domains(id),
       description TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+  // Allow null domain_id on existing databases
+  await db.execute(sql`ALTER TABLE interests ALTER COLUMN domain_id DROP NOT NULL`);
 }

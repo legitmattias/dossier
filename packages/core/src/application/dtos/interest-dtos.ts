@@ -2,7 +2,7 @@
 
 export interface AddInterestInput {
   readonly name: string;
-  readonly domainId: string;
+  readonly domainId?: string;
   readonly description?: string;
 }
 
@@ -22,7 +22,7 @@ export interface PromoteInterestInput {
 export interface InterestOutput {
   readonly id: string;
   readonly name: string;
-  readonly domainId: string;
+  readonly domainId?: string;
   readonly description?: string;
   readonly createdAt: string;
 }

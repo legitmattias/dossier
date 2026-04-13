@@ -89,7 +89,7 @@ const domainSchema = z.object({
 const interestSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
-  domainId: z.string().min(1),
+  domainId: z.string().min(1).optional(),
   description: z.string().optional(),
   createdAt: z.coerce.date(),
 });
