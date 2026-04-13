@@ -27,6 +27,7 @@ export function toGoalOutput(goal: LearningGoal): GoalOutput {
     name: goal.name,
     domainId: goal.domainId,
     ...(goal.description !== undefined && { description: goal.description }),
+    ...(goal.motivation !== undefined && { motivation: goal.motivation }),
     priority: goal.priority,
     status: goal.status,
     progress: goal.progress,

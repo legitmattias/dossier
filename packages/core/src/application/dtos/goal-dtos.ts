@@ -6,6 +6,7 @@ export interface AddGoalInput {
   readonly name: string;
   readonly domainId: string;
   readonly description?: string;
+  readonly motivation?: string;
   readonly priority?: string;
   readonly resources?: readonly Resource[];
   readonly targetDate?: string | Date;
@@ -30,6 +31,7 @@ export interface GoalOutput {
   readonly name: string;
   readonly domainId: string;
   readonly description?: string;
+  readonly motivation?: string;
   readonly priority: string;
   readonly status: GoalStatus;
   readonly progress: readonly Progress[];
