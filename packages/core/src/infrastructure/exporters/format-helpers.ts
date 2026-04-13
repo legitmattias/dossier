@@ -23,7 +23,7 @@ export function groupByDomain(profile: Profile): readonly DomainGroup[] {
     domainMap.set(domain.id, { domain, skills: [], goals: [], interests: [] });
   }
 
-  for (const skill of profile.skills) {
+  for (const skill of profile.skills.filter((s) => s.visibility !== "private")) {
     const group = domainMap.get(skill.domainId);
     if (group) {
       domainMap.set(skill.domainId, {
@@ -33,7 +33,7 @@ export function groupByDomain(profile: Profile): readonly DomainGroup[] {
     }
   }
 
-  for (const goal of profile.goals) {
+  for (const goal of profile.goals.filter((g) => g.visibility !== "private")) {
     const group = domainMap.get(goal.domainId);
     if (group) {
       domainMap.set(goal.domainId, {
@@ -43,7 +43,7 @@ export function groupByDomain(profile: Profile): readonly DomainGroup[] {
     }
   }
 
-  for (const interest of profile.interests) {
+  for (const interest of profile.interests.filter((i) => i.visibility !== "private")) {
     const group = domainMap.get(interest.domainId);
     if (group) {
       domainMap.set(interest.domainId, {

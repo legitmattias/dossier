@@ -16,6 +16,7 @@ export function toSkillOutput(skill: Skill): SkillOutput {
     sources: skill.sources,
     usage: skill.usage,
     ...(skill.notes !== undefined && { notes: skill.notes }),
+    visibility: skill.visibility,
     createdAt: skill.createdAt.toISOString(),
     updatedAt: skill.updatedAt.toISOString(),
   };
@@ -30,6 +31,7 @@ export function toGoalOutput(goal: LearningGoal): GoalOutput {
     ...(goal.description !== undefined && { description: goal.description }),
     ...(goal.motivation !== undefined && { motivation: goal.motivation }),
     priority: goal.priority,
+    visibility: goal.visibility,
     status: goal.status,
     progress: goal.progress,
     resources: goal.resources,
@@ -50,6 +52,7 @@ export function toInterestOutput(interest: Interest): InterestOutput {
     ...(interest.description !== undefined && {
       description: interest.description,
     }),
+    visibility: interest.visibility,
     createdAt: interest.createdAt.toISOString(),
   };
 }
@@ -66,6 +69,7 @@ export function toProjectOutput(project: Project): ProjectOutput {
     status: project.status,
     priority: project.priority,
     featured: project.featured,
+    visibility: project.visibility,
     skillIds: project.skillIds,
     highlights: project.highlights,
     ...(project.startDate !== undefined && { startDate: project.startDate.toISOString() }),

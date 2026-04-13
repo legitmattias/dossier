@@ -10,6 +10,7 @@ export interface AddProjectInput {
   readonly status?: string;
   readonly priority?: string;
   readonly featured?: boolean;
+  readonly visibility?: string;
   readonly skillIds?: readonly string[];
   readonly highlights?: readonly string[];
   readonly startDate?: string | Date;
@@ -25,6 +26,7 @@ export interface UpdateProjectInput {
   readonly status?: string;
   readonly priority?: string;
   readonly featured?: boolean;
+  readonly visibility?: string;
   readonly skillIds?: readonly string[];
   readonly highlights?: readonly string[];
   readonly startDate?: string | Date;
@@ -52,6 +54,7 @@ export interface ProjectOutput {
   readonly status: ProjectStatus;
   readonly priority: ProjectPriority;
   readonly featured: boolean;
+  readonly visibility: string;
   readonly skillIds: readonly string[];
   readonly highlights: readonly string[];
   readonly startDate?: string;

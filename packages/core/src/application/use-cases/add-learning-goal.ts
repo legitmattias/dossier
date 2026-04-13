@@ -49,6 +49,7 @@ export async function addLearningGoal(
     priority,
     resources: input.resources,
     targetDate,
+    visibility: input.visibility as "public" | "private" | undefined,
   });
 
   const updatedProfile = addGoalToProfile(profile, goal);

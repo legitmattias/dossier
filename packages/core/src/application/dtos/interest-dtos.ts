@@ -4,6 +4,7 @@ export interface AddInterestInput {
   readonly name: string;
   readonly domainId?: string;
   readonly description?: string;
+  readonly visibility?: string;
 }
 
 export interface RemoveInterestInput {
@@ -24,6 +25,7 @@ export interface InterestOutput {
   readonly name: string;
   readonly domainId?: string;
   readonly description?: string;
+  readonly visibility: string;
   readonly createdAt: string;
 }
 

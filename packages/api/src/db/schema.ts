@@ -78,6 +78,7 @@ export const skills = pgTable("skills", {
   notes: text("notes"),
   sources: jsonb("sources").notNull().default([]),
   usage: jsonb("usage").notNull().default([]),
+  visibility: text("visibility").notNull().default("public"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
@@ -98,6 +99,7 @@ export const goals = pgTable("goals", {
   progress: jsonb("progress").notNull().default([]),
   resources: jsonb("resources").notNull().default([]),
   targetDate: timestamp("target_date", { withTimezone: true }),
+  visibility: text("visibility").notNull().default("public"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -110,6 +112,7 @@ export const interests = pgTable("interests", {
   name: text("name").notNull(),
   domainId: text("domain_id").references(() => domains.id),
   description: text("description"),
+  visibility: text("visibility").notNull().default("public"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -175,6 +178,7 @@ export const projects = pgTable("projects", {
   highlights: jsonb("highlights").notNull().default([]),
   startDate: timestamp("start_date", { withTimezone: true }),
   endDate: timestamp("end_date", { withTimezone: true }),
+  visibility: text("visibility").notNull().default("public"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

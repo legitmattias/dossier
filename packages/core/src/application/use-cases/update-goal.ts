@@ -19,6 +19,7 @@ export interface UpdateGoalInput {
   readonly motivation?: string;
   readonly priority?: string;
   readonly status?: string;
+  readonly visibility?: string;
 }
 
 export interface UpdateGoalOutput {
@@ -42,6 +43,7 @@ export async function updateGoal(
     ...(input.motivation !== undefined && { motivation: input.motivation }),
     ...(input.priority !== undefined && { priority: input.priority as typeof goal.priority }),
     ...(input.status !== undefined && { status: input.status as typeof goal.status }),
+    ...(input.visibility !== undefined && { visibility: input.visibility as typeof goal.visibility }),
     updatedAt: new Date(),
   };
 

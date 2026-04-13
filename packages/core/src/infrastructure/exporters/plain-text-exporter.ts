@@ -34,8 +34,8 @@ export class PlainTextExporter implements IExporter {
         }
       }
 
-      const activeGoals = group.goals.filter((g) => g.status !== "completed");
-      const completedGoals = group.goals.filter((g) => g.status === "completed");
+      const activeGoals = group.goals.filter((g) => g.status !== "completed" && g.visibility !== "private");
+      const completedGoals = group.goals.filter((g) => g.status === "completed" && g.visibility !== "private");
 
       if (activeGoals.length > 0) {
         lines.push("  Learning Goals:");

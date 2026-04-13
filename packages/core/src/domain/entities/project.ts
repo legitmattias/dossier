@@ -19,6 +19,7 @@ export interface Project {
   readonly highlights: readonly string[];
   readonly startDate?: Date;
   readonly endDate?: Date;
+  readonly visibility: "public" | "private";
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -37,6 +38,7 @@ export interface CreateProjectInput {
   readonly highlights?: readonly string[];
   readonly startDate?: Date;
   readonly endDate?: Date;
+  readonly visibility?: "public" | "private";
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
 }
@@ -61,6 +63,7 @@ export function createProject(input: CreateProjectInput): Readonly<Project> {
     highlights: input.highlights ?? [],
     ...(input.startDate !== undefined && { startDate: input.startDate }),
     ...(input.endDate !== undefined && { endDate: input.endDate }),
+    visibility: input.visibility ?? "public",
     createdAt: input.createdAt ?? now,
     updatedAt: input.updatedAt ?? now,
   };

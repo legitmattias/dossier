@@ -66,7 +66,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
           id: skill.id, profileId, slug: skill.slug, name: skill.name,
           domainId: skill.domainId, categoryId: skill.categoryId,
           proficiency: skill.proficiency, notes: skill.notes,
-          sources: skill.sources, usage: skill.usage,
+          sources: skill.sources, usage: skill.usage, visibility: skill.visibility,
           createdAt: skill.createdAt, updatedAt: skill.updatedAt,
         });
       }
@@ -75,7 +75,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
         await tx.insert(schema.goals).values({
           id: goal.id, profileId, name: goal.name, domainId: goal.domainId,
           description: goal.description, motivation: goal.motivation,
-          priority: goal.priority, status: goal.status,
+          priority: goal.priority, status: goal.status, visibility: goal.visibility,
           progress: goal.progress, resources: goal.resources,
           targetDate: goal.targetDate, createdAt: goal.createdAt, updatedAt: goal.updatedAt,
         });
@@ -84,7 +84,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       for (const interest of profile.interests) {
         await tx.insert(schema.interests).values({
           id: interest.id, profileId, name: interest.name, domainId: interest.domainId,
-          description: interest.description, createdAt: interest.createdAt,
+          description: interest.description, visibility: interest.visibility, createdAt: interest.createdAt,
         });
       }
 
@@ -92,7 +92,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
         await tx.insert(schema.projects).values({
           id: project.id, profileId, slug: project.slug, name: project.name,
           description: project.description, url: project.url, role: project.role,
-          status: project.status, priority: project.priority, featured: project.featured,
+          status: project.status, priority: project.priority, featured: project.featured, visibility: project.visibility,
           skillIds: project.skillIds, highlights: project.highlights,
           startDate: project.startDate, endDate: project.endDate,
           createdAt: project.createdAt, updatedAt: project.updatedAt,

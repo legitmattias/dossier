@@ -36,6 +36,7 @@ export async function addProject(
     status: input.status as Parameters<typeof createProject>[0]["status"],
     priority: input.priority as Parameters<typeof createProject>[0]["priority"],
     featured: input.featured,
+    visibility: input.visibility as "public" | "private" | undefined,
     skillIds: input.skillIds,
     highlights: input.highlights,
     startDate: input.startDate ? new Date(input.startDate) : undefined,

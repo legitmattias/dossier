@@ -39,6 +39,7 @@ const skillSchema = z.object({
   sources: z.array(skillSourceSchema),
   usage: z.array(skillUsageSchema),
   notes: z.string().optional(),
+  visibility: z.literal(["public", "private"]).optional().default("public"),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -67,6 +68,7 @@ const learningGoalSchema = z.object({
   progress: z.array(progressSchema),
   resources: z.array(resourceSchema),
   targetDate: z.coerce.date().optional(),
+  visibility: z.literal(["public", "private"]).optional().default("public"),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -92,6 +94,7 @@ const interestSchema = z.object({
   name: z.string().min(1),
   domainId: z.string().min(1).optional(),
   description: z.string().optional(),
+  visibility: z.literal(["public", "private"]).optional().default("public"),
   createdAt: z.coerce.date(),
 });
 
@@ -109,6 +112,7 @@ const projectSchema = z.object({
   highlights: z.array(z.string()),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
+  visibility: z.literal(["public", "private"]).optional().default("public"),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -197,6 +201,7 @@ function serializeSkill(skill: Skill): object {
     sources: skill.sources.map(serializeSkillSource),
     usage: skill.usage.map(serializeSkillUsage),
     ...(skill.notes !== undefined && { notes: skill.notes }),
+    visibility: skill.visibility,
     createdAt: serializeDate(skill.createdAt),
     updatedAt: serializeDate(skill.updatedAt),
   };
@@ -231,6 +236,7 @@ function serializeGoal(goal: LearningGoal): object {
     progress: goal.progress.map(serializeProgress),
     resources: goal.resources.map(serializeResource),
     ...(goal.targetDate !== undefined && { targetDate: serializeDate(goal.targetDate) }),
+    visibility: goal.visibility,
     createdAt: serializeDate(goal.createdAt),
     updatedAt: serializeDate(goal.updatedAt),
   };
@@ -262,6 +268,7 @@ function serializeInterest(interest: Interest): object {
     name: interest.name,
     domainId: interest.domainId,
     ...(interest.description !== undefined && { description: interest.description }),
+    visibility: interest.visibility,
     createdAt: serializeDate(interest.createdAt),
   };
 }
@@ -281,6 +288,7 @@ function serializeProject(project: Project): object {
     highlights: project.highlights,
     ...(project.startDate !== undefined && { startDate: serializeDate(project.startDate) }),
     ...(project.endDate !== undefined && { endDate: serializeDate(project.endDate) }),
+    visibility: project.visibility,
     createdAt: serializeDate(project.createdAt),
     updatedAt: serializeDate(project.updatedAt),
   };

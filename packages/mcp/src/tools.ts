@@ -18,6 +18,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         categoryId: z.string().describe("Category ID, slug, or name (e.g. 'languages' or 'Programming Languages')"),
         proficiency: z.enum(PROFICIENCY_LEVELS).describe("Proficiency level"),
         notes: z.string().optional().describe("Optional notes about this skill"),
+        visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
       }),
     },
     withErrorHandler(async (input) => {
@@ -73,6 +74,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         name: z.string().optional().describe("New name"),
         proficiency: z.enum(PROFICIENCY_LEVELS).optional().describe("New proficiency level"),
         notes: z.string().optional().describe("Updated notes"),
+        visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
       }),
     },
     withErrorHandler(async (input) => {
@@ -107,6 +109,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         priority: z.enum(["low", "medium", "high"]).optional().describe("Priority level (default: medium)"),
         description: z.string().optional().describe("Goal description or motivation"),
         targetDate: z.string().optional().describe("Target date in ISO format (e.g. '2026-12-31')"),
+        visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
       }),
     },
     withErrorHandler(async (input) => {
@@ -190,6 +193,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         name: z.string().describe("Interest name"),
         domainId: z.string().describe("Domain ID, slug, or name"),
         description: z.string().optional().describe("Why you're interested"),
+        visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
       }),
     },
     withErrorHandler(async (input) => {
@@ -271,6 +275,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         featured: z.boolean().optional().describe("Whether this is a featured/showcase project"),
         skillIds: z.array(z.string()).optional().describe("IDs of skills used in this project"),
         highlights: z.array(z.string()).optional().describe("Key achievements or highlights"),
+        visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
       }),
     },
     withErrorHandler(async (input) => {
@@ -320,6 +325,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         featured: z.boolean().optional().describe("Set featured flag"),
         skillIds: z.array(z.string()).optional().describe("Updated skill IDs"),
         highlights: z.array(z.string()).optional().describe("Updated highlights"),
+        visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
       }),
     },
     withErrorHandler(async (input) => {

@@ -50,6 +50,7 @@ export async function addSkill(
     sources: input.sources,
     usage: input.usage,
     notes: input.notes,
+    visibility: input.visibility as "public" | "private" | undefined,
   });
 
   const updatedProfile = addSkillToProfile(profile, skill);

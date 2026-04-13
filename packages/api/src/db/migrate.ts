@@ -143,4 +143,9 @@ export async function ensureTables(db: Database): Promise<void> {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+
+  await db.execute(sql`ALTER TABLE skills ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'`);
+  await db.execute(sql`ALTER TABLE goals ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'`);
+  await db.execute(sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'`);
+  await db.execute(sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'`);
 }

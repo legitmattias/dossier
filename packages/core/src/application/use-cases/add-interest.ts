@@ -38,6 +38,7 @@ export async function addInterest(
     name: input.name,
     domainId,
     description: input.description,
+    visibility: input.visibility as "public" | "private" | undefined,
   });
 
   const updatedProfile = addInterestToProfile(profile, interest);

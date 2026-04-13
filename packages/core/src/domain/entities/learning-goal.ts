@@ -28,6 +28,7 @@ export interface LearningGoal {
   readonly progress: readonly Progress[];
   readonly resources: readonly Resource[];
   readonly targetDate?: Date;
+  readonly visibility: "public" | "private";
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -42,6 +43,7 @@ export interface CreateLearningGoalInput {
   readonly status?: GoalStatus;
   readonly resources?: readonly Resource[];
   readonly targetDate?: Date;
+  readonly visibility?: "public" | "private";
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
 }
@@ -63,6 +65,7 @@ export function createLearningGoal(input: CreateLearningGoalInput): Readonly<Lea
     progress: [],
     resources: input.resources ?? [],
     ...(input.targetDate !== undefined && { targetDate: input.targetDate }),
+    visibility: input.visibility ?? "public",
     createdAt: input.createdAt ?? now,
     updatedAt: input.updatedAt ?? now,
   };

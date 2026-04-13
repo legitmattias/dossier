@@ -65,7 +65,7 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Active goals
-    const activeGoals = profile.goals.filter((g) => g.status === "active");
+    const activeGoals = profile.goals.filter((g) => g.status === "active" && g.visibility !== "private");
     if (activeGoals.length > 0) {
       lines.push("");
       lines.push("## Currently Learning");
@@ -83,7 +83,7 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Paused goals
-    const pausedGoals = profile.goals.filter((g) => g.status === "paused");
+    const pausedGoals = profile.goals.filter((g) => g.status === "paused" && g.visibility !== "private");
     if (pausedGoals.length > 0) {
       lines.push("");
       lines.push("## Paused");
@@ -93,7 +93,7 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Completed goals
-    const completedGoals = profile.goals.filter((g) => g.status === "completed");
+    const completedGoals = profile.goals.filter((g) => g.status === "completed" && g.visibility !== "private");
     if (completedGoals.length > 0) {
       lines.push("");
       lines.push("## Completed Learning");
@@ -103,7 +103,7 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Featured projects — shown prominently
-    const featuredProjects = profile.projects.filter((p) => p.featured);
+    const featuredProjects = profile.projects.filter((p) => p.featured && p.visibility !== "private");
     if (featuredProjects.length > 0) {
       lines.push("");
       lines.push("## Featured Projects");
@@ -122,7 +122,7 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Other active projects
-    const otherProjects = profile.projects.filter((p) => !p.featured && p.status === "active");
+    const otherProjects = profile.projects.filter((p) => !p.featured && p.status === "active" && p.visibility !== "private");
     if (otherProjects.length > 0) {
       lines.push("");
       lines.push("## Active Projects");
@@ -135,10 +135,11 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Interests
-    if (profile.interests.length > 0) {
+    const visibleInterests = profile.interests.filter((i) => i.visibility !== "private");
+    if (visibleInterests.length > 0) {
       lines.push("");
       lines.push("## On My Radar");
-      for (const interest of profile.interests) {
+      for (const interest of visibleInterests) {
         if (interest.description) {
           lines.push(`- ${interest.name} — ${interest.description}`);
         } else {
@@ -149,13 +150,13 @@ export class ClaudeMdExporter implements IExporter {
 
     // Guidance section — compact summary, not per-skill lines
     const strongSkills = profile.skills.filter(
-      (s) => s.proficiency === "advanced" || s.proficiency === "expert",
+      (s) => (s.proficiency === "advanced" || s.proficiency === "expert") && s.visibility !== "private",
     );
     const noviceSkills = profile.skills.filter(
-      (s) => s.proficiency === "novice",
+      (s) => s.proficiency === "novice" && s.visibility !== "private",
     );
     const activeGoalNames = profile.goals
-      .filter((g) => g.status === "active")
+      .filter((g) => g.status === "active" && g.visibility !== "private")
       .map((g) => `${g.name} (${g.priority})`);
 
     if (strongSkills.length > 0 || noviceSkills.length > 0 || activeGoalNames.length > 0) {
