@@ -8,6 +8,12 @@ import { requireToken } from "~/lib/session.server";
 import styles from "~/styles/skills.module.css";
 import settingsStyles from "~/styles/settings.module.css";
 
+interface Profile {
+  bio?: string;
+  preferredLanguage?: string;
+  customInstructions?: string;
+}
+
 interface ApiKey {
   id: string;
   name: string;
@@ -21,12 +27,13 @@ export const meta: MetaFunction = () => [{ title: "Settings — Dossier" }];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const token = await requireToken(request);
-  const [{ user }, { keys }, exportClaude] = await Promise.all([
+  const [{ user }, { keys }, exportClaude, profileData] = await Promise.all([
     api<{ user: { id: string; username: string; email: string } }>("/auth/me", { token }),
     api<{ keys: ApiKey[] }>("/auth/api-keys", { token }),
     api<string>("/profile/export?format=claude", { token }),
+    api<{ profile: Profile }>("/profile", { token }).catch(() => ({ profile: {} as Profile })),
   ]);
-  return json({ user, keys, exportPreview: exportClaude });
+  return json({ user, keys, exportPreview: exportClaude, profile: profileData.profile });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -35,6 +42,19 @@ export async function action({ request }: ActionFunctionArgs) {
   const intent = String(form.get("intent"));
 
   try {
+    if (intent === "update-profile") {
+      await api("/profile", {
+        method: "PATCH",
+        token,
+        body: {
+          bio: String(form.get("bio") ?? "") || undefined,
+          preferredLanguage: String(form.get("preferredLanguage") ?? "") || undefined,
+          customInstructions: String(form.get("customInstructions") ?? "") || undefined,
+        },
+      });
+      return json({ profileSaved: true });
+    }
+
     if (intent === "create-key") {
       const name = String(form.get("name"));
       const scopes = String(form.get("scopes") || "read");
@@ -63,7 +83,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function SettingsPage() {
-  const { user, keys, exportPreview } = useLoaderData<typeof loader>();
+  const { user, keys, exportPreview, profile } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -72,6 +92,67 @@ export default function SettingsPage() {
   return (
     <div>
       <h1 className={styles.title}>Settings</h1>
+
+      {/* Profile */}
+      <div className={styles.domainGroup}>
+        <h2 className={styles.domainName}>Profile</h2>
+
+        {actionData && "profileSaved" in actionData && (
+          <div style={{
+            padding: "var(--space-sm) var(--space-md)",
+            background: "#f0fdf4",
+            border: "1px solid #86efac",
+            borderRadius: "var(--radius-md)",
+            color: "#16a34a",
+            fontSize: "0.875rem",
+            marginBottom: "var(--space-md)",
+          }}>
+            Profile updated successfully.
+          </div>
+        )}
+
+        <Form method="post" className={styles.form}>
+          <input type="hidden" name="intent" value="update-profile" />
+
+          <div className={styles.field}>
+            <label htmlFor="bio" className={styles.label}>Bio</label>
+            <textarea
+              id="bio"
+              name="bio"
+              className={styles.input}
+              rows={3}
+              defaultValue={profile.bio ?? ""}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="preferredLanguage" className={styles.label}>Preferred Language</label>
+            <input
+              id="preferredLanguage"
+              name="preferredLanguage"
+              className={styles.input}
+              defaultValue={profile.preferredLanguage ?? ""}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="customInstructions" className={styles.label}>Custom Instructions</label>
+            <textarea
+              id="customInstructions"
+              name="customInstructions"
+              className={styles.input}
+              rows={4}
+              defaultValue={profile.customInstructions ?? ""}
+            />
+          </div>
+
+          <div className={styles.formActions}>
+            <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
+              {isSubmitting ? "Saving..." : "Save Profile"}
+            </button>
+          </div>
+        </Form>
+      </div>
 
       {/* Account */}
       <div className={styles.domainGroup}>
