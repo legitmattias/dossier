@@ -25,9 +25,11 @@ export async function addInterest(
     throw new ProfileNotFoundError();
   }
 
-  const domainId = toDomainId(input.domainId);
-  // Validate domain exists in profile
-  findDomainInProfile(profile, domainId);
+  // Validate domain exists if provided
+  const domainId = input.domainId ? toDomainId(input.domainId) : undefined;
+  if (domainId) {
+    findDomainInProfile(profile, domainId);
+  }
 
   const interestId = toInterestId(deps.idGenerator.generate("interest"));
 
