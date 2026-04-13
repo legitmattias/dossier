@@ -45,6 +45,7 @@ beforeEach(async () => {
 
   app = createApp(dbConn);
   process.env["JWT_SECRET"] = "test-secret-for-tests";
+  process.env["NODE_ENV"] = "test";
 });
 
 afterEach(async () => {

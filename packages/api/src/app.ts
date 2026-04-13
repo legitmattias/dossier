@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { secureHeaders } from "hono/secure-headers";
 
 import { application } from "@dossier/core";
 import type { DbConnection } from "./db/connection.js";
@@ -18,6 +19,9 @@ export interface AppEnv {
 
 export function createApp(dbConnection: DbConnection): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
+
+  // Security headers
+  app.use("*", secureHeaders());
 
   // Inject database into context
   app.use("*", async (c, next) => {

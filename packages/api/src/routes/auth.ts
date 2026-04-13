@@ -13,11 +13,15 @@ import {
   requireScope,
 } from "../middleware/auth.js";
 import { BUILT_IN_DOMAINS } from "@dossier/core";
+import { rateLimit } from "../middleware/rate-limit.js";
+
+const loginRateLimit = rateLimit({ windowMs: 60 * 1000, max: 5, message: "Too many login attempts" });
+const registerRateLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 3, message: "Too many registration attempts" });
 
 export const authRoutes = new Hono<AppEnv>();
 
 // POST /auth/register
-authRoutes.post("/register", async (c) => {
+authRoutes.post("/register", registerRateLimit, async (c) => {
   if (process.env["REGISTRATION_ENABLED"] === "false") {
     return c.json({ error: "Registration is currently disabled" }, 403);
   }
@@ -86,7 +90,7 @@ authRoutes.post("/register", async (c) => {
 });
 
 // POST /auth/login
-authRoutes.post("/login", async (c) => {
+authRoutes.post("/login", loginRateLimit, async (c) => {
   const body = await c.req.json<{ email: string; password: string }>();
   const { email, password } = body;
 

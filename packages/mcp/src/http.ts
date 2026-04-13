@@ -18,10 +18,25 @@ export async function startHttpServer(
 ): Promise<void> {
   const { port, host, apiKey, corsOrigin } = options;
   const transports: Record<string, StreamableHTTPServerTransport> = {};
+  const sessionActivity: Record<string, number> = {};
 
   const getServer = typeof serverFactory === "function"
     ? serverFactory
     : () => serverFactory;
+
+  // Clean up inactive sessions every 5 minutes
+  const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+  const cleanupInterval = setInterval(() => {
+    const now = Date.now();
+    for (const [id, lastActive] of Object.entries(sessionActivity)) {
+      if (now - lastActive > SESSION_TIMEOUT_MS) {
+        transports[id]?.close();
+        delete transports[id];
+        delete sessionActivity[id];
+        log.info(`Session timed out: ${id}`);
+      }
+    }
+  }, 5 * 60 * 1000);
 
   const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     // CORS headers
@@ -63,6 +78,7 @@ export async function startHttpServer(
       const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
       if (sessionId && transports[sessionId]) {
+        sessionActivity[sessionId] = Date.now();
         await transports[sessionId].handleRequest(req, res, body);
         return;
       }
@@ -73,6 +89,7 @@ export async function startHttpServer(
           onsessioninitialized: (id) => {
             log.info(`Session initialized: ${id}`);
             transports[id] = transport;
+            sessionActivity[id] = Date.now();
           },
         });
 
@@ -80,6 +97,7 @@ export async function startHttpServer(
           const sid = transport.sessionId;
           if (sid && transports[sid]) {
             log.info(`Session closed: ${sid}`);
+            delete sessionActivity[sid];
             delete transports[sid];
           }
         };
@@ -132,6 +150,7 @@ export async function startHttpServer(
 
   // Graceful shutdown
   process.on("SIGINT", async () => {
+    clearInterval(cleanupInterval);
     for (const transport of Object.values(transports)) {
       await transport.close();
     }

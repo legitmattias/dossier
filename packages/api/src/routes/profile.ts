@@ -107,12 +107,27 @@ profileRoutes.put("/goals/:id/progress", requireAuth, requireScope("write"), asy
   return c.json(result);
 });
 
+// PUT /profile/goals/:id
+profileRoutes.put("/goals/:id", requireAuth, requireScope("write"), async (c) => {
+  const body = await c.req.json();
+  const deps = getDeps(c);
+  const result = await application.updateGoal(deps, { goalId: c.req.param("id"), ...body });
+  return c.json(result);
+});
+
 // POST /profile/goals/:id/complete
 profileRoutes.post("/goals/:id/complete", requireAuth, requireScope("write"), async (c) => {
   const body = await c.req.json();
   const deps = getDeps(c);
   const result = await application.completeGoal(deps, { goalId: c.req.param("id"), ...body });
   return c.json(result);
+});
+
+// DELETE /profile/goals/:id
+profileRoutes.delete("/goals/:id", requireAuth, requireScope("write"), async (c) => {
+  const deps = getDeps(c);
+  await application.removeGoal(deps, { goalId: c.req.param("id") });
+  return c.json({ removed: true });
 });
 
 // --- Interests ---
@@ -134,12 +149,38 @@ profileRoutes.post("/interests", requireAuth, requireScope("write"), async (c) =
   return c.json(result, 201);
 });
 
+// PUT /profile/interests/:id
+profileRoutes.put("/interests/:id", requireAuth, requireScope("write"), async (c) => {
+  const body = await c.req.json();
+  const deps = getDeps(c);
+  const result = await application.updateInterest(deps, { interestId: c.req.param("id"), ...body });
+  return c.json(result);
+});
+
 // DELETE /profile/interests/:id
 profileRoutes.delete("/interests/:id", requireAuth, requireScope("write"), async (c) => {
+  const deps = getDeps(c);
+  await application.removeInterest(deps, { interestId: c.req.param("id") });
+  return c.json({ removed: true });
+});
+
+// POST /profile/interests/:id/promote
+profileRoutes.post("/interests/:id/promote", requireAuth, requireScope("write"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const deps = getDeps(c);
-  await application.removeInterest(deps, { interestId: c.req.param("id"), ...body });
-  return c.json({ removed: true });
+  const result = await application.promoteInterest(deps, { interestId: c.req.param("id"), ...body });
+  return c.json(result, 201);
+});
+
+// POST /profile/skills/:id/mark-used
+profileRoutes.post("/skills/:id/mark-used", requireAuth, requireScope("write"), async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const deps = getDeps(c);
+  const result = await application.updateSkill(deps, {
+    skillId: c.req.param("id"),
+    addUsage: [{ context: body.context ?? "Used", lastUsed: new Date() }],
+  });
+  return c.json(result);
 });
 
 // --- Domains ---

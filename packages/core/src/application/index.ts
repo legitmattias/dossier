@@ -73,12 +73,18 @@ export { updateGoalProgress } from "./use-cases/update-goal-progress.js";
 export type { UpdateGoalProgressDeps } from "./use-cases/update-goal-progress.js";
 export { completeGoal } from "./use-cases/complete-goal.js";
 export type { CompleteGoalDeps } from "./use-cases/complete-goal.js";
+export { updateGoal } from "./use-cases/update-goal.js";
+export type { UpdateGoalDeps, UpdateGoalInput, UpdateGoalOutput } from "./use-cases/update-goal.js";
+export { removeGoal } from "./use-cases/remove-goal.js";
+export type { RemoveGoalDeps, RemoveGoalInput } from "./use-cases/remove-goal.js";
 
 // Use Cases — Interests
 export { addInterest } from "./use-cases/add-interest.js";
 export type { AddInterestDeps } from "./use-cases/add-interest.js";
 export { removeInterest } from "./use-cases/remove-interest.js";
 export type { RemoveInterestDeps } from "./use-cases/remove-interest.js";
+export { updateInterest } from "./use-cases/update-interest.js";
+export type { UpdateInterestDeps, UpdateInterestInput, UpdateInterestOutput } from "./use-cases/update-interest.js";
 export { promoteInterest } from "./use-cases/promote-interest.js";
 export type { PromoteInterestDeps } from "./use-cases/promote-interest.js";
 
