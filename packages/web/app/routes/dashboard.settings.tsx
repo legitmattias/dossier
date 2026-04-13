@@ -88,6 +88,8 @@ export default function SettingsPage() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [keyCopied, setKeyCopied] = useState(false);
+  const [keyDismissed, setKeyDismissed] = useState(false);
 
   return (
     <div>
@@ -120,7 +122,7 @@ export default function SettingsPage() {
               id="bio"
               name="bio"
               className={styles.input}
-              rows={3}
+              rows={6}
               defaultValue={profile.bio ?? ""}
               placeholder="A short bio about yourself"
             />
@@ -143,7 +145,7 @@ export default function SettingsPage() {
               id="customInstructions"
               name="customInstructions"
               className={styles.input}
-              rows={4}
+              rows={8}
               defaultValue={profile.customInstructions ?? ""}
               placeholder="Instructions for AI tools using your profile"
             />
@@ -186,13 +188,37 @@ export default function SettingsPage() {
         )}
 
         {/* New key banner — shown once after creation */}
-        {actionData && "newKey" in actionData && (
+        {actionData && "newKey" in actionData && !keyDismissed && (
           <div className={settingsStyles.newKeyBanner}>
             <p><strong>New API key created: {actionData.keyName}</strong></p>
-            <code className={settingsStyles.keyValue}>{actionData.newKey}</code>
-            <p className={settingsStyles.keyWarning}>
-              Copy this key now — it won't be shown again.
-            </p>
+            <div style={{ display: "flex", gap: "var(--space-sm)", alignItems: "center" }}>
+              <code className={settingsStyles.keyValue} style={{ flex: 1 }}>{actionData.newKey}</code>
+              <button
+                type="button"
+                title="Copy to clipboard"
+                onClick={() => {
+                  navigator.clipboard.writeText(actionData.newKey as string);
+                  setKeyCopied(true);
+                  setTimeout(() => setKeyCopied(false), 2000);
+                }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem", padding: "4px" }}
+              >
+                {keyCopied ? "\u2713" : "\u2398"}
+              </button>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "var(--space-sm)" }}>
+              <p className={settingsStyles.keyWarning} style={{ margin: 0 }}>
+                Copy this key now — it won't be shown again.
+              </p>
+              <button
+                type="button"
+                onClick={() => setKeyDismissed(true)}
+                className={styles.submitButton}
+                style={{ fontSize: "0.8rem", padding: "var(--space-xs) var(--space-md)" }}
+              >
+                Done
+              </button>
+            </div>
           </div>
         )}
 
