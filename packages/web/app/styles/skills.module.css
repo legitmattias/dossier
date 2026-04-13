@@ -7,6 +7,64 @@
   margin-bottom: var(--space-lg);
 }
 
+/* --- Filter Bar --- */
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.filterSelect {
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.filterSearch {
+  composes: filterSelect;
+  flex: 1;
+  min-width: 160px;
+  cursor: text;
+}
+
+.filterSearch::placeholder {
+  color: var(--color-text-faint);
+}
+
+.filterClear {
+  padding: var(--space-xs) var(--space-sm);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all var(--transition-base);
+}
+
+.filterClear:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-hover);
+}
+
 .title {
   font-family: var(--font-heading);
   font-size: 1.5rem;

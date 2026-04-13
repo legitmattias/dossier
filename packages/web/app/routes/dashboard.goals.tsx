@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
@@ -106,12 +107,20 @@ export default function GoalsPage() {
   const showAdd = searchParams.get("add") === "true";
   const editId = searchParams.get("edit");
   const isSubmitting = navigation.state === "submitting";
+  const [filterPriority, setFilterPriority] = useState("");
+  const [filterSearch, setFilterSearch] = useState("");
+
+  const filteredGoals = goals.filter((g) => {
+    if (filterPriority && g.priority !== filterPriority) return false;
+    if (filterSearch && !g.name.toLowerCase().includes(filterSearch.toLowerCase())) return false;
+    return true;
+  });
 
   const domainMap = new Map(domains.map((d) => [d.id, d.name]));
-  const active = goals.filter((g) => g.status === "active");
-  const paused = goals.filter((g) => g.status === "paused");
-  const completed = goals.filter((g) => g.status === "completed");
-  const abandoned = goals.filter((g) => g.status === "abandoned");
+  const active = filteredGoals.filter((g) => g.status === "active");
+  const paused = filteredGoals.filter((g) => g.status === "paused");
+  const completed = filteredGoals.filter((g) => g.status === "completed");
+  const abandoned = filteredGoals.filter((g) => g.status === "abandoned");
   const editGoal = editId ? goals.find((g) => g.id === editId) : undefined;
 
   function getProgress(goal: Goal): number {
@@ -204,8 +213,25 @@ export default function GoalsPage() {
         <div className={styles.error}>{actionData.error}</div>
       )}
 
+      {goals.length > 0 && (
+        <div className={styles.filterBar}>
+          <input type="text" className={styles.filterSearch} placeholder="Search goals..." value={filterSearch} onChange={(e) => setFilterSearch(e.target.value)} />
+          <select className={styles.filterSelect} value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)}>
+            <option value="">All priorities</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+          {(filterPriority || filterSearch) && (
+            <button className={styles.filterClear} onClick={() => { setFilterPriority(""); setFilterSearch(""); }}>Clear filters</button>
+          )}
+        </div>
+      )}
+
       {goals.length === 0 ? (
         <p className={styles.emptyState}>No learning goals yet.</p>
+      ) : filteredGoals.length === 0 ? (
+        <p className={styles.emptyState}>No goals match your filters.</p>
       ) : (
         <>
           {renderSection("Active", active)}

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
@@ -107,6 +108,16 @@ export default function ProjectsPage() {
   const showAdd = searchParams.get("add") === "true";
   const editProject = projects.find((p) => p.id === searchParams.get("edit"));
   const isSubmitting = navigation.state === "submitting";
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterPriority, setFilterPriority] = useState("");
+  const [filterSearch, setFilterSearch] = useState("");
+
+  const filteredProjects = projects.filter((p) => {
+    if (filterStatus && p.status !== filterStatus) return false;
+    if (filterPriority && p.priority !== filterPriority) return false;
+    if (filterSearch && !p.name.toLowerCase().includes(filterSearch.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <div>
@@ -124,13 +135,34 @@ export default function ProjectsPage() {
         <div className={styles.error}>{actionData.error}</div>
       )}
 
+      {projects.length > 0 && (
+        <div className={styles.filterBar}>
+          <input type="text" className={styles.filterSearch} placeholder="Search projects..." value={filterSearch} onChange={(e) => setFilterSearch(e.target.value)} />
+          <select className={styles.filterSelect} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+            <option value="">All statuses</option>
+            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <select className={styles.filterSelect} value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)}>
+            <option value="">All priorities</option>
+            {PRIORITY_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+          {(filterStatus || filterPriority || filterSearch) && (
+            <button className={styles.filterClear} onClick={() => { setFilterStatus(""); setFilterPriority(""); setFilterSearch(""); }}>Clear filters</button>
+          )}
+        </div>
+      )}
+
       {projects.length === 0 ? (
         <p className={styles.emptyState}>
           No projects yet. Add your first project to get started.
         </p>
+      ) : filteredProjects.length === 0 ? (
+        <p className={styles.emptyState}>
+          No projects match your filters.
+        </p>
       ) : (
         <div className={styles.cardGrid}>
-          {projects.map((project) => (
+          {filteredProjects.map((project) => (
             <div className={styles.card} key={project.id}>
               <div className={styles.cardHeader}>
                 {project.url ? (

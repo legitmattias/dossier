@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
@@ -100,13 +101,24 @@ export default function SkillsPage() {
   const editSkillId = searchParams.get("edit");
   const editSkill = editSkillId ? skills.find((s) => s.id === editSkillId) : undefined;
   const isSubmitting = navigation.state === "submitting";
+  const [filterDomain, setFilterDomain] = useState("");
+  const [filterProficiency, setFilterProficiency] = useState("");
+  const [filterSearch, setFilterSearch] = useState("");
+
+  // Filter skills based on active filters
+  const filteredSkills = skills.filter((s) => {
+    if (filterDomain && s.domainId !== filterDomain) return false;
+    if (filterProficiency && s.proficiency !== filterProficiency) return false;
+    if (filterSearch && !s.name.toLowerCase().includes(filterSearch.toLowerCase())) return false;
+    return true;
+  });
 
   // Build domain/category lookup maps
   const domainMap = new Map(domains.map((d) => [d.id, d]));
 
   // Group skills by domain
   const skillsByDomain = new Map<string, Skill[]>();
-  for (const skill of skills) {
+  for (const skill of filteredSkills) {
     const list = skillsByDomain.get(skill.domainId) ?? [];
     list.push(skill);
     skillsByDomain.set(skill.domainId, list);
@@ -128,9 +140,53 @@ export default function SkillsPage() {
         <div className={styles.error}>{actionData.error}</div>
       )}
 
+      {skills.length > 0 && (
+        <div className={styles.filterBar}>
+          <input
+            type="text"
+            className={styles.filterSearch}
+            placeholder="Search skills..."
+            value={filterSearch}
+            onChange={(e) => setFilterSearch(e.target.value)}
+          />
+          <select
+            className={styles.filterSelect}
+            value={filterDomain}
+            onChange={(e) => setFilterDomain(e.target.value)}
+          >
+            <option value="">All domains</option>
+            {domains.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+          <select
+            className={styles.filterSelect}
+            value={filterProficiency}
+            onChange={(e) => setFilterProficiency(e.target.value)}
+          >
+            <option value="">All levels</option>
+            {PROFICIENCY_LEVELS.map((l) => (
+              <option key={l} value={l}>{l}</option>
+            ))}
+          </select>
+          {(filterDomain || filterProficiency || filterSearch) && (
+            <button
+              className={styles.filterClear}
+              onClick={() => { setFilterDomain(""); setFilterProficiency(""); setFilterSearch(""); }}
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+      )}
+
       {skills.length === 0 ? (
         <p className={styles.emptyState}>
           No skills yet. Add your first skill to get started.
+        </p>
+      ) : filteredSkills.length === 0 ? (
+        <p className={styles.emptyState}>
+          No skills match your filters.
         </p>
       ) : (
         [...skillsByDomain.entries()].map(([domainId, domainSkills]) => {
