@@ -18,7 +18,12 @@ const sessionStorage = createCookieSessionStorage({
 });
 
 export async function getSession(request: Request) {
-  return sessionStorage.getSession(request.headers.get("Cookie"));
+  try {
+    return await sessionStorage.getSession(request.headers.get("Cookie"));
+  } catch {
+    // Cookie is corrupted or signed with old secret — return a fresh session
+    return sessionStorage.getSession();
+  }
 }
 
 export async function getToken(request: Request): Promise<string | null> {
