@@ -66,6 +66,7 @@ export async function action({ request }: ActionFunctionArgs) {
         body: {
           proficiency: String(form.get("proficiency")),
           notes: String(form.get("notes") ?? "") || undefined,
+          visibility: String(form.get("visibility") ?? "public"),
         },
       });
       return json({ ok: true });
@@ -96,6 +97,8 @@ export default function SkillsPage() {
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdd = searchParams.get("add") === "true";
+  const editSkillId = searchParams.get("edit");
+  const editSkill = editSkillId ? skills.find((s) => s.id === editSkillId) : undefined;
   const isSubmitting = navigation.state === "submitting";
 
   // Build domain/category lookup maps
@@ -165,6 +168,13 @@ export default function SkillsPage() {
                           )}
                         </td>
                         <td className={styles.actions}>
+                          <button
+                            type="button"
+                            className={styles.cancelButton}
+                            onClick={() => setSearchParams({ edit: skill.id })}
+                          >
+                            Edit
+                          </button>
                           <Form method="post">
                             <input type="hidden" name="intent" value="delete" />
                             <input type="hidden" name="skillId" value={skill.id} />
@@ -179,6 +189,66 @@ export default function SkillsPage() {
             </div>
           );
         })
+      )}
+
+      {/* Edit Skill Modal */}
+      {editSkill && (
+        <div className={styles.modal} onClick={() => setSearchParams({})}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Edit Skill: {editSkill.name}</h2>
+            <Form method="post" className={styles.form}>
+              <input type="hidden" name="intent" value="update" />
+              <input type="hidden" name="skillId" value={editSkill.id} />
+
+              <div className={styles.field}>
+                <label htmlFor="edit-proficiency" className={styles.label}>Proficiency</label>
+                <select
+                  id="edit-proficiency"
+                  name="proficiency"
+                  required
+                  className={styles.select}
+                  defaultValue={editSkill.proficiency}
+                >
+                  {PROFICIENCY_LEVELS.map((level) => (
+                    <option key={level} value={level}>{level}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-notes" className={styles.label}>Notes (optional)</label>
+                <input
+                  id="edit-notes"
+                  name="notes"
+                  className={styles.input}
+                  defaultValue={editSkill.notes ?? ""}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-visibility" className={styles.label}>Visibility</label>
+                <select
+                  id="edit-visibility"
+                  name="visibility"
+                  className={styles.select}
+                  defaultValue={editSkill.visibility ?? "public"}
+                >
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+
+              <div className={styles.formActions}>
+                <button type="button" onClick={() => setSearchParams({})} className={styles.cancelButton}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
+                  {isSubmitting ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </Form>
+          </div>
+        </div>
       )}
 
       {/* Add Skill Modal */}

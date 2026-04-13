@@ -105,6 +105,7 @@ export default function ProjectsPage() {
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdd = searchParams.get("add") === "true";
+  const editProject = projects.find((p) => p.id === searchParams.get("edit"));
   const isSubmitting = navigation.state === "submitting";
 
   return (
@@ -176,6 +177,12 @@ export default function ProjectsPage() {
                 <td className={styles.categoryName}>{project.visibility}</td>
                 <td>{project.notes ?? ""}</td>
                 <td className={styles.actions}>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => setSearchParams({ edit: project.id })}
+                  >
+                    Edit
+                  </button>
                   <Form method="post">
                     <input type="hidden" name="intent" value="delete" />
                     <input type="hidden" name="projectId" value={project.id} />
@@ -260,6 +267,86 @@ export default function ProjectsPage() {
                 </button>
                 <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
                   {isSubmitting ? "Adding..." : "Add Project"}
+                </button>
+              </div>
+            </Form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Project Modal */}
+      {editProject && (
+        <div className={styles.modal} onClick={() => setSearchParams({})}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Edit Project</h2>
+            <Form method="post" className={styles.form}>
+              <input type="hidden" name="intent" value="update" />
+              <input type="hidden" name="projectId" value={editProject.id} />
+
+              <div className={styles.field}>
+                <label htmlFor="edit-name" className={styles.label}>Name</label>
+                <input id="edit-name" name="name" required className={styles.input} defaultValue={editProject.name} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-description" className={styles.label}>Description (optional)</label>
+                <input id="edit-description" name="description" className={styles.input} defaultValue={editProject.description ?? ""} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-url" className={styles.label}>URL (optional)</label>
+                <input id="edit-url" name="url" type="url" className={styles.input} defaultValue={editProject.url ?? ""} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-role" className={styles.label}>Role (optional)</label>
+                <input id="edit-role" name="role" className={styles.input} defaultValue={editProject.role ?? ""} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-notes" className={styles.label}>Notes (optional)</label>
+                <input id="edit-notes" name="notes" className={styles.input} defaultValue={editProject.notes ?? ""} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-status" className={styles.label}>Status</label>
+                <select id="edit-status" name="status" className={styles.select} defaultValue={editProject.status}>
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-priority" className={styles.label}>Priority</label>
+                <select id="edit-priority" name="priority" className={styles.select} defaultValue={editProject.priority}>
+                  {PRIORITY_OPTIONS.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-featured" className={styles.label}>
+                  <input id="edit-featured" name="featured" type="checkbox" defaultChecked={editProject.featured} /> Featured
+                </label>
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-visibility" className={styles.label}>Visibility</label>
+                <select id="edit-visibility" name="visibility" className={styles.select} defaultValue={editProject.visibility}>
+                  {VISIBILITY_OPTIONS.map((v) => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.formActions}>
+                <button type="button" onClick={() => setSearchParams({})} className={styles.cancelButton}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
+                  {isSubmitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </Form>

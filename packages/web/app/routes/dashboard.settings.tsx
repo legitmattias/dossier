@@ -31,9 +31,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     api<{ user: { id: string; username: string; email: string } }>("/auth/me", { token }),
     api<{ keys: ApiKey[] }>("/auth/api-keys", { token }),
     api<string>("/profile/export?format=claude", { token }),
-    api<{ profile: Profile }>("/profile", { token }).catch(() => ({ profile: {} as Profile })),
+    api<Profile>("/profile", { token }).catch(() => ({} as Profile)),
   ]);
-  return json({ user, keys, exportPreview: exportClaude, profile: profileData.profile });
+  return json({ user, keys, exportPreview: exportClaude, profile: profileData });
 }
 
 export async function action({ request }: ActionFunctionArgs) {

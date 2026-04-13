@@ -14,6 +14,7 @@ interface Goal {
   progress: Array<{ percentage: number }>;
   domainId: string;
   description?: string;
+  motivation?: string;
   visibility?: string;
 }
 
@@ -67,6 +68,27 @@ export async function action({ request }: ActionFunctionArgs) {
       return json({ ok: true });
     }
 
+    if (intent === "update") {
+      await api(`/profile/goals/${form.get("goalId")}`, {
+        method: "PUT",
+        token,
+        body: {
+          name: String(form.get("name")),
+          description: String(form.get("description") ?? "") || undefined,
+          motivation: String(form.get("motivation") ?? "") || undefined,
+          priority: String(form.get("priority")),
+          status: String(form.get("status")),
+          visibility: String(form.get("visibility") ?? "public"),
+        },
+      });
+      return json({ ok: true });
+    }
+
+    if (intent === "delete") {
+      await api(`/profile/goals/${form.get("goalId")}`, { method: "DELETE", token });
+      return json({ ok: true });
+    }
+
     return json({ error: "Unknown action" }, { status: 400 });
   } catch (error) {
     if (error instanceof ApiError) {
@@ -82,12 +104,15 @@ export default function GoalsPage() {
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdd = searchParams.get("add") === "true";
+  const editId = searchParams.get("edit");
   const isSubmitting = navigation.state === "submitting";
 
   const domainMap = new Map(domains.map((d) => [d.id, d.name]));
   const active = goals.filter((g) => g.status === "active");
   const paused = goals.filter((g) => g.status === "paused");
   const completed = goals.filter((g) => g.status === "completed");
+  const abandoned = goals.filter((g) => g.status === "abandoned");
+  const editGoal = editId ? goals.find((g) => g.id === editId) : undefined;
 
   function getProgress(goal: Goal): number {
     if (goal.progress.length === 0) return 0;
@@ -130,6 +155,26 @@ export default function GoalsPage() {
             />
             <button type="submit" className={styles.editButton}>Update</button>
           </Form>
+          <button
+            className={styles.editButton}
+            onClick={() => setSearchParams({ edit: goal.id })}
+          >
+            Edit
+          </button>
+          <Form method="post" style={{ display: "inline" }}>
+            <input type="hidden" name="intent" value="delete" />
+            <input type="hidden" name="goalId" value={goal.id} />
+            <button
+              type="submit"
+              className={styles.editButton}
+              style={{ color: "var(--color-danger, #c0392b)" }}
+              onClick={(e) => {
+                if (!confirm(`Delete goal "${goal.name}"?`)) e.preventDefault();
+              }}
+            >
+              Delete
+            </button>
+          </Form>
         </td>
       </tr>
     );
@@ -170,6 +215,7 @@ export default function GoalsPage() {
           {renderSection("Active", active)}
           {renderSection("Paused", paused)}
           {renderSection("Completed", completed)}
+          {renderSection("Abandoned", abandoned)}
         </>
       )}
 
@@ -228,6 +274,69 @@ export default function GoalsPage() {
                 </button>
                 <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
                   {isSubmitting ? "Adding..." : "Add Goal"}
+                </button>
+              </div>
+            </Form>
+          </div>
+        </div>
+      )}
+
+      {editGoal && (
+        <div className={styles.modal} onClick={() => setSearchParams({})}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Edit Learning Goal</h2>
+            <Form method="post" className={styles.form}>
+              <input type="hidden" name="intent" value="update" />
+              <input type="hidden" name="goalId" value={editGoal.id} />
+
+              <div className={styles.field}>
+                <label htmlFor="edit-name" className={styles.label}>Name</label>
+                <input id="edit-name" name="name" required className={styles.input} defaultValue={editGoal.name} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-description" className={styles.label}>Description (optional)</label>
+                <input id="edit-description" name="description" className={styles.input} defaultValue={editGoal.description ?? ""} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-motivation" className={styles.label}>Motivation (optional)</label>
+                <textarea id="edit-motivation" name="motivation" className={styles.input} rows={3} defaultValue={editGoal.motivation ?? ""} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-priority" className={styles.label}>Priority</label>
+                <select id="edit-priority" name="priority" className={styles.select} defaultValue={editGoal.priority}>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-status" className={styles.label}>Status</label>
+                <select id="edit-status" name="status" className={styles.select} defaultValue={editGoal.status}>
+                  <option value="active">Active</option>
+                  <option value="paused">Paused</option>
+                  <option value="completed">Completed</option>
+                  <option value="abandoned">Abandoned</option>
+                </select>
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-visibility" className={styles.label}>Visibility</label>
+                <select id="edit-visibility" name="visibility" className={styles.select} defaultValue={editGoal.visibility ?? "public"}>
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+
+              <div className={styles.formActions}>
+                <button type="button" onClick={() => setSearchParams({})} className={styles.cancelButton}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
+                  {isSubmitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </Form>

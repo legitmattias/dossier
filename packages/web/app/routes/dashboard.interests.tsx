@@ -50,6 +50,19 @@ export async function action({ request }: ActionFunctionArgs) {
       return json({ ok: true });
     }
 
+    if (intent === "update") {
+      await api(`/profile/interests/${form.get("interestId")}`, {
+        method: "PUT",
+        token,
+        body: {
+          name: String(form.get("name")),
+          description: String(form.get("description") ?? "") || undefined,
+          visibility: String(form.get("visibility") ?? "public"),
+        },
+      });
+      return json({ ok: true });
+    }
+
     if (intent === "delete") {
       await api(`/profile/interests/${form.get("interestId")}`, {
         method: "DELETE",
@@ -73,6 +86,7 @@ export default function InterestsPage() {
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdd = searchParams.get("add") === "true";
+  const editInterest = interests.find((i) => i.id === searchParams.get("edit"));
   const isSubmitting = navigation.state === "submitting";
 
   const domainMap = new Map(domains.map((d) => [d.id, d.name]));
@@ -109,6 +123,12 @@ export default function InterestsPage() {
                   )}
                 </td>
                 <td className={styles.actions}>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => setSearchParams({ edit: interest.id })}
+                  >
+                    Edit
+                  </button>
                   <Form method="post">
                     <input type="hidden" name="intent" value="delete" />
                     <input type="hidden" name="interestId" value={interest.id} />
@@ -162,6 +182,45 @@ export default function InterestsPage() {
                 </button>
                 <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
                   {isSubmitting ? "Adding..." : "Add Interest"}
+                </button>
+              </div>
+            </Form>
+          </div>
+        </div>
+      )}
+
+      {editInterest && (
+        <div className={styles.modal} onClick={() => setSearchParams({})}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Edit Interest</h2>
+            <Form method="post" className={styles.form}>
+              <input type="hidden" name="intent" value="update" />
+              <input type="hidden" name="interestId" value={editInterest.id} />
+
+              <div className={styles.field}>
+                <label htmlFor="edit-name" className={styles.label}>Name</label>
+                <input id="edit-name" name="name" required className={styles.input} defaultValue={editInterest.name} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-description" className={styles.label}>Description (optional)</label>
+                <input id="edit-description" name="description" className={styles.input} defaultValue={editInterest.description ?? ""} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-visibility" className={styles.label}>Visibility</label>
+                <select id="edit-visibility" name="visibility" className={styles.select} defaultValue={editInterest.visibility ?? "public"}>
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+
+              <div className={styles.formActions}>
+                <button type="button" onClick={() => setSearchParams({})} className={styles.cancelButton}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
+                  {isSubmitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </Form>
