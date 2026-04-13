@@ -6,8 +6,8 @@ import { createConnection } from "./db/connection.js";
 import { ensureTables } from "./db/migrate.js";
 import type { DbConnection } from "./db/connection.js";
 
-// Uses Postgres — set DATABASE_URL or defaults to local test database
-const TEST_DATABASE_URL = process.env["DATABASE_URL"] ?? "postgres://dossier:dossier@localhost:5432/dossier_test";
+// Uses Postgres — set DATABASE_URL or defaults to local dev database (port 5433 matches docker-compose.dev.yml)
+const TEST_DATABASE_URL = process.env["DATABASE_URL"] ?? "postgres://dossier:dossier@localhost:5433/dossier_test";
 
 let dbConn: DbConnection;
 let app: ReturnType<typeof createApp>;

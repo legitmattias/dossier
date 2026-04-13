@@ -1,0 +1,16 @@
+# Local development database for running API tests.
+# Usage: docker compose -f docker/docker-compose.dev.yml up -d
+services:
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=dossier
+      - POSTGRES_PASSWORD=dossier
+      - POSTGRES_DB=dossier_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dossier"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
