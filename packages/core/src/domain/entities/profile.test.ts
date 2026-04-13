@@ -5,6 +5,7 @@ import {
   GoalNotFoundError,
   InterestNotFoundError,
   InvalidNameError,
+  ProjectNotFoundError,
   SkillNotFoundError,
 } from "../errors/domain-errors.js";
 import {
@@ -13,6 +14,7 @@ import {
   toGoalId,
   toInterestId,
   toProfileId,
+  toProjectId,
   toSkillId,
 } from "../value-objects/identifiers.js";
 import { createSlug } from "../value-objects/slug.js";
@@ -20,21 +22,26 @@ import { createCategory } from "./category.js";
 import { createDomain } from "./domain-entity.js";
 import { createInterest } from "./interest.js";
 import { createLearningGoal } from "./learning-goal.js";
+import { createProject } from "./project.js";
 import {
   addDomainToProfile,
   addGoalToProfile,
   addInterestToProfile,
+  addProjectToProfile,
   addSkillToProfile,
   createProfile,
   findDomainInProfile,
   findGoalInProfile,
   findInterestInProfile,
+  findProjectInProfile,
   findSkillInProfile,
   removeDomainFromProfile,
   removeGoalFromProfile,
   removeInterestFromProfile,
+  removeProjectFromProfile,
   removeSkillFromProfile,
   updateGoalInProfile,
+  updateProjectInProfile,
   updateSkillInProfile,
 } from "./profile.js";
 import { createSkill, updateSkill } from "./skill.js";
@@ -90,6 +97,14 @@ function makeInterest(id = "interest-1", name = "Distributed Systems") {
   });
 }
 
+function makeProject(id = "project-1", name = "My Project") {
+  return createProject({
+    id: toProjectId(id),
+    slug: createSlug(name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")),
+    name,
+  });
+}
+
 // --- Tests ---
 
 describe("createProfile", () => {
@@ -103,6 +118,7 @@ describe("createProfile", () => {
     expect(profile.skills).toEqual([]);
     expect(profile.goals).toEqual([]);
     expect(profile.interests).toEqual([]);
+    expect(profile.projects).toEqual([]);
     expect(profile.createdAt).toBeInstanceOf(Date);
   });
 
@@ -339,6 +355,52 @@ describe("interest operations", () => {
   it("throws InterestNotFoundError when removing unknown interest", () => {
     expect(() => removeInterestFromProfile(makeProfile(), toInterestId("nope"))).toThrow(
       InterestNotFoundError,
+    );
+  });
+});
+
+describe("project operations", () => {
+  it("adds a project", () => {
+    const profile = addProjectToProfile(makeProfile(), makeProject());
+    expect(profile.projects).toHaveLength(1);
+  });
+
+  it("finds a project by ID", () => {
+    const profile = addProjectToProfile(makeProfile(), makeProject());
+    const found = findProjectInProfile(profile, toProjectId("project-1"));
+    expect(found.name).toBe("My Project");
+  });
+
+  it("throws ProjectNotFoundError for unknown project", () => {
+    expect(() => findProjectInProfile(makeProfile(), toProjectId("nope"))).toThrow(
+      ProjectNotFoundError,
+    );
+  });
+
+  it("updates a project in the profile", () => {
+    const project = makeProject();
+    const profile = addProjectToProfile(makeProfile(), project);
+    const updatedProject = { ...project, name: "Updated Project" };
+    const updated = updateProjectInProfile(profile, toProjectId("project-1"), updatedProject);
+
+    expect(findProjectInProfile(updated, toProjectId("project-1")).name).toBe("Updated Project");
+  });
+
+  it("throws ProjectNotFoundError when updating unknown project", () => {
+    expect(() =>
+      updateProjectInProfile(makeProfile(), toProjectId("nope"), makeProject()),
+    ).toThrow(ProjectNotFoundError);
+  });
+
+  it("removes a project", () => {
+    const profile = addProjectToProfile(makeProfile(), makeProject());
+    const updated = removeProjectFromProfile(profile, toProjectId("project-1"));
+    expect(updated.projects).toHaveLength(0);
+  });
+
+  it("throws ProjectNotFoundError when removing unknown project", () => {
+    expect(() => removeProjectFromProfile(makeProfile(), toProjectId("nope"))).toThrow(
+      ProjectNotFoundError,
     );
   });
 });

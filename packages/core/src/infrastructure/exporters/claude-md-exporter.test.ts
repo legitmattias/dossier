@@ -3,13 +3,17 @@ import { describe, expect, it } from "vitest";
 import {
   addDomainToProfile,
   addGoalToProfile,
+  addProjectToProfile,
   addSkillToProfile,
   BUILT_IN_DOMAINS,
   createLearningGoal,
   createProfile,
+  createProject,
   createSkill,
+  createSlug,
   toGoalId,
   toProfileId,
+  toProjectId,
   toSkillId,
 } from "../../domain/index.js";
 import { slugify } from "../../application/helpers/slugify.js";
@@ -130,6 +134,36 @@ describe("ClaudeMdExporter", () => {
     const profile = createProfile({ id: toProfileId("empty"), name: "Empty" });
     const output = exporter.export(profile);
     expect(output).toBe("# Dossier Profile: Empty\n");
+  });
+
+  it("shows featured projects section", () => {
+    let profile = createExportTestProfile();
+    const project = createProject({
+      id: toProjectId("project-1"),
+      slug: createSlug(slugify("My App")),
+      name: "My App",
+      description: "A cool app",
+      featured: true,
+    });
+    profile = addProjectToProfile(profile, project);
+
+    const output = exporter.export(profile);
+    expect(output).toContain("## Featured Projects");
+    expect(output).toContain("**My App**");
+    expect(output).toContain("A cool app");
+  });
+
+  it("shows active non-featured projects section", () => {
+    let profile = createExportTestProfile();
+    const project = createProject({
+      id: toProjectId("project-2"),
+      slug: createSlug(slugify("Side Project")),
+      name: "Side Project",
+    });
+    profile = addProjectToProfile(profile, project);
+
+    const output = exporter.export(profile);
+    expect(output).toContain("## Active Projects");
   });
 
   it("ends with trailing newline", () => {
