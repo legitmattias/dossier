@@ -27,6 +27,32 @@ profileRoutes.get("/", requireAuth, requireScope("read"), async (c) => {
   return c.json(serialized);
 });
 
+// PATCH /profile — Update profile-level fields (name, bio, customInstructions, preferredLanguage)
+profileRoutes.patch("/", requireAuth, requireScope("write"), async (c) => {
+  const body = await c.req.json<{
+    name?: string;
+    bio?: string;
+    preferredLanguage?: string;
+    customInstructions?: string;
+  }>();
+  const deps = getDeps(c);
+  const profile = await deps.profileRepository.load();
+  if (!profile) return c.json({ error: "Profile not found" }, 404);
+
+  const updated = {
+    ...profile,
+    ...(body.name !== undefined && { name: body.name }),
+    ...(body.bio !== undefined && { bio: body.bio }),
+    ...(body.preferredLanguage !== undefined && { preferredLanguage: body.preferredLanguage }),
+    ...(body.customInstructions !== undefined && { customInstructions: body.customInstructions }),
+    updatedAt: new Date(),
+  };
+  await deps.profileRepository.save(updated);
+
+  const serialized = infrastructure.serializeProfile(updated);
+  return c.json(serialized);
+});
+
 // GET /profile/export?format=claude
 profileRoutes.get("/export", requireAuth, requireScope("read"), async (c) => {
   const format = c.req.query("format") ?? "json";
