@@ -148,4 +148,5 @@ export async function ensureTables(db: Database): Promise<void> {
   await db.execute(sql`ALTER TABLE goals ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'`);
   await db.execute(sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'`);
   await db.execute(sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'`);
+  await db.execute(sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS notes TEXT`);
 }

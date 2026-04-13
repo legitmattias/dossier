@@ -13,6 +13,7 @@ export interface AddProjectInput {
   readonly visibility?: string;
   readonly skillIds?: readonly string[];
   readonly highlights?: readonly string[];
+  readonly notes?: string;
   readonly startDate?: string | Date;
   readonly endDate?: string | Date;
 }
@@ -29,6 +30,7 @@ export interface UpdateProjectInput {
   readonly visibility?: string;
   readonly skillIds?: readonly string[];
   readonly highlights?: readonly string[];
+  readonly notes?: string;
   readonly startDate?: string | Date;
   readonly endDate?: string | Date;
 }
@@ -57,6 +59,7 @@ export interface ProjectOutput {
   readonly visibility: string;
   readonly skillIds: readonly string[];
   readonly highlights: readonly string[];
+  readonly notes?: string;
   readonly startDate?: string;
   readonly endDate?: string;
   readonly createdAt: string;

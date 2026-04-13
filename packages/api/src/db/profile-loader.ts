@@ -111,6 +111,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     featured: p.featured,
     skillIds: (p.skillIds as string[]) ?? [],
     highlights: (p.highlights as string[]) ?? [],
+    ...(p.notes != null && { notes: p.notes }),
     ...(p.startDate != null && { startDate: p.startDate }),
     ...(p.endDate != null && { endDate: p.endDate }),
     visibility: p.visibility as "public" | "private",

@@ -17,6 +17,7 @@ export interface Project {
   readonly featured: boolean;
   readonly skillIds: readonly string[];
   readonly highlights: readonly string[];
+  readonly notes?: string;
   readonly startDate?: Date;
   readonly endDate?: Date;
   readonly visibility: "public" | "private";
@@ -36,6 +37,7 @@ export interface CreateProjectInput {
   readonly featured?: boolean;
   readonly skillIds?: readonly string[];
   readonly highlights?: readonly string[];
+  readonly notes?: string;
   readonly startDate?: Date;
   readonly endDate?: Date;
   readonly visibility?: "public" | "private";
@@ -61,6 +63,7 @@ export function createProject(input: CreateProjectInput): Readonly<Project> {
     featured: input.featured ?? false,
     skillIds: input.skillIds ?? [],
     highlights: input.highlights ?? [],
+    ...(input.notes !== undefined && { notes: input.notes }),
     ...(input.startDate !== undefined && { startDate: input.startDate }),
     ...(input.endDate !== undefined && { endDate: input.endDate }),
     visibility: input.visibility ?? "public",

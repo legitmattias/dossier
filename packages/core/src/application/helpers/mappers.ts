@@ -72,6 +72,7 @@ export function toProjectOutput(project: Project): ProjectOutput {
     visibility: project.visibility,
     skillIds: project.skillIds,
     highlights: project.highlights,
+    ...(project.notes !== undefined && { notes: project.notes }),
     ...(project.startDate !== undefined && { startDate: project.startDate.toISOString() }),
     ...(project.endDate !== undefined && { endDate: project.endDate.toISOString() }),
     createdAt: project.createdAt.toISOString(),

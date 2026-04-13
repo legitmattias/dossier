@@ -35,6 +35,7 @@ export async function updateProject(
     ...(input.visibility !== undefined && { visibility: input.visibility as "public" | "private" }),
     ...(input.skillIds !== undefined && { skillIds: input.skillIds }),
     ...(input.highlights !== undefined && { highlights: input.highlights }),
+    ...(input.notes !== undefined && { notes: input.notes }),
     ...(input.startDate !== undefined && { startDate: new Date(input.startDate) }),
     ...(input.endDate !== undefined && { endDate: new Date(input.endDate) }),
     updatedAt: new Date(),

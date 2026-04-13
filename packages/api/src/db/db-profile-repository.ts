@@ -91,7 +91,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       for (const project of profile.projects) {
         await tx.insert(schema.projects).values({
           id: project.id, profileId, slug: project.slug, name: project.name,
-          description: project.description, url: project.url, role: project.role,
+          description: project.description, url: project.url, role: project.role, notes: project.notes,
           status: project.status, priority: project.priority, featured: project.featured, visibility: project.visibility,
           skillIds: project.skillIds, highlights: project.highlights,
           startDate: project.startDate, endDate: project.endDate,

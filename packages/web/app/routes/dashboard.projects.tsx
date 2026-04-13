@@ -19,6 +19,7 @@ interface Project {
   visibility: string;
   skillIds: string[];
   highlights: string[];
+  notes?: string;
   startDate?: string;
   endDate?: string;
   createdAt: string;
@@ -48,6 +49,7 @@ export async function action({ request }: ActionFunctionArgs) {
           description: String(form.get("description") ?? "") || undefined,
           url: String(form.get("url") ?? "") || undefined,
           role: String(form.get("role") ?? "") || undefined,
+          notes: String(form.get("notes") ?? "") || undefined,
           status: String(form.get("status") || "active"),
           priority: String(form.get("priority") || "medium"),
           featured: form.get("featured") === "on",
@@ -134,6 +136,7 @@ export default function ProjectsPage() {
               <th>Priority</th>
               <th>Featured</th>
               <th>Visibility</th>
+              <th>Notes</th>
               <th></th>
             </tr>
           </thead>
@@ -148,6 +151,16 @@ export default function ProjectsPage() {
                   ) : (
                     project.name
                   )}
+                  {project.description && (
+                    <div style={{ fontSize: "0.85em", color: "var(--color-text-muted)", marginTop: "2px" }}>
+                      {project.description}
+                    </div>
+                  )}
+                  {project.role && (
+                    <div style={{ fontSize: "0.8em", color: "var(--color-text-muted)", fontStyle: "italic" }}>
+                      {project.role}
+                    </div>
+                  )}
                 </td>
                 <td>
                   <span className={styles.proficiency} data-level={project.status}>
@@ -161,6 +174,7 @@ export default function ProjectsPage() {
                 </td>
                 <td>{project.featured ? "\u2605" : ""}</td>
                 <td className={styles.categoryName}>{project.visibility}</td>
+                <td>{project.notes ?? ""}</td>
                 <td className={styles.actions}>
                   <Form method="post">
                     <input type="hidden" name="intent" value="delete" />
@@ -200,6 +214,11 @@ export default function ProjectsPage() {
               <div className={styles.field}>
                 <label htmlFor="role" className={styles.label}>Role (optional)</label>
                 <input id="role" name="role" className={styles.input} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
+                <input id="notes" name="notes" className={styles.input} />
               </div>
 
               <div className={styles.field}>

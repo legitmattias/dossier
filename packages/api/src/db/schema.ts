@@ -176,6 +176,7 @@ export const projects = pgTable("projects", {
   featured: boolean("featured").notNull().default(false),
   skillIds: jsonb("skill_ids").notNull().default([]),
   highlights: jsonb("highlights").notNull().default([]),
+  notes: text("notes"),
   startDate: timestamp("start_date", { withTimezone: true }),
   endDate: timestamp("end_date", { withTimezone: true }),
   visibility: text("visibility").notNull().default("public"),

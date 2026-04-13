@@ -33,6 +33,7 @@ export async function addProject(
     description: input.description,
     url: input.url,
     role: input.role,
+    notes: input.notes,
     status: input.status as Parameters<typeof createProject>[0]["status"],
     priority: input.priority as Parameters<typeof createProject>[0]["priority"],
     featured: input.featured,
