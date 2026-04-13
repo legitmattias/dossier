@@ -13,6 +13,7 @@ interface Skill {
   domainId: string;
   categoryId: string;
   notes?: string;
+  visibility?: string;
 }
 
 interface Domain {
@@ -52,6 +53,7 @@ export async function action({ request }: ActionFunctionArgs) {
           categoryId: String(form.get("categoryId")),
           proficiency: String(form.get("proficiency")),
           notes: String(form.get("notes") ?? "") || undefined,
+          visibility: form.get("visibility") as string || "public",
         },
       });
       return json({ ok: true });
@@ -140,6 +142,7 @@ export default function SkillsPage() {
                     <th>Proficiency</th>
                     <th>Category</th>
                     <th>Notes</th>
+                    <th>Visibility</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -156,6 +159,11 @@ export default function SkillsPage() {
                         </td>
                         <td className={styles.categoryName}>{category?.name ?? "—"}</td>
                         <td className={styles.categoryName}>{skill.notes ?? "—"}</td>
+                        <td>
+                          {skill.visibility === "private" && (
+                            <span className={styles.proficiency} data-level="private">private</span>
+                          )}
+                        </td>
                         <td className={styles.actions}>
                           <Form method="post">
                             <input type="hidden" name="intent" value="delete" />
@@ -220,6 +228,14 @@ export default function SkillsPage() {
               <div className={styles.field}>
                 <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
                 <input id="notes" name="notes" className={styles.input} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="visibility" className={styles.label}>Visibility</label>
+                <select id="visibility" name="visibility" className={styles.select} defaultValue="public">
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
               </div>
 
               <div className={styles.formActions}>

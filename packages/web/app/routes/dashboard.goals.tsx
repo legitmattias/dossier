@@ -14,6 +14,7 @@ interface Goal {
   progress: Array<{ percentage: number }>;
   domainId: string;
   description?: string;
+  visibility?: string;
 }
 
 interface Domain {
@@ -47,6 +48,8 @@ export async function action({ request }: ActionFunctionArgs) {
           domainId: String(form.get("domainId")),
           priority: String(form.get("priority") || "medium"),
           description: String(form.get("description") ?? "") || undefined,
+          motivation: form.get("motivation") || undefined,
+          visibility: form.get("visibility") as string || "public",
         },
       });
       return json({ ok: true });
@@ -94,7 +97,12 @@ export default function GoalsPage() {
   function renderGoalRow(goal: Goal) {
     return (
       <tr key={goal.id}>
-        <td>{goal.name}</td>
+        <td>
+          {goal.name}
+          {goal.description && (
+            <div className={styles.categoryName} style={{ marginTop: "2px" }}>{goal.description}</div>
+          )}
+        </td>
         <td className={styles.categoryName}>{domainMap.get(goal.domainId) ?? "—"}</td>
         <td>
           <span className={styles.proficiency} data-level={goal.priority}>
@@ -102,6 +110,11 @@ export default function GoalsPage() {
           </span>
         </td>
         <td>{getProgress(goal)}%</td>
+        <td>
+          {goal.visibility === "private" && (
+            <span className={styles.proficiency} data-level="private">private</span>
+          )}
+        </td>
         <td className={styles.actions}>
           <Form method="post" style={{ display: "flex", gap: "4px", alignItems: "center" }}>
             <input type="hidden" name="intent" value="progress" />
@@ -129,7 +142,7 @@ export default function GoalsPage() {
         <h2 className={styles.domainName}>{title}</h2>
         <table className={styles.table}>
           <thead>
-            <tr><th>Goal</th><th>Domain</th><th>Priority</th><th>Progress</th><th></th></tr>
+            <tr><th>Goal</th><th>Domain</th><th>Priority</th><th>Progress</th><th>Visibility</th><th></th></tr>
           </thead>
           <tbody>{items.map(renderGoalRow)}</tbody>
         </table>
@@ -194,6 +207,19 @@ export default function GoalsPage() {
               <div className={styles.field}>
                 <label htmlFor="description" className={styles.label}>Description (optional)</label>
                 <input id="description" name="description" className={styles.input} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="motivation" className={styles.label}>Motivation (optional)</label>
+                <textarea id="motivation" name="motivation" className={styles.input} rows={3} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="visibility" className={styles.label}>Visibility</label>
+                <select id="visibility" name="visibility" className={styles.select} defaultValue="public">
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
               </div>
 
               <div className={styles.formActions}>

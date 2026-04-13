@@ -71,6 +71,7 @@
 .proficiency[data-level="proficient"] { background: #d1fae5; color: #059669; }
 .proficiency[data-level="advanced"] { background: #fef3c7; color: #d97706; }
 .proficiency[data-level="expert"] { background: #ede9fe; color: #7c3aed; }
+.proficiency[data-level="private"] { background: #f3f4f6; color: #9ca3af; }
 
 .actions {
   display: flex;
