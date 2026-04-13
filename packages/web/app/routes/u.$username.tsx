@@ -5,12 +5,23 @@ import { Link, useLoaderData } from "@remix-run/react";
 import { api, ApiError } from "~/lib/api.server";
 import styles from "~/styles/public-profile.module.css";
 
+interface PublicProject {
+  name: string;
+  description?: string;
+  url?: string;
+  role?: string;
+  status: string;
+  featured: boolean;
+  visibility: string;
+}
+
 interface PublicProfile {
   name: string;
   skills: Array<{ name: string; proficiency: string; domainId: string; categoryId: string }>;
   goals: Array<{ name: string; status: string; priority: string }>;
   interests: Array<{ name: string }>;
   domains: Array<{ id: string; name: string; categories: Array<{ id: string; name: string }> }>;
+  projects: PublicProject[];
 }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -53,6 +64,9 @@ export default function PublicProfile() {
 
   const domainMap = new Map(profile.domains.map((d) => [d.id, d]));
   const activeGoals = profile.goals.filter((g) => g.status === "active");
+  const publicProjects = profile.projects
+    .filter((p) => p.visibility !== "private")
+    .sort((a, b) => (a.featured === b.featured ? 0 : a.featured ? -1 : 1));
 
   // Group skills by domain
   const skillsByDomain = new Map<string, typeof profile.skills>();
@@ -98,6 +112,41 @@ export default function PublicProfile() {
             <div key={goal.name} className={styles.goalItem}>
               <span>{goal.name}</span>
               <span className={styles.goalMeta}>{goal.priority} priority</span>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {publicProjects.length > 0 && (
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Projects</h2>
+          {publicProjects.map((project) => (
+            <div key={project.name} className={styles.projectItem}>
+              <div className={styles.projectHeader}>
+                {project.url ? (
+                  <a href={project.url} className={styles.projectLink} target="_blank" rel="noopener noreferrer">
+                    {project.name}
+                  </a>
+                ) : (
+                  <span className={styles.projectName}>{project.name}</span>
+                )}
+                <div className={styles.projectMeta}>
+                  {project.featured && (
+                    <span className={styles.featuredBadge}>Featured</span>
+                  )}
+                  <span className={styles.goalMeta}>{project.status}</span>
+                </div>
+              </div>
+              {(project.description || project.role) && (
+                <div className={styles.projectDetails}>
+                  {project.description && (
+                    <span className={styles.projectDescription}>{project.description}</span>
+                  )}
+                  {project.role && (
+                    <span className={styles.goalMeta}>{project.role}</span>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </section>

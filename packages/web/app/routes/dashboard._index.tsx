@@ -6,12 +6,20 @@ import { api } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
 import styles from "~/styles/overview.module.css";
 
+interface Project {
+  name: string;
+  description?: string;
+  status: string;
+  featured: boolean;
+}
+
 interface Profile {
   name: string;
   skills: Array<{ name: string; proficiency: string }>;
   goals: Array<{ name: string; status: string; priority: string }>;
   interests: Array<{ name: string }>;
   domains: Array<{ name: string; categories: Array<{ name: string }> }>;
+  projects: Project[];
 }
 
 export const meta: MetaFunction = () => [{ title: "Dashboard — Dossier" }];
@@ -26,6 +34,7 @@ export default function DashboardOverview() {
   const { profile } = useLoaderData<typeof loader>();
 
   const activeGoals = profile.goals.filter((g) => g.status === "active");
+  const featuredProjects = profile.projects.filter((p) => p.featured);
 
   return (
     <div>
@@ -48,6 +57,10 @@ export default function DashboardOverview() {
           <span className={styles.statNumber}>{profile.domains.length}</span>
           <span className={styles.statLabel}>Domains</span>
         </div>
+        <Link to="/dashboard/projects" className={styles.statCard}>
+          <span className={styles.statNumber}>{profile.projects.length}</span>
+          <span className={styles.statLabel}>Projects</span>
+        </Link>
       </div>
 
       {profile.skills.length > 0 && (
@@ -72,6 +85,27 @@ export default function DashboardOverview() {
               <li key={goal.name} className={styles.goalItem}>
                 <span>{goal.name}</span>
                 <span className={styles.goalPriority}>{goal.priority}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {featuredProjects.length > 0 && (
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Featured Projects</h2>
+          <ul className={styles.goalList}>
+            {featuredProjects.map((project) => (
+              <li key={project.name} className={styles.goalItem}>
+                <div>
+                  <span>{project.name}</span>
+                  {project.description && (
+                    <span className={styles.chipMeta} style={{ display: "block", marginTop: "2px" }}>
+                      {project.description}
+                    </span>
+                  )}
+                </div>
+                <span className={styles.goalPriority}>{project.status}</span>
               </li>
             ))}
           </ul>

@@ -86,6 +86,60 @@
   color: var(--color-text-muted);
 }
 
+.projectItem {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+}
+
+.projectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.projectName {
+  font-weight: 600;
+}
+
+.projectLink {
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.projectLink:hover {
+  text-decoration: underline;
+}
+
+.projectMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.featuredBadge {
+  font-size: 0.75rem;
+  padding: 2px var(--space-sm);
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.projectDetails {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: var(--space-xs);
+}
+
+.projectDescription {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
 .interestChip {
   display: inline-block;
   padding: var(--space-xs) var(--space-md);
