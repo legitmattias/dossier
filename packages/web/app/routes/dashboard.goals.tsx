@@ -187,7 +187,7 @@ export default function GoalsPage() {
         <h2 className={styles.domainName}>{title}</h2>
         <table className={styles.table}>
           <thead>
-            <tr><th>Goal</th><th>Domain</th><th>Priority</th><th>Progress</th><th>Visibility</th><th></th></tr>
+            <tr><th>Goal</th><th>Domain</th><th title="low, medium, or high">Priority</th><th title="Learning progress (0-100%)">Progress</th><th title="Public items appear in exports; private items are hidden">Visibility</th><th></th></tr>
           </thead>
           <tbody>{items.map(renderGoalRow)}</tbody>
         </table>
@@ -228,7 +228,7 @@ export default function GoalsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="name" className={styles.label}>Name</label>
-                <input id="name" name="name" required className={styles.input} />
+                <input id="name" name="name" required className={styles.input} placeholder="e.g. Learn Rust" />
               </div>
 
               <div className={styles.field}>
@@ -252,12 +252,12 @@ export default function GoalsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="description" className={styles.label}>Description (optional)</label>
-                <input id="description" name="description" className={styles.input} />
+                <input id="description" name="description" className={styles.input} placeholder="What does this goal involve?" />
               </div>
 
               <div className={styles.field}>
                 <label htmlFor="motivation" className={styles.label}>Motivation (optional)</label>
-                <textarea id="motivation" name="motivation" className={styles.input} rows={3} />
+                <textarea id="motivation" name="motivation" className={styles.input} rows={3} placeholder="Why are you learning this?" />
               </div>
 
               <div className={styles.field}>

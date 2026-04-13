@@ -122,6 +122,7 @@ export default function SettingsPage() {
               className={styles.input}
               rows={3}
               defaultValue={profile.bio ?? ""}
+              placeholder="A short bio about yourself"
             />
           </div>
 
@@ -132,6 +133,7 @@ export default function SettingsPage() {
               name="preferredLanguage"
               className={styles.input}
               defaultValue={profile.preferredLanguage ?? ""}
+              placeholder="e.g. English, Swedish"
             />
           </div>
 
@@ -143,6 +145,7 @@ export default function SettingsPage() {
               className={styles.input}
               rows={4}
               defaultValue={profile.customInstructions ?? ""}
+              placeholder="Instructions for AI tools using your profile"
             />
           </div>
 

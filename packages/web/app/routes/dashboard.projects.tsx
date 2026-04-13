@@ -132,12 +132,12 @@ export default function ProjectsPage() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Status</th>
-              <th>Priority</th>
-              <th>Featured</th>
-              <th>Visibility</th>
-              <th>Notes</th>
+              <th title="Project name, description, and role">Name</th>
+              <th title="active, completed, paused, or ideation">Status</th>
+              <th title="low, medium, or high">Priority</th>
+              <th title="Showcase project, shown prominently in exports">Featured</th>
+              <th title="Public items appear in exports; private items are hidden">Visibility</th>
+              <th title="Internal notes (not exported to LLMs)">Notes</th>
               <th></th>
             </tr>
           </thead>
@@ -158,8 +158,8 @@ export default function ProjectsPage() {
                     </div>
                   )}
                   {project.role && (
-                    <div style={{ fontSize: "0.8em", color: "var(--color-text-muted)", fontStyle: "italic" }}>
-                      {project.role}
+                    <div style={{ fontSize: "0.8em", color: "var(--color-text-muted)", fontStyle: "italic" }} title="Role">
+                      Role: {project.role}
                     </div>
                   )}
                 </td>
@@ -205,27 +205,27 @@ export default function ProjectsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="name" className={styles.label}>Name</label>
-                <input id="name" name="name" required className={styles.input} />
+                <input id="name" name="name" required className={styles.input} placeholder="e.g. My SaaS App" />
               </div>
 
               <div className={styles.field}>
                 <label htmlFor="description" className={styles.label}>Description (optional)</label>
-                <input id="description" name="description" className={styles.input} />
+                <input id="description" name="description" className={styles.input} placeholder="Brief summary of the project" />
               </div>
 
               <div className={styles.field}>
                 <label htmlFor="url" className={styles.label}>URL (optional)</label>
-                <input id="url" name="url" type="url" className={styles.input} />
+                <input id="url" name="url" type="url" className={styles.input} placeholder="https://github.com/..." />
               </div>
 
               <div className={styles.field}>
                 <label htmlFor="role" className={styles.label}>Role (optional)</label>
-                <input id="role" name="role" className={styles.input} />
+                <input id="role" name="role" className={styles.input} placeholder="e.g. Lead developer, Solo developer" />
               </div>
 
               <div className={styles.field}>
                 <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
-                <input id="notes" name="notes" className={styles.input} />
+                <input id="notes" name="notes" className={styles.input} placeholder="Internal notes (not exported)" />
               </div>
 
               <div className={styles.field}>

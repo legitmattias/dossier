@@ -142,10 +142,10 @@ export default function SkillsPage() {
                 <thead>
                   <tr>
                     <th>Skill</th>
-                    <th>Proficiency</th>
-                    <th>Category</th>
-                    <th>Notes</th>
-                    <th>Visibility</th>
+                    <th title="novice, familiar, proficient, advanced, or expert">Proficiency</th>
+                    <th title="Category within the domain">Category</th>
+                    <th title="Personal notes about this skill">Notes</th>
+                    <th title="Public items appear in exports; private items are hidden">Visibility</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -261,7 +261,7 @@ export default function SkillsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="name" className={styles.label}>Name</label>
-                <input id="name" name="name" required className={styles.input} />
+                <input id="name" name="name" required className={styles.input} placeholder="e.g. TypeScript, React, Swedish" />
               </div>
 
               <div className={styles.field}>
@@ -297,7 +297,7 @@ export default function SkillsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
-                <input id="notes" name="notes" className={styles.input} />
+                <input id="notes" name="notes" className={styles.input} placeholder="Personal notes about this skill" />
               </div>
 
               <div className={styles.field}>

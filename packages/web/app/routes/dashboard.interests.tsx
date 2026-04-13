@@ -150,7 +150,7 @@ export default function InterestsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="name" className={styles.label}>Name</label>
-                <input id="name" name="name" required className={styles.input} />
+                <input id="name" name="name" required className={styles.input} placeholder="e.g. WebAssembly, Modal Jazz" />
               </div>
 
               <div className={styles.field}>
@@ -165,7 +165,7 @@ export default function InterestsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="description" className={styles.label}>Description (optional)</label>
-                <input id="description" name="description" className={styles.input} />
+                <input id="description" name="description" className={styles.input} placeholder="Why are you interested in this?" />
               </div>
 
               <div className={styles.field}>

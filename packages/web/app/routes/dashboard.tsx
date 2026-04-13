@@ -54,6 +54,12 @@ export default function DashboardLayout() {
             Projects
           </NavLink>
           <NavLink
+            to="/dashboard/domains"
+            className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
+          >
+            Domains
+          </NavLink>
+          <NavLink
             to="/dashboard/settings"
             className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
           >
