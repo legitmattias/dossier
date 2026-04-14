@@ -17,6 +17,8 @@ export interface AddSkillInput {
 export interface UpdateSkillInput {
   readonly skillId: string;
   readonly name?: string;
+  readonly domainId?: string;
+  readonly categoryId?: string;
   readonly proficiency?: string;
   readonly notes?: string;
   readonly visibility?: string;

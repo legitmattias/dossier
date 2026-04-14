@@ -71,7 +71,7 @@ export function createSkill(input: CreateSkillInput): Readonly<Skill> {
 }
 
 export type UpdateSkillInput = Partial<
-  Pick<Skill, "name" | "proficiency" | "notes" | "visibility" | "featured">
+  Pick<Skill, "name" | "domainId" | "categoryId" | "proficiency" | "notes" | "visibility" | "featured">
 > & {
   readonly addSources?: readonly SkillSource[];
   readonly addUsage?: readonly SkillUsage[];
@@ -86,6 +86,8 @@ export function updateSkill(skill: Skill, updates: UpdateSkillInput): Readonly<S
   return {
     ...skill,
     name,
+    domainId: updates.domainId ?? skill.domainId,
+    categoryId: updates.categoryId ?? skill.categoryId,
     proficiency: updates.proficiency ?? skill.proficiency,
     ...(updates.notes !== undefined ? { notes: updates.notes } : {}),
     visibility: updates.visibility ?? skill.visibility,

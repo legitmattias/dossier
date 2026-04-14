@@ -1,5 +1,7 @@
 import {
   findSkillInProfile,
+  toDomainId,
+  toCategoryId,
   toSkillId,
   updateSkill as domainUpdateSkill,
   updateSkillInProfile,
@@ -32,6 +34,8 @@ export async function updateSkill(
 
   const updatedSkill = domainUpdateSkill(skill, {
     name: input.name,
+    domainId: input.domainId ? toDomainId(input.domainId) : undefined,
+    categoryId: input.categoryId ? toCategoryId(input.categoryId) : undefined,
     proficiency,
     notes: input.notes,
     visibility: input.visibility as "public" | "private" | undefined,

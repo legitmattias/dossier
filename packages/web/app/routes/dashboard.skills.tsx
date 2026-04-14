@@ -67,6 +67,9 @@ export async function action({ request }: ActionFunctionArgs) {
         method: "PUT",
         token,
         body: {
+          name: String(form.get("name")),
+          domainId: String(form.get("domainId")),
+          categoryId: String(form.get("categoryId")),
           proficiency: String(form.get("proficiency")),
           notes: String(form.get("notes") ?? "") || undefined,
           visibility: String(form.get("visibility") ?? "public"),
@@ -247,6 +250,37 @@ export default function SkillsPage() {
             <Form method="post" className={styles.form}>
               <input type="hidden" name="intent" value="update" />
               <input type="hidden" name="skillId" value={editSkill.id} />
+
+              <div className={styles.field}>
+                <label htmlFor="edit-name" className={styles.label}>Name</label>
+                <input
+                  id="edit-name"
+                  name="name"
+                  required
+                  className={styles.input}
+                  defaultValue={editSkill.name}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-domainId" className={styles.label}>Domain</label>
+                <select id="edit-domainId" name="domainId" required className={styles.select} defaultValue={editSkill.domainId}>
+                  {domains.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-categoryId" className={styles.label}>Category</label>
+                <select id="edit-categoryId" name="categoryId" required className={styles.select} defaultValue={editSkill.categoryId}>
+                  {domains.flatMap((d) =>
+                    d.categories.map((c) => (
+                      <option key={c.id} value={c.id}>{d.name} &gt; {c.name}</option>
+                    ))
+                  )}
+                </select>
+              </div>
 
               <div className={styles.field}>
                 <label htmlFor="edit-proficiency" className={styles.label}>Proficiency</label>
