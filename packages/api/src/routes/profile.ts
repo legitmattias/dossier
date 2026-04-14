@@ -23,8 +23,13 @@ profileRoutes.get("/", requireAuth, requireScope("read"), async (c) => {
   const profile = await deps.profileRepository.load();
   if (!profile) return c.json({ error: "Profile not found" }, 404);
 
-  const serialized = infrastructure.serializeProfile(profile);
-  return c.json(serialized);
+  try {
+    const serialized = infrastructure.serializeProfile(profile);
+    return c.json(serialized);
+  } catch (err) {
+    console.error("[GET /profile] Serialization error:", err);
+    throw err;
+  }
 });
 
 // PATCH /profile — Update profile-level fields (name, bio, customInstructions, preferredLanguage)

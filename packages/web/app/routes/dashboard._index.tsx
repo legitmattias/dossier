@@ -33,8 +33,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function DashboardOverview() {
   const { profile } = useLoaderData<typeof loader>();
 
-  const activeGoals = profile.goals.filter((g) => g.status === "active");
-  const featuredProjects = profile.projects.filter((p) => p.featured);
+  const activeGoals = (profile.goals ?? []).filter((g) => g.status === "active");
+  const projects = profile.projects ?? [];
+  const featuredProjects = projects.filter((p) => p.featured);
 
   return (
     <div>
@@ -58,7 +59,7 @@ export default function DashboardOverview() {
           <span className={styles.statLabel}>Domains</span>
         </div>
         <Link to="/dashboard/projects" className={styles.statCard} data-entity="projects">
-          <span className={styles.statNumber}>{profile.projects.length}</span>
+          <span className={styles.statNumber}>{projects.length}</span>
           <span className={styles.statLabel}>Projects</span>
         </Link>
       </div>

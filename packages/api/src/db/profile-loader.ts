@@ -69,7 +69,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     ...(s.notes != null && { notes: s.notes }),
     sources: (s.sources as Skill["sources"]) ?? [],
     usage: (s.usage as Skill["usage"]) ?? [],
-    visibility: s.visibility as "public" | "private",
+    visibility: (s.visibility ?? "public") as "public" | "private",
     createdAt: s.createdAt,
     updatedAt: s.updatedAt,
   }));
