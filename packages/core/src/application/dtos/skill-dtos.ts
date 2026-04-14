@@ -11,6 +11,7 @@ export interface AddSkillInput {
   readonly usage?: readonly SkillUsage[];
   readonly notes?: string;
   readonly visibility?: string;
+  readonly featured?: boolean;
 }
 
 export interface UpdateSkillInput {
@@ -19,6 +20,7 @@ export interface UpdateSkillInput {
   readonly proficiency?: string;
   readonly notes?: string;
   readonly visibility?: string;
+  readonly featured?: boolean;
   readonly addSources?: readonly SkillSource[];
   readonly addUsage?: readonly SkillUsage[];
 }
@@ -47,6 +49,7 @@ export interface SkillOutput {
   readonly usage: readonly SkillUsage[];
   readonly notes?: string;
   readonly visibility: string;
+  readonly featured: boolean;
   readonly createdAt: string;
   readonly updatedAt: string;
 }

@@ -66,7 +66,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
           id: skill.id, profileId, slug: skill.slug, name: skill.name,
           domainId: skill.domainId, categoryId: skill.categoryId,
           proficiency: skill.proficiency, notes: skill.notes,
-          sources: skill.sources, usage: skill.usage, visibility: skill.visibility,
+          sources: skill.sources, usage: skill.usage, visibility: skill.visibility, featured: skill.featured,
           createdAt: skill.createdAt, updatedAt: skill.updatedAt,
         });
       }
@@ -75,7 +75,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
         await tx.insert(schema.goals).values({
           id: goal.id, profileId, name: goal.name, domainId: goal.domainId,
           description: goal.description, motivation: goal.motivation,
-          priority: goal.priority, status: goal.status, visibility: goal.visibility,
+          priority: goal.priority, status: goal.status, visibility: goal.visibility, featured: goal.featured,
           progress: goal.progress, resources: goal.resources,
           targetDate: goal.targetDate, createdAt: goal.createdAt, updatedAt: goal.updatedAt,
         });
@@ -84,7 +84,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       for (const interest of profile.interests) {
         await tx.insert(schema.interests).values({
           id: interest.id, profileId, name: interest.name, domainId: interest.domainId,
-          description: interest.description, visibility: interest.visibility, createdAt: interest.createdAt,
+          description: interest.description, visibility: interest.visibility, featured: interest.featured, createdAt: interest.createdAt,
         });
       }
 

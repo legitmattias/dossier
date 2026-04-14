@@ -19,6 +19,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         proficiency: z.enum(PROFICIENCY_LEVELS).describe("Proficiency level"),
         notes: z.string().optional().describe("Optional notes about this skill"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
+        featured: z.boolean().optional().describe("Mark as featured/showcase item"),
       }),
     },
     withErrorHandler(async (input) => {
@@ -75,6 +76,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         proficiency: z.enum(PROFICIENCY_LEVELS).optional().describe("New proficiency level"),
         notes: z.string().optional().describe("Updated notes"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
+        featured: z.boolean().optional().describe("Mark as featured/showcase item"),
       }),
     },
     withErrorHandler(async (input) => {
@@ -110,6 +112,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         description: z.string().optional().describe("Goal description or motivation"),
         targetDate: z.string().optional().describe("Target date in ISO format (e.g. '2026-12-31')"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
+        featured: z.boolean().optional().describe("Mark as featured/showcase item"),
       }),
     },
     withErrorHandler(async (input) => {
@@ -194,6 +197,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         domainId: z.string().describe("Domain ID, slug, or name"),
         description: z.string().optional().describe("Why you're interested"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
+        featured: z.boolean().optional().describe("Mark as featured/showcase item"),
       }),
     },
     withErrorHandler(async (input) => {

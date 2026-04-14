@@ -17,6 +17,7 @@ interface Goal {
   description?: string;
   motivation?: string;
   visibility?: string;
+  featured?: boolean;
 }
 
 interface Domain {
@@ -52,6 +53,7 @@ export async function action({ request }: ActionFunctionArgs) {
           description: String(form.get("description") ?? "") || undefined,
           motivation: form.get("motivation") || undefined,
           visibility: form.get("visibility") as string || "public",
+          featured: form.get("featured") === "on",
         },
       });
       return json({ ok: true });
@@ -80,6 +82,7 @@ export async function action({ request }: ActionFunctionArgs) {
           priority: String(form.get("priority")),
           status: String(form.get("status")),
           visibility: String(form.get("visibility") ?? "public"),
+          featured: form.get("featured") === "on",
         },
       });
       return json({ ok: true });
@@ -158,6 +161,7 @@ export default function GoalsPage() {
         </div>
         {goal.description && <div className={styles.cardDescription}>{goal.description}</div>}
         <div className={styles.cardBadges}>
+          {goal.featured && <span className={styles.featuredBadge}>Featured</span>}
           <span className={styles.proficiency} data-level={goal.priority}>{goal.priority}</span>
           <span className={styles.proficiency} data-level={goal.status}>{goal.status}</span>
           {goal.visibility === "private" && (
@@ -283,6 +287,12 @@ export default function GoalsPage() {
               </div>
 
               <div className={styles.field}>
+                <label className={styles.label}>
+                  <input type="checkbox" name="featured" /> Featured
+                </label>
+              </div>
+
+              <div className={styles.field}>
                 <label htmlFor="visibility" className={styles.label}>Visibility</label>
                 <select id="visibility" name="visibility" className={styles.select} defaultValue="public">
                   <option value="public">Public</option>
@@ -343,6 +353,12 @@ export default function GoalsPage() {
                   <option value="completed">Completed</option>
                   <option value="abandoned">Abandoned</option>
                 </select>
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>
+                  <input type="checkbox" name="featured" defaultChecked={editGoal.featured} /> Featured
+                </label>
               </div>
 
               <div className={styles.field}>

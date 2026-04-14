@@ -20,6 +20,7 @@ export interface UpdateGoalInput {
   readonly priority?: string;
   readonly status?: string;
   readonly visibility?: string;
+  readonly featured?: boolean;
 }
 
 export interface UpdateGoalOutput {
@@ -44,6 +45,7 @@ export async function updateGoal(
     ...(input.priority !== undefined && { priority: input.priority as typeof goal.priority }),
     ...(input.status !== undefined && { status: input.status as typeof goal.status }),
     ...(input.visibility !== undefined && { visibility: input.visibility as typeof goal.visibility }),
+    ...(input.featured !== undefined && { featured: input.featured }),
     updatedAt: new Date(),
   };
 

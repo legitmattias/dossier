@@ -16,6 +16,7 @@ export interface UpdateInterestInput {
   readonly name?: string;
   readonly description?: string;
   readonly visibility?: string;
+  readonly featured?: boolean;
 }
 
 export interface UpdateInterestOutput {
@@ -37,6 +38,7 @@ export async function updateInterest(
     ...(input.name !== undefined && { name: input.name }),
     ...(input.description !== undefined && { description: input.description }),
     ...(input.visibility !== undefined && { visibility: input.visibility as "public" | "private" }),
+    ...(input.featured !== undefined && { featured: input.featured }),
   };
 
   const updatedProfile = {

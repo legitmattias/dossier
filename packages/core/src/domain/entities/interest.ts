@@ -7,6 +7,7 @@ export interface Interest {
   readonly domainId?: DomainId;
   readonly description?: string;
   readonly visibility: "public" | "private";
+  readonly featured: boolean;
   readonly createdAt: Date;
 }
 
@@ -16,6 +17,7 @@ export interface CreateInterestInput {
   readonly domainId?: DomainId;
   readonly description?: string;
   readonly visibility?: "public" | "private";
+  readonly featured?: boolean;
   readonly createdAt?: Date;
 }
 
@@ -30,6 +32,7 @@ export function createInterest(input: CreateInterestInput): Readonly<Interest> {
     ...(input.domainId !== undefined && { domainId: input.domainId }),
     ...(input.description !== undefined && { description: input.description }),
     visibility: input.visibility ?? "public",
+    featured: input.featured ?? false,
     createdAt: input.createdAt ?? new Date(),
   };
 }

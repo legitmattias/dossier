@@ -15,6 +15,7 @@ interface Skill {
   categoryId: string;
   notes?: string;
   visibility?: string;
+  featured?: boolean;
 }
 
 interface Domain {
@@ -55,6 +56,7 @@ export async function action({ request }: ActionFunctionArgs) {
           proficiency: String(form.get("proficiency")),
           notes: String(form.get("notes") ?? "") || undefined,
           visibility: form.get("visibility") as string || "public",
+          featured: form.get("featured") === "on",
         },
       });
       return json({ ok: true });
@@ -68,6 +70,7 @@ export async function action({ request }: ActionFunctionArgs) {
           proficiency: String(form.get("proficiency")),
           notes: String(form.get("notes") ?? "") || undefined,
           visibility: String(form.get("visibility") ?? "public"),
+          featured: form.get("featured") === "on",
         },
       });
       return json({ ok: true });
@@ -217,6 +220,7 @@ export default function SkillsPage() {
                           </div>
                         </div>
                         <div className={styles.cardBadges}>
+                          {skill.featured && <span className={styles.featuredBadge}>Featured</span>}
                           <span className={styles.proficiency} data-level={skill.proficiency}>
                             {skill.proficiency}
                           </span>
@@ -267,6 +271,12 @@ export default function SkillsPage() {
                   className={styles.input}
                   defaultValue={editSkill.notes ?? ""}
                 />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>
+                  <input type="checkbox" name="featured" defaultChecked={editSkill.featured} /> Featured
+                </label>
               </div>
 
               <div className={styles.field}>
@@ -342,6 +352,12 @@ export default function SkillsPage() {
               <div className={styles.field}>
                 <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
                 <input id="notes" name="notes" className={styles.input} placeholder="Personal notes about this skill" />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>
+                  <input type="checkbox" name="featured" /> Featured
+                </label>
               </div>
 
               <div className={styles.field}>

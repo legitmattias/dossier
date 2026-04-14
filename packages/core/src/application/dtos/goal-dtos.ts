@@ -9,6 +9,7 @@ export interface AddGoalInput {
   readonly motivation?: string;
   readonly priority?: string;
   readonly visibility?: string;
+  readonly featured?: boolean;
   readonly resources?: readonly Resource[];
   readonly targetDate?: string | Date;
 }
@@ -35,6 +36,7 @@ export interface GoalOutput {
   readonly motivation?: string;
   readonly priority: string;
   readonly visibility: string;
+  readonly featured: boolean;
   readonly status: GoalStatus;
   readonly progress: readonly Progress[];
   readonly resources: readonly Resource[];

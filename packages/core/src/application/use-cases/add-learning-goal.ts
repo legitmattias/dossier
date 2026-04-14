@@ -50,6 +50,7 @@ export async function addLearningGoal(
     resources: input.resources,
     targetDate,
     visibility: input.visibility as "public" | "private" | undefined,
+    featured: input.featured,
   });
 
   const updatedProfile = addGoalToProfile(profile, goal);

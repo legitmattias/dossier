@@ -34,6 +34,8 @@ export async function updateSkill(
     name: input.name,
     proficiency,
     notes: input.notes,
+    visibility: input.visibility as "public" | "private" | undefined,
+    featured: input.featured,
     addSources: input.addSources,
     addUsage: input.addUsage,
   });

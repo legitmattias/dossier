@@ -26,6 +26,7 @@ export interface Skill {
   readonly usage: readonly SkillUsage[];
   readonly notes?: string;
   readonly visibility: "public" | "private";
+  readonly featured: boolean;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -41,6 +42,7 @@ export interface CreateSkillInput {
   readonly usage?: readonly SkillUsage[];
   readonly notes?: string;
   readonly visibility?: "public" | "private";
+  readonly featured?: boolean;
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
 }
@@ -62,13 +64,14 @@ export function createSkill(input: CreateSkillInput): Readonly<Skill> {
     usage: input.usage ?? [],
     ...(input.notes !== undefined && { notes: input.notes }),
     visibility: input.visibility ?? "public",
+    featured: input.featured ?? false,
     createdAt: input.createdAt ?? now,
     updatedAt: input.updatedAt ?? now,
   };
 }
 
 export type UpdateSkillInput = Partial<
-  Pick<Skill, "name" | "proficiency" | "notes" | "visibility">
+  Pick<Skill, "name" | "proficiency" | "notes" | "visibility" | "featured">
 > & {
   readonly addSources?: readonly SkillSource[];
   readonly addUsage?: readonly SkillUsage[];
@@ -86,6 +89,7 @@ export function updateSkill(skill: Skill, updates: UpdateSkillInput): Readonly<S
     proficiency: updates.proficiency ?? skill.proficiency,
     ...(updates.notes !== undefined ? { notes: updates.notes } : {}),
     visibility: updates.visibility ?? skill.visibility,
+    featured: updates.featured ?? skill.featured,
     sources: updates.addSources
       ? [...skill.sources, ...updates.addSources]
       : skill.sources,

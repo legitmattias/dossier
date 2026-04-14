@@ -79,6 +79,7 @@ export const skills = pgTable("skills", {
   sources: jsonb("sources").notNull().default([]),
   usage: jsonb("usage").notNull().default([]),
   visibility: text("visibility").notNull().default("public"),
+  featured: boolean("featured").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
@@ -100,6 +101,7 @@ export const goals = pgTable("goals", {
   resources: jsonb("resources").notNull().default([]),
   targetDate: timestamp("target_date", { withTimezone: true }),
   visibility: text("visibility").notNull().default("public"),
+  featured: boolean("featured").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -113,6 +115,7 @@ export const interests = pgTable("interests", {
   domainId: text("domain_id").references(() => domains.id),
   description: text("description"),
   visibility: text("visibility").notNull().default("public"),
+  featured: boolean("featured").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

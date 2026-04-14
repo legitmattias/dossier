@@ -70,6 +70,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     sources: (s.sources as Skill["sources"]) ?? [],
     usage: (s.usage as Skill["usage"]) ?? [],
     visibility: (s.visibility ?? "public") as "public" | "private",
+    featured: s.featured ?? false,
     createdAt: s.createdAt,
     updatedAt: s.updatedAt,
   }));
@@ -86,6 +87,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     resources: (g.resources as LearningGoal["resources"]) ?? [],
     ...(g.targetDate != null && { targetDate: g.targetDate }),
     visibility: g.visibility as "public" | "private",
+    featured: g.featured ?? false,
     createdAt: g.createdAt,
     updatedAt: g.updatedAt,
   }));
@@ -96,6 +98,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     ...(i.domainId != null && { domainId: toDomainId(i.domainId) }),
     ...(i.description != null && { description: i.description }),
     visibility: i.visibility as "public" | "private",
+    featured: i.featured ?? false,
     createdAt: i.createdAt,
   }));
 

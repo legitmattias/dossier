@@ -12,6 +12,7 @@ interface Interest {
   domainId: string;
   description?: string;
   visibility?: string;
+  featured?: boolean;
 }
 
 interface Domain {
@@ -45,6 +46,7 @@ export async function action({ request }: ActionFunctionArgs) {
           domainId: String(form.get("domainId")),
           description: String(form.get("description") ?? "") || undefined,
           visibility: form.get("visibility") as string || "public",
+          featured: form.get("featured") === "on",
         },
       });
       return json({ ok: true });
@@ -58,6 +60,7 @@ export async function action({ request }: ActionFunctionArgs) {
           name: String(form.get("name")),
           description: String(form.get("description") ?? "") || undefined,
           visibility: String(form.get("visibility") ?? "public"),
+          featured: form.get("featured") === "on",
         },
       });
       return json({ ok: true });
@@ -129,6 +132,7 @@ export default function InterestsPage() {
               </div>
               {interest.domainId && <div className={styles.cardMeta}>{domainMap.get(interest.domainId) ?? "—"}</div>}
               <div className={styles.cardBadges}>
+                {interest.featured && <span className={styles.featuredBadge}>Featured</span>}
                 {interest.visibility === "private" && (
                   <span className={styles.proficiency} data-level="private">private</span>
                 )}
@@ -164,6 +168,12 @@ export default function InterestsPage() {
               <div className={styles.field}>
                 <label htmlFor="description" className={styles.label}>Description (optional)</label>
                 <input id="description" name="description" className={styles.input} placeholder="Why are you interested in this?" />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>
+                  <input type="checkbox" name="featured" /> Featured
+                </label>
               </div>
 
               <div className={styles.field}>
@@ -203,6 +213,12 @@ export default function InterestsPage() {
               <div className={styles.field}>
                 <label htmlFor="edit-description" className={styles.label}>Description (optional)</label>
                 <input id="edit-description" name="description" className={styles.input} defaultValue={editInterest.description ?? ""} />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>
+                  <input type="checkbox" name="featured" defaultChecked={editInterest.featured} /> Featured
+                </label>
               </div>
 
               <div className={styles.field}>
