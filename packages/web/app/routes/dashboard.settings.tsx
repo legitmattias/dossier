@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { api, ApiError } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
@@ -90,6 +90,14 @@ export default function SettingsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [keyCopied, setKeyCopied] = useState(false);
   const [keyDismissed, setKeyDismissed] = useState(false);
+
+  // Reset dismissed state when new key is generated
+  useEffect(() => {
+    if (actionData && "newKey" in actionData) {
+      setKeyDismissed(false);
+      setKeyCopied(false);
+    }
+  }, [actionData]);
 
   return (
     <div>
