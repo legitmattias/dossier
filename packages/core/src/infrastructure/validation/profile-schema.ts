@@ -171,7 +171,8 @@ export function parseProfile(json: unknown): Profile {
 
 // --- Serialization helpers ---
 
-function serializeDate(date: Date): string {
+function serializeDate(date: Date | string): string {
+  if (typeof date === "string") return date;
   return date.toISOString();
 }
 
