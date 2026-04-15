@@ -124,6 +124,7 @@ export default function SkillsPage() {
   const [saved, setSaved] = useState(false);
   const [filterDomain, setFilterDomain] = useState("");
   const [filterProficiency, setFilterProficiency] = useState("");
+  const [filterFeatured, setFilterFeatured] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
 
   // Show "Saved!" confirmation briefly after successful save
@@ -139,6 +140,8 @@ export default function SkillsPage() {
   const filteredSkills = skills.filter((s) => {
     if (filterDomain && s.domainId !== filterDomain) return false;
     if (filterProficiency && s.proficiency !== filterProficiency) return false;
+    if (filterFeatured === "yes" && !s.featured) return false;
+    if (filterFeatured === "no" && s.featured) return false;
     if (filterSearch && !s.name.toLowerCase().includes(filterSearch.toLowerCase())) return false;
     return true;
   });
@@ -199,10 +202,19 @@ export default function SkillsPage() {
               <option key={l} value={l}>{l}</option>
             ))}
           </select>
-          {(filterDomain || filterProficiency || filterSearch) && (
+          <select
+            className={styles.filterSelect}
+            value={filterFeatured}
+            onChange={(e) => setFilterFeatured(e.target.value)}
+          >
+            <option value="">All</option>
+            <option value="yes">Featured</option>
+            <option value="no">Not featured</option>
+          </select>
+          {(filterDomain || filterProficiency || filterFeatured || filterSearch) && (
             <button
               className={styles.filterClear}
-              onClick={() => { setFilterDomain(""); setFilterProficiency(""); setFilterSearch(""); }}
+              onClick={() => { setFilterDomain(""); setFilterProficiency(""); setFilterFeatured(""); setFilterSearch(""); }}
             >
               Clear filters
             </button>

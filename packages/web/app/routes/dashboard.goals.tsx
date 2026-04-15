@@ -115,6 +115,7 @@ export default function GoalsPage() {
   const isSubmitting = navigation.state !== "idle";
   const [saved, setSaved] = useState(false);
   const [filterPriority, setFilterPriority] = useState("");
+  const [filterFeatured, setFilterFeatured] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
 
   useEffect(() => {
@@ -127,6 +128,8 @@ export default function GoalsPage() {
 
   const filteredGoals = goals.filter((g) => {
     if (filterPriority && g.priority !== filterPriority) return false;
+    if (filterFeatured === "yes" && !g.featured) return false;
+    if (filterFeatured === "no" && g.featured) return false;
     if (filterSearch && !g.name.toLowerCase().includes(filterSearch.toLowerCase())) return false;
     return true;
   });
@@ -240,8 +243,13 @@ export default function GoalsPage() {
             <option value="medium">Medium</option>
             <option value="high">High</option>
           </select>
-          {(filterPriority || filterSearch) && (
-            <button className={styles.filterClear} onClick={() => { setFilterPriority(""); setFilterSearch(""); }}>Clear filters</button>
+          <select className={styles.filterSelect} value={filterFeatured} onChange={(e) => setFilterFeatured(e.target.value)}>
+            <option value="">All</option>
+            <option value="yes">Featured</option>
+            <option value="no">Not featured</option>
+          </select>
+          {(filterPriority || filterFeatured || filterSearch) && (
+            <button className={styles.filterClear} onClick={() => { setFilterPriority(""); setFilterFeatured(""); setFilterSearch(""); }}>Clear filters</button>
           )}
         </div>
       )}

@@ -116,6 +116,7 @@ export default function ProjectsPage() {
   const [saved, setSaved] = useState(false);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
+  const [filterFeatured, setFilterFeatured] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
   const [skillFilter, setSkillFilter] = useState("");
 
@@ -130,6 +131,8 @@ export default function ProjectsPage() {
   const filteredProjects = projects.filter((p) => {
     if (filterStatus && p.status !== filterStatus) return false;
     if (filterPriority && p.priority !== filterPriority) return false;
+    if (filterFeatured === "yes" && !p.featured) return false;
+    if (filterFeatured === "no" && p.featured) return false;
     if (filterSearch && !p.name.toLowerCase().includes(filterSearch.toLowerCase())) return false;
     return true;
   });
@@ -161,8 +164,13 @@ export default function ProjectsPage() {
             <option value="">All priorities</option>
             {PRIORITY_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
-          {(filterStatus || filterPriority || filterSearch) && (
-            <button className={styles.filterClear} onClick={() => { setFilterStatus(""); setFilterPriority(""); setFilterSearch(""); }}>Clear filters</button>
+          <select className={styles.filterSelect} value={filterFeatured} onChange={(e) => setFilterFeatured(e.target.value)}>
+            <option value="">All</option>
+            <option value="yes">Featured</option>
+            <option value="no">Not featured</option>
+          </select>
+          {(filterStatus || filterPriority || filterFeatured || filterSearch) && (
+            <button className={styles.filterClear} onClick={() => { setFilterStatus(""); setFilterPriority(""); setFilterFeatured(""); setFilterSearch(""); }}>Clear filters</button>
           )}
         </div>
       )}
