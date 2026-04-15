@@ -50,6 +50,17 @@
   flex: 1;
 }
 
+.navSection {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: var(--space-md) var(--space-md) var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
 .navLink {
   display: block;
   padding: var(--space-sm) var(--space-md);

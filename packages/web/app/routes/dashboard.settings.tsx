@@ -117,7 +117,7 @@ export default function SettingsPage() {
           <input type="hidden" name="intent" value="update-profile" />
 
           <div className={styles.field}>
-            <label htmlFor="bio" className={styles.label}>Bio</label>
+            <label htmlFor="bio" className={styles.label} title="Exported in your profile — visible to AI tools and public profiles">Bio</label>
             <textarea
               id="bio"
               name="bio"
@@ -129,7 +129,7 @@ export default function SettingsPage() {
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="preferredLanguage" className={styles.label}>Preferred Language</label>
+            <label htmlFor="preferredLanguage" className={styles.label} title="Language AI tools should respond in">Preferred Language</label>
             <input
               id="preferredLanguage"
               name="preferredLanguage"
@@ -140,7 +140,7 @@ export default function SettingsPage() {
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="customInstructions" className={styles.label}>Custom Instructions</label>
+            <label htmlFor="customInstructions" className={styles.label} title="Instructions included in your exported profile for AI tools to follow">Custom Instructions</label>
             <textarea
               id="customInstructions"
               name="customInstructions"

@@ -26,42 +26,53 @@ export default function DashboardLayout() {
             to="/dashboard"
             end
             className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
+            title="Dashboard overview with stats and highlights"
           >
             Overview
           </NavLink>
+
+          <span className={styles.navSection}>Profile</span>
           <NavLink
             to="/dashboard/skills"
             className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
+            title="What you know — proficiency levels, usage tracking"
           >
             Skills
           </NavLink>
           <NavLink
             to="/dashboard/goals"
             className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
+            title="What you're actively learning — progress tracking"
           >
             Learning Goals
           </NavLink>
           <NavLink
             to="/dashboard/interests"
             className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
+            title="Topics on your radar for future exploration"
           >
             Interests
           </NavLink>
           <NavLink
             to="/dashboard/projects"
             className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
+            title="Work you're doing or have done — active and completed"
           >
             Projects
           </NavLink>
+
+          <span className={styles.navSection}>System</span>
           <NavLink
             to="/dashboard/domains"
             className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
+            title="Knowledge domains and categories — organize your profile"
           >
             Domains
           </NavLink>
           <NavLink
             to="/dashboard/settings"
             className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
+            title="Profile info, API keys, and export preview"
           >
             Settings
           </NavLink>
