@@ -20,6 +20,8 @@ export function registerProjectCommand(
     .option("--url <url>", "Project URL")
     .option("--role <role>", "Your role in the project")
     .option("--description <text>", "Project description")
+    .option("--notes <text>", "Internal notes (not exported)")
+    .option("--visibility <vis>", "Visibility: public or private", "public")
     .action(
       withErrorHandler(async (name: string | undefined, opts: {
         list?: boolean;
@@ -30,6 +32,8 @@ export function registerProjectCommand(
         url?: string;
         role?: string;
         description?: string;
+        notes?: string;
+        visibility?: string;
       }) => {
         const container = getContainer();
 
@@ -78,9 +82,11 @@ export function registerProjectCommand(
           description: opts.description,
           url: opts.url,
           role: opts.role,
+          notes: opts.notes,
           status: opts.status,
           priority: opts.priority,
           featured: opts.featured,
+          visibility: opts.visibility,
         });
 
         success(`Added project: ${result.project.name} (${result.project.status})`);

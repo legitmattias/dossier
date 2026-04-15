@@ -17,9 +17,9 @@ interface PublicProject {
 
 interface PublicProfile {
   name: string;
-  skills: Array<{ name: string; proficiency: string; domainId: string; categoryId: string }>;
-  goals: Array<{ name: string; status: string; priority: string }>;
-  interests: Array<{ name: string }>;
+  skills: Array<{ name: string; proficiency: string; domainId: string; categoryId: string; description?: string; featured?: boolean }>;
+  goals: Array<{ name: string; status: string; priority: string; description?: string; featured?: boolean }>;
+  interests: Array<{ name: string; description?: string; featured?: boolean }>;
   domains: Array<{ id: string; name: string; categories: Array<{ id: string; name: string }> }>;
   projects: PublicProject[];
 }
@@ -93,7 +93,8 @@ export default function PublicProfile() {
                 <h3 className={styles.domainName}>{domain?.name ?? domainId}</h3>
                 <div className={styles.skillGrid}>
                   {skills.map((skill) => (
-                    <span key={skill.name} className={styles.skillChip}>
+                    <span key={skill.name} className={styles.skillChip} title={skill.description}>
+                      {skill.featured && <span className={styles.featuredBadge}>Featured</span>}
                       {skill.name}
                       <span className={styles.skillLevel}>{skill.proficiency}</span>
                     </span>
@@ -110,8 +111,14 @@ export default function PublicProfile() {
           <h2 className={styles.sectionTitle}>Currently Learning</h2>
           {activeGoals.map((goal) => (
             <div key={goal.name} className={styles.goalItem}>
-              <span>{goal.name}</span>
-              <span className={styles.goalMeta}>{goal.priority} priority</span>
+              <div>
+                <span>{goal.name}</span>
+                {goal.description && <div className={styles.goalMeta}>{goal.description}</div>}
+              </div>
+              <span className={styles.goalMeta}>
+                {goal.featured && <span className={styles.featuredBadge}>Featured</span>}
+                {goal.priority} priority
+              </span>
             </div>
           ))}
         </section>
@@ -157,8 +164,8 @@ export default function PublicProfile() {
           <h2 className={styles.sectionTitle}>Interests</h2>
           <div className={styles.skillGrid}>
             {profile.interests.map((interest) => (
-              <span key={interest.name} className={styles.interestChip}>
-                {interest.name}
+              <span key={interest.name} className={styles.interestChip} title={interest.description}>
+                {interest.featured ? `★ ${interest.name}` : interest.name}
               </span>
             ))}
           </div>

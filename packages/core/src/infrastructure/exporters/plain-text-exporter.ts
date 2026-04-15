@@ -29,7 +29,9 @@ export class PlainTextExporter implements IExporter {
           const categoryName = category?.name ?? "Other";
           lines.push(`    ${categoryName}:`);
           for (const skill of skills) {
-            lines.push(`      ${skill.name} (${skill.proficiency})`);
+            const desc = skill.description ? ` — ${skill.description}` : "";
+            const feat = skill.featured ? " [featured]" : "";
+            lines.push(`      ${skill.name} (${skill.proficiency})${desc}${feat}`);
           }
         }
       }
@@ -40,7 +42,8 @@ export class PlainTextExporter implements IExporter {
       if (activeGoals.length > 0) {
         lines.push("  Learning Goals:");
         for (const goal of activeGoals) {
-          lines.push(`    ${goal.name} [${goal.status}, ${goal.priority}]`);
+          const feat = goal.featured ? " [featured]" : "";
+          lines.push(`    ${goal.name} [${goal.status}, ${goal.priority}]${feat}`);
         }
       }
 
@@ -54,7 +57,8 @@ export class PlainTextExporter implements IExporter {
       if (group.interests.length > 0) {
         lines.push("  Interests:");
         for (const interest of group.interests) {
-          lines.push(`    ${interest.name}`);
+          const feat = interest.featured ? " [featured]" : "";
+          lines.push(`    ${interest.name}${feat}`);
         }
       }
     }

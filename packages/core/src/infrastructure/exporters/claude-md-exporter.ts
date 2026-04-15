@@ -34,6 +34,18 @@ export class ClaudeMdExporter implements IExporter {
       lines.push(`**Preferred language:** ${profile.preferredLanguage}`);
     }
 
+    // Featured skills — called out prominently
+    const featuredSkills = profile.skills.filter((s) => s.featured && s.visibility !== "private");
+    if (featuredSkills.length > 0) {
+      lines.push("");
+      lines.push("## Key Skills");
+      lines.push(featuredSkills.map((s) => {
+        let entry = `**${s.name}** (${s.proficiency})`;
+        if (s.description) entry += ` — ${s.description}`;
+        return entry;
+      }).join(", "));
+    }
+
     // Skills grouped by domain > category
     const groups = groupByDomain(profile);
     const hasSkills = groups.some((g) => g.skills.length > 0);
@@ -69,9 +81,11 @@ export class ClaudeMdExporter implements IExporter {
     if (activeGoals.length > 0) {
       lines.push("");
       lines.push("## Currently Learning");
-      for (const goal of activeGoals) {
+      const sortedGoals = [...activeGoals].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+      for (const goal of sortedGoals) {
         const progress = getLatestProgress(goal);
-        let line = `- **${goal.name}** — ${goal.priority} priority, ${progress}% complete`;
+        const prefix = goal.featured ? "[Featured] " : "";
+        let line = `- ${prefix}**${goal.name}** — ${goal.priority} priority, ${progress}% complete`;
         if (goal.motivation) {
           line += ` (${goal.motivation})`;
         }
@@ -139,11 +153,14 @@ export class ClaudeMdExporter implements IExporter {
     if (visibleInterests.length > 0) {
       lines.push("");
       lines.push("## On My Radar");
-      for (const interest of visibleInterests) {
+      const sortedInterests = [...visibleInterests].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+      for (const interest of sortedInterests) {
+        const prefix = interest.featured ? "**" : "";
+        const suffix = interest.featured ? "**" : "";
         if (interest.description) {
-          lines.push(`- ${interest.name} — ${interest.description}`);
+          lines.push(`- ${prefix}${interest.name}${suffix} — ${interest.description}`);
         } else {
-          lines.push(`- ${interest.name}`);
+          lines.push(`- ${prefix}${interest.name}${suffix}`);
         }
       }
     }
@@ -181,11 +198,11 @@ export class ClaudeMdExporter implements IExporter {
 
 function formatSkillLine(skill: Skill, now: Date): string {
   const lastUsed = getLastUsedDate(skill);
-  const notesSuffix = skill.notes ? ` — ${skill.notes}` : "";
+  const descSuffix = skill.description ? ` — ${skill.description}` : "";
 
   // Only show freshness when there IS usage data
   if (!lastUsed) {
-    return `${skill.name} (${skill.proficiency})${notesSuffix}`;
+    return `${skill.name} (${skill.proficiency})${descSuffix}`;
   }
 
   const timeSince = formatTimeSince(lastUsed, now);
@@ -193,5 +210,5 @@ function formatSkillLine(skill: Skill, now: Date): string {
     ? "last used: recently"
     : `last used: ${timeSince}`;
 
-  return `${skill.name} (${skill.proficiency}) [${freshness}]${notesSuffix}`;
+  return `${skill.name} (${skill.proficiency}) [${freshness}]${descSuffix}`;
 }

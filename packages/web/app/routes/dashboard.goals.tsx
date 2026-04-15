@@ -163,6 +163,7 @@ export default function GoalsPage() {
           </div>
         </div>
         {goal.description && <div className={styles.cardDescription}>{goal.description}</div>}
+        {goal.motivation && <div className={styles.cardMeta}><span className={styles.cardMetaLabel}>Motivation:</span> {goal.motivation}</div>}
         {goal.notes && <div className={styles.cardNotes}>{goal.notes}</div>}
         <div className={styles.cardBadges}>
           {goal.featured && <span className={styles.featuredBadge}>Featured</span>}

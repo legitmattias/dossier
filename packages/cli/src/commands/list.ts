@@ -39,12 +39,17 @@ export function registerListCommand(
 
           const lines: string[] = [];
           lines.push(`Name:         ${skill.name}`);
+          if (skill.description) {
+            lines.push(`Description:  ${skill.description}`);
+          }
           lines.push(`Proficiency:  ${skill.proficiency}`);
           lines.push(`Domain:       ${domainName}`);
           lines.push(`Category:     ${categoryName}`);
           if (skill.notes) {
             lines.push(`Notes:        ${skill.notes}`);
           }
+          lines.push(`Featured:     ${skill.featured ? "yes" : "no"}`);
+          lines.push(`Visibility:   ${skill.visibility}`);
           lines.push(`Created:      ${skill.createdAt.toISOString().slice(0, 10)}`);
 
           if (skill.usage.length > 0) {
@@ -101,7 +106,7 @@ export function registerListCommand(
         table(
           ["Name", "Proficiency", "Domain", "Category"],
           result.skills.map((s) => [
-            s.name,
+            s.featured ? `★ ${s.name}` : s.name,
             s.proficiency,
             domainNames.get(s.domainId) ?? s.domainId,
             categoryNames.get(s.categoryId) ?? s.categoryId,

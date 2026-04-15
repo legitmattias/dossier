@@ -47,6 +47,14 @@ export function registerGoalsCommand(
           if (goal.description) {
             lines.push(`Description:  ${goal.description}`);
           }
+          if (goal.motivation) {
+            lines.push(`Motivation:   ${goal.motivation}`);
+          }
+          if (goal.notes) {
+            lines.push(`Notes:        ${goal.notes}`);
+          }
+          lines.push(`Featured:     ${goal.featured ? "yes" : "no"}`);
+          lines.push(`Visibility:   ${goal.visibility}`);
 
           if (goal.progress.length > 0) {
             lines.push("");
@@ -89,7 +97,7 @@ export function registerGoalsCommand(
               ? g.progress[g.progress.length - 1]!
               : null;
             const pct = latest ? `${latest.percentage}%` : "0%";
-            return [g.name, g.priority, g.status, pct];
+            return [g.featured ? `★ ${g.name}` : g.name, g.priority, g.status, pct];
           }),
         );
       }),

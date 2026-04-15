@@ -17,6 +17,9 @@ export function registerInterestCommand(
     .option("--remove", "Remove interest")
     .option("--list", "List all interests")
     .option("--description <text>", "Interest description")
+    .option("--notes <text>", "Internal notes (not exported)")
+    .option("--featured", "Mark as featured")
+    .option("--visibility <vis>", "Visibility: public or private", "public")
     .action(
       withErrorHandler(async (name: string | undefined, opts: {
         domain?: string;
@@ -24,6 +27,9 @@ export function registerInterestCommand(
         remove?: boolean;
         list?: boolean;
         description?: string;
+        notes?: string;
+        featured?: boolean;
+        visibility?: string;
       }) => {
         const container = getContainer();
 
@@ -106,6 +112,9 @@ export function registerInterestCommand(
           name,
           domainId: domain.id,
           description: opts.description,
+          notes: opts.notes,
+          featured: opts.featured,
+          visibility: opts.visibility,
         });
 
         success(`Added interest: ${result.interest.name}`);

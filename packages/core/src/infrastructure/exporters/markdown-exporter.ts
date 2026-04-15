@@ -30,11 +30,12 @@ export class MarkdownExporter implements IExporter {
           const categoryName = category?.name ?? "Other";
           lines.push("");
           lines.push(`#### ${categoryName}`);
-          lines.push("| Skill | Proficiency | Notes |");
-          lines.push("|-------|-------------|-------|");
+          lines.push("| Skill | Proficiency | Description |");
+          lines.push("|-------|-------------|-------------|");
           for (const skill of skills) {
-            const notes = skill.notes ?? "-";
-            lines.push(`| ${skill.name} | ${skill.proficiency} | ${notes} |`);
+            const prefix = skill.featured ? "★ " : "";
+            const desc = skill.description ?? "-";
+            lines.push(`| ${prefix}${skill.name} | ${skill.proficiency} | ${desc} |`);
           }
         }
       }
@@ -47,8 +48,9 @@ export class MarkdownExporter implements IExporter {
         lines.push("### Learning Goals");
         for (const goal of activeGoals) {
           const progress = getLatestProgress(goal);
+          const prefix = goal.featured ? "★ " : "";
           lines.push(
-            `- **${goal.name}** (${goal.status}, ${goal.priority} priority) — ${progress}% complete`,
+            `- ${prefix}**${goal.name}** (${goal.status}, ${goal.priority} priority) — ${progress}% complete`,
           );
         }
       }
@@ -65,7 +67,8 @@ export class MarkdownExporter implements IExporter {
         lines.push("");
         lines.push("### Interests");
         for (const interest of group.interests) {
-          lines.push(`- ${interest.name}`);
+          const prefix = interest.featured ? "★ " : "";
+          lines.push(`- ${prefix}${interest.name}`);
         }
       }
     }

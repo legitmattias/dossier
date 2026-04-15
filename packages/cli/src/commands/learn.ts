@@ -16,12 +16,20 @@ export function registerLearnCommand(
     .option("--priority <priority>", "Priority level (low, medium, high)", "medium")
     .option("--target-date <date>", "Target completion date (YYYY-MM-DD)")
     .option("--description <text>", "Goal description")
+    .option("--motivation <text>", "Why you want to learn this")
+    .option("--notes <text>", "Internal notes (not exported)")
+    .option("--featured", "Mark as featured")
+    .option("--visibility <vis>", "Visibility: public or private", "public")
     .action(
       withErrorHandler(async (name: string, opts: {
         domain: string;
         priority: string;
         targetDate?: string;
         description?: string;
+        motivation?: string;
+        notes?: string;
+        featured?: boolean;
+        visibility?: string;
       }) => {
         const container = getContainer();
         const profile = await container.profileRepository.load();
@@ -37,6 +45,10 @@ export function registerLearnCommand(
           priority: opts.priority,
           targetDate: opts.targetDate,
           description: opts.description,
+          motivation: opts.motivation,
+          notes: opts.notes,
+          featured: opts.featured,
+          visibility: opts.visibility,
         });
 
         success(`Added learning goal: ${result.goal.name} (${result.goal.priority} priority)`);
