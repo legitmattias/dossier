@@ -31,8 +31,11 @@ export const meta: MetaFunction = () => [{ title: "Projects — Dossier" }];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const token = await requireToken(request);
-  const data = await api<{ projects: Project[] }>("/profile/projects", { token });
-  return json({ projects: data.projects });
+  const [projectsData, skillsData] = await Promise.all([
+    api<{ projects: Project[] }>("/profile/projects", { token }),
+    api<{ skills: Array<{ id: string; name: string }> }>("/profile/skills", { token }),
+  ]);
+  return json({ projects: projectsData.projects, skills: skillsData.skills });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -55,6 +58,7 @@ export async function action({ request }: ActionFunctionArgs) {
           priority: String(form.get("priority") || "medium"),
           featured: form.get("featured") === "on",
           visibility: String(form.get("visibility") || "public"),
+          skillIds: form.getAll("skillIds").map(String).filter(Boolean),
         },
       });
       return json({ ok: true });
@@ -74,6 +78,7 @@ export async function action({ request }: ActionFunctionArgs) {
           priority: String(form.get("priority") ?? "") || undefined,
           featured: form.has("featured") ? form.get("featured") === "on" : undefined,
           visibility: String(form.get("visibility") ?? "") || undefined,
+          skillIds: form.getAll("skillIds").map(String).filter(Boolean),
         },
       });
       return json({ ok: true });
@@ -101,7 +106,7 @@ const PRIORITY_OPTIONS = ["low", "medium", "high"] as const;
 const VISIBILITY_OPTIONS = ["public", "private"] as const;
 
 export default function ProjectsPage() {
-  const { projects } = useLoaderData<typeof loader>();
+  const { projects, skills } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -111,6 +116,7 @@ export default function ProjectsPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
+  const [skillFilter, setSkillFilter] = useState("");
 
   const filteredProjects = projects.filter((p) => {
     if (filterStatus && p.status !== filterStatus) return false;
@@ -178,6 +184,14 @@ export default function ProjectsPage() {
               {project.role && (
                 <div className={styles.cardMeta}>
                   <span className={styles.cardMetaLabel}>Role:</span> {project.role}
+                </div>
+              )}
+              {project.skillIds && project.skillIds.length > 0 && (
+                <div className={styles.skillChips}>
+                  {project.skillIds.map((skillId) => {
+                    const skill = skills.find((s) => s.id === skillId);
+                    return skill ? <span key={skillId} className={styles.skillChip}>{skill.name}</span> : null;
+                  })}
                 </div>
               )}
               <div className={styles.cardBadges}>
@@ -272,6 +286,31 @@ export default function ProjectsPage() {
                 </select>
               </div>
 
+              <div className={styles.field}>
+                <label className={styles.label}>Skills</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="Filter skills..."
+                  value={skillFilter}
+                  onChange={(e) => setSkillFilter(e.target.value)}
+                />
+                <div className={styles.skillPickerList}>
+                  {skills
+                    .filter((s) => s.name.toLowerCase().includes(skillFilter.toLowerCase()))
+                    .map((skill) => (
+                      <label key={skill.id} className={styles.skillPickerItem}>
+                        <input
+                          type="checkbox"
+                          name="skillIds"
+                          value={skill.id}
+                        />
+                        {skill.name}
+                      </label>
+                    ))}
+                </div>
+              </div>
+
               <div className={styles.formActions}>
                 <button type="button" onClick={() => setSearchParams({})} className={styles.cancelButton}>
                   Cancel
@@ -350,6 +389,32 @@ export default function ProjectsPage() {
                     <option key={v} value={v}>{v}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>Skills</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="Filter skills..."
+                  value={skillFilter}
+                  onChange={(e) => setSkillFilter(e.target.value)}
+                />
+                <div className={styles.skillPickerList}>
+                  {skills
+                    .filter((s) => s.name.toLowerCase().includes(skillFilter.toLowerCase()))
+                    .map((skill) => (
+                      <label key={skill.id} className={styles.skillPickerItem}>
+                        <input
+                          type="checkbox"
+                          name="skillIds"
+                          value={skill.id}
+                          defaultChecked={editProject.skillIds.includes(skill.id)}
+                        />
+                        {skill.name}
+                      </label>
+                    ))}
+                </div>
               </div>
 
               <div className={styles.formActions}>

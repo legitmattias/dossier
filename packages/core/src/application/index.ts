@@ -121,6 +121,17 @@ export type { RemoveProjectDeps } from "./use-cases/remove-project.js";
 export { listProjects } from "./use-cases/list-projects.js";
 export type { ListProjectsDeps } from "./use-cases/list-projects.js";
 
+// DTOs — Search
+export type {
+  SearchProfileInput,
+  SearchProfileOutput,
+  SearchResultItem,
+} from "./dtos/search-dtos.js";
+
+// Use Cases — Search
+export { searchProfile } from "./use-cases/search-profile.js";
+export type { SearchProfileDeps } from "./use-cases/search-profile.js";
+
 // Helpers — Resolve
 export { resolveDomainInProfile, resolveCategoryInDomain } from "./helpers/resolve.js";
 

@@ -8,10 +8,57 @@ import { log } from "./logger.js";
 
 export function registerTools(server: McpServer, ops: DossierOperations): void {
   server.registerTool(
+    "dossier_search",
+    {
+      title: "Search Profile",
+      description:
+        "Search across all entity types (skills, goals, interests, projects) by partial name match. " +
+        "Use this to check for duplicates before adding items, or to discover existing entries. " +
+        "Returns results grouped by type with IDs for follow-up operations.",
+      inputSchema: z.object({
+        query: z.string().min(1).describe("Search term (case-insensitive substring match)"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.searchProfile({ query: input.query });
+      if (result.total === 0) {
+        return ok(`No matches found for "${input.query}".`);
+      }
+      const sections: string[] = [];
+      sections.push(`Found ${result.total} match${result.total === 1 ? "" : "es"} for "${input.query}":`);
+      if (result.results.skills.length > 0) {
+        sections.push("\nSkills:");
+        for (const s of result.results.skills) {
+          sections.push(`  - ${s.name} (${s.meta}) [id: ${s.id}]`);
+        }
+      }
+      if (result.results.goals.length > 0) {
+        sections.push("\nGoals:");
+        for (const g of result.results.goals) {
+          sections.push(`  - ${g.name} (${g.meta}) [id: ${g.id}]`);
+        }
+      }
+      if (result.results.interests.length > 0) {
+        sections.push("\nInterests:");
+        for (const i of result.results.interests) {
+          sections.push(`  - ${i.name} [id: ${i.id}]`);
+        }
+      }
+      if (result.results.projects.length > 0) {
+        sections.push("\nProjects:");
+        for (const p of result.results.projects) {
+          sections.push(`  - ${p.name} (${p.meta}) [id: ${p.id}]`);
+        }
+      }
+      return ok(sections.join("\n"));
+    }),
+  );
+
+  server.registerTool(
     "dossier_add_skill",
     {
       title: "Add Skill",
-      description: "Add a new skill to the profile. Requires name, domainId, categoryId, and proficiency level.",
+      description: "Add a new skill to the profile. Requires name, domainId, categoryId, and proficiency level. Before adding, use dossier_search to check if a similar skill already exists. After adding, consider linking the skill to relevant projects using dossier_update_project with skillIds.",
       inputSchema: z.object({
         name: z.string().describe("Skill name (e.g. 'TypeScript', 'Swedish')"),
         description: z.string().optional().describe("Brief description of this skill"),
@@ -70,7 +117,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
     "dossier_update_skill",
     {
       title: "Update Skill",
-      description: "Update an existing skill's proficiency, notes, or name.",
+      description: "Update an existing skill's proficiency, description, notes, or name. Use visibility 'private' to hide from exports, or featured=true to highlight in exports.",
       inputSchema: z.object({
         skillId: z.string().describe("Skill ID to update"),
         name: z.string().optional().describe("New name"),
@@ -106,7 +153,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
     "dossier_add_goal",
     {
       title: "Add Learning Goal",
-      description: "Add a new learning goal to the profile.",
+      description: "Add a new learning goal to the profile. Before adding, use dossier_search to check if a similar goal or interest already exists — consider promoting an existing interest instead of creating a duplicate.",
       inputSchema: z.object({
         name: z.string().describe("Goal name (e.g. 'Learn Rust')"),
         domainId: z.string().describe("Domain ID, slug, or name"),
@@ -194,7 +241,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
     "dossier_add_interest",
     {
       title: "Add Interest",
-      description: "Add a topic of interest — something you're curious about but haven't committed to learning.",
+      description: "Add a topic of interest — something you're curious about but haven't committed to learning. Before adding, use dossier_search to check if a skill or goal already covers this topic.",
       inputSchema: z.object({
         name: z.string().describe("Interest name"),
         domainId: z.string().describe("Domain ID, slug, or name"),
@@ -272,7 +319,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
     "dossier_add_project",
     {
       title: "Add Project",
-      description: "Add a project to the profile — something you're working on or have worked on.",
+      description: "Add a project to the profile — something you're working on or have worked on. After adding, link relevant skills by updating the project with dossier_update_project and providing skillIds. Use dossier_search or dossier_list_skills to find skill IDs.",
       inputSchema: z.object({
         name: z.string().describe("Project name"),
         description: z.string().optional().describe("Brief description"),
@@ -322,7 +369,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
     "dossier_update_project",
     {
       title: "Update Project",
-      description: "Update an existing project's details.",
+      description: "Update an existing project's details. Use skillIds to link skills to this project — find skill IDs with dossier_search or dossier_list_skills.",
       inputSchema: z.object({
         projectId: z.string().describe("Project ID to update"),
         name: z.string().optional().describe("New name"),

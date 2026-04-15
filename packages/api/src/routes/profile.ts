@@ -70,6 +70,17 @@ profileRoutes.get("/export", requireAuth, requireScope("read"), async (c) => {
   return c.text(result.content);
 });
 
+// --- Search ---
+
+// GET /profile/search?q=term
+profileRoutes.get("/search", requireAuth, requireScope("read"), async (c) => {
+  const q = c.req.query("q");
+  if (!q) return c.json({ error: "Query parameter 'q' is required" }, 400);
+  const deps = getDeps(c);
+  const result = await application.searchProfile(deps, { query: q });
+  return c.json(result);
+});
+
 // --- Skills ---
 
 // GET /profile/skills

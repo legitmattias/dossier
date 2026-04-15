@@ -116,6 +116,9 @@ export class ClaudeMdExporter implements IExporter {
       }
     }
 
+    // Skill name lookup for project skill references
+    const skillNameMap = new Map<string, string>(profile.skills.map((s) => [s.id, s.name]));
+
     // Featured projects — shown prominently
     const featuredProjects = profile.projects.filter((p) => p.featured && p.visibility !== "private");
     if (featuredProjects.length > 0) {
@@ -131,6 +134,12 @@ export class ClaudeMdExporter implements IExporter {
             line += `\n  - ${highlight}`;
           }
         }
+        if (project.skillIds.length > 0) {
+          const skillNames = project.skillIds.map((id) => skillNameMap.get(id)).filter(Boolean);
+          if (skillNames.length > 0) {
+            line += `\n  Skills: ${skillNames.join(", ")}`;
+          }
+        }
         lines.push(line);
       }
     }
@@ -144,6 +153,12 @@ export class ClaudeMdExporter implements IExporter {
         let line = `- ${project.name}`;
         if (project.description) line += ` — ${project.description}`;
         if (project.role) line += ` (${project.role})`;
+        if (project.skillIds.length > 0) {
+          const skillNames = project.skillIds.map((id) => skillNameMap.get(id)).filter(Boolean);
+          if (skillNames.length > 0) {
+            line += `\n  Skills: ${skillNames.join(", ")}`;
+          }
+        }
         lines.push(line);
       }
     }

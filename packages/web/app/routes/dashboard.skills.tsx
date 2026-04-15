@@ -30,13 +30,15 @@ export const meta: MetaFunction = () => [{ title: "Skills — Dossier" }];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const token = await requireToken(request);
-  const [skillsData, domainsData] = await Promise.all([
+  const [skillsData, domainsData, projectsData] = await Promise.all([
     api<{ skills: Skill[] }>("/profile/skills", { token }),
     api<{ domains: Domain[] }>("/profile/domains", { token }),
+    api<{ projects: Array<{ id: string; name: string; skillIds: string[] }> }>("/profile/projects", { token }),
   ]);
   return json({
     skills: skillsData.skills,
     domains: domainsData.domains,
+    projects: projectsData.projects,
   });
 }
 
@@ -102,7 +104,16 @@ export async function action({ request }: ActionFunctionArgs) {
 const PROFICIENCY_LEVELS = ["novice", "familiar", "proficient", "advanced", "expert"] as const;
 
 export default function SkillsPage() {
-  const { skills, domains } = useLoaderData<typeof loader>();
+  const { skills, domains, projects } = useLoaderData<typeof loader>();
+
+  const projectsBySkill = new Map<string, string[]>();
+  for (const project of projects) {
+    for (const skillId of project.skillIds ?? []) {
+      const list = projectsBySkill.get(skillId) ?? [];
+      list.push(project.name);
+      projectsBySkill.set(skillId, list);
+    }
+  }
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -237,6 +248,13 @@ export default function SkillsPage() {
                           )}
                         </div>
                         {skill.notes && <div className={styles.cardNotes}>{skill.notes}</div>}
+                        {(projectsBySkill.get(skill.id) ?? []).length > 0 && (
+                          <div className={styles.skillChips}>
+                            {projectsBySkill.get(skill.id)!.map((name) => (
+                              <span key={name} className={styles.skillChip}>{name}</span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

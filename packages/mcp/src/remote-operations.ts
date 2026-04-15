@@ -123,6 +123,12 @@ export class RemoteOperations implements DossierOperations {
     return this.api<application.RemoveProjectOutput>(`/profile/projects/${input.projectId}`, { method: "DELETE" });
   }
 
+  // Search
+  async searchProfile(input: application.SearchProfileInput) {
+    const params = new URLSearchParams({ q: input.query });
+    return this.api<application.SearchProfileOutput>(`/profile/search?${params}`);
+  }
+
   // Domains & Categories
   async addDomain(input: application.AddDomainInput) {
     return this.api<application.AddDomainOutput>("/profile/domains", { method: "POST", body: input });

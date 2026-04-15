@@ -36,6 +36,9 @@ export interface DossierOperations {
   addDomain(input: application.AddDomainInput): Promise<application.AddDomainOutput>;
   addCategory(input: application.AddCategoryInput): Promise<application.AddCategoryOutput>;
 
+  // Search
+  searchProfile(input: application.SearchProfileInput): Promise<application.SearchProfileOutput>;
+
   // Export
   exportProfile(format: string): Promise<string>;
 }
