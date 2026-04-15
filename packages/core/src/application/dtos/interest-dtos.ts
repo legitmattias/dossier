@@ -4,6 +4,7 @@ export interface AddInterestInput {
   readonly name: string;
   readonly domainId?: string;
   readonly description?: string;
+  readonly notes?: string;
   readonly visibility?: string;
   readonly featured?: boolean;
 }
@@ -26,6 +27,7 @@ export interface InterestOutput {
   readonly name: string;
   readonly domainId?: string;
   readonly description?: string;
+  readonly notes?: string;
   readonly visibility: string;
   readonly featured: boolean;
   readonly createdAt: string;

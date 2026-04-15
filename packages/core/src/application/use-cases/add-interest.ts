@@ -38,6 +38,7 @@ export async function addInterest(
     name: input.name,
     domainId,
     description: input.description,
+    notes: input.notes,
     visibility: input.visibility as "public" | "private" | undefined,
     featured: input.featured,
   });

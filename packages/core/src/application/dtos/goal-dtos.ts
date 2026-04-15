@@ -7,6 +7,7 @@ export interface AddGoalInput {
   readonly domainId: string;
   readonly description?: string;
   readonly motivation?: string;
+  readonly notes?: string;
   readonly priority?: string;
   readonly visibility?: string;
   readonly featured?: boolean;
@@ -34,6 +35,7 @@ export interface GoalOutput {
   readonly domainId: string;
   readonly description?: string;
   readonly motivation?: string;
+  readonly notes?: string;
   readonly priority: string;
   readonly visibility: string;
   readonly featured: boolean;

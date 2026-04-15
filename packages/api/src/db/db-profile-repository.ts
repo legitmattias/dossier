@@ -74,7 +74,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       for (const goal of profile.goals) {
         await tx.insert(schema.goals).values({
           id: goal.id, profileId, name: goal.name, domainId: goal.domainId,
-          description: goal.description, motivation: goal.motivation,
+          description: goal.description, motivation: goal.motivation, notes: goal.notes,
           priority: goal.priority, status: goal.status, visibility: goal.visibility, featured: goal.featured,
           progress: goal.progress, resources: goal.resources,
           targetDate: goal.targetDate, createdAt: goal.createdAt, updatedAt: goal.updatedAt,
@@ -84,7 +84,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       for (const interest of profile.interests) {
         await tx.insert(schema.interests).values({
           id: interest.id, profileId, name: interest.name, domainId: interest.domainId,
-          description: interest.description, visibility: interest.visibility, featured: interest.featured, createdAt: interest.createdAt,
+          description: interest.description, notes: interest.notes, visibility: interest.visibility, featured: interest.featured, createdAt: interest.createdAt,
         });
       }
 

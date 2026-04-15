@@ -46,6 +46,7 @@ export async function addLearningGoal(
     domainId,
     description: input.description,
     motivation: input.motivation,
+    notes: input.notes,
     priority,
     resources: input.resources,
     targetDate,

@@ -17,6 +17,7 @@ export interface UpdateGoalInput {
   readonly name?: string;
   readonly description?: string;
   readonly motivation?: string;
+  readonly notes?: string;
   readonly priority?: string;
   readonly status?: string;
   readonly visibility?: string;
@@ -42,6 +43,7 @@ export async function updateGoal(
     ...(input.name !== undefined && { name: input.name }),
     ...(input.description !== undefined && { description: input.description }),
     ...(input.motivation !== undefined && { motivation: input.motivation }),
+    ...(input.notes !== undefined && { notes: input.notes }),
     ...(input.priority !== undefined && { priority: input.priority as typeof goal.priority }),
     ...(input.status !== undefined && { status: input.status as typeof goal.status }),
     ...(input.visibility !== undefined && { visibility: input.visibility as typeof goal.visibility }),

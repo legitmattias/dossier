@@ -16,6 +16,7 @@ interface Goal {
   domainId: string;
   description?: string;
   motivation?: string;
+  notes?: string;
   visibility?: string;
   featured?: boolean;
 }
@@ -52,6 +53,7 @@ export async function action({ request }: ActionFunctionArgs) {
           priority: String(form.get("priority") || "medium"),
           description: String(form.get("description") ?? "") || undefined,
           motivation: form.get("motivation") || undefined,
+          notes: String(form.get("notes") ?? "") || undefined,
           visibility: form.get("visibility") as string || "public",
           featured: form.get("featured") === "on",
         },
@@ -79,6 +81,7 @@ export async function action({ request }: ActionFunctionArgs) {
           name: String(form.get("name")),
           description: String(form.get("description") ?? "") || undefined,
           motivation: String(form.get("motivation") ?? "") || undefined,
+          notes: String(form.get("notes") ?? "") || undefined,
           priority: String(form.get("priority")),
           status: String(form.get("status")),
           visibility: String(form.get("visibility") ?? "public"),
@@ -160,6 +163,7 @@ export default function GoalsPage() {
           </div>
         </div>
         {goal.description && <div className={styles.cardDescription}>{goal.description}</div>}
+        {goal.notes && <div className={styles.cardNotes}>{goal.notes}</div>}
         <div className={styles.cardBadges}>
           {goal.featured && <span className={styles.featuredBadge}>Featured</span>}
           <span className={styles.proficiency} data-level={goal.priority}>{goal.priority}</span>
@@ -287,6 +291,11 @@ export default function GoalsPage() {
               </div>
 
               <div className={styles.field}>
+                <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
+                <textarea id="notes" name="notes" className={styles.input} rows={2} placeholder="Internal notes (not exported)" />
+              </div>
+
+              <div className={styles.field}>
                 <label className={styles.label}>
                   <input type="checkbox" name="featured" /> Featured
                 </label>
@@ -334,6 +343,11 @@ export default function GoalsPage() {
               <div className={styles.field}>
                 <label htmlFor="edit-motivation" className={styles.label}>Motivation (optional)</label>
                 <textarea id="edit-motivation" name="motivation" className={styles.input} rows={3} defaultValue={editGoal.motivation ?? ""} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-notes" className={styles.label}>Notes (optional)</label>
+                <textarea id="edit-notes" name="notes" className={styles.input} rows={2} defaultValue={editGoal.notes ?? ""} placeholder="Internal notes (not exported)" />
               </div>
 
               <div className={styles.field}>

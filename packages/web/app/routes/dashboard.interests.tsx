@@ -11,6 +11,7 @@ interface Interest {
   name: string;
   domainId: string;
   description?: string;
+  notes?: string;
   visibility?: string;
   featured?: boolean;
 }
@@ -45,6 +46,7 @@ export async function action({ request }: ActionFunctionArgs) {
           name: String(form.get("name")),
           domainId: String(form.get("domainId")),
           description: String(form.get("description") ?? "") || undefined,
+          notes: String(form.get("notes") ?? "") || undefined,
           visibility: form.get("visibility") as string || "public",
           featured: form.get("featured") === "on",
         },
@@ -59,6 +61,7 @@ export async function action({ request }: ActionFunctionArgs) {
         body: {
           name: String(form.get("name")),
           description: String(form.get("description") ?? "") || undefined,
+          notes: String(form.get("notes") ?? "") || undefined,
           visibility: String(form.get("visibility") ?? "public"),
           featured: form.get("featured") === "on",
         },
@@ -138,6 +141,7 @@ export default function InterestsPage() {
                 )}
               </div>
               {interest.description && <div className={styles.cardDescription}>{interest.description}</div>}
+              {interest.notes && <div className={styles.cardNotes}>{interest.notes}</div>}
             </div>
           ))}
         </div>
@@ -168,6 +172,11 @@ export default function InterestsPage() {
               <div className={styles.field}>
                 <label htmlFor="description" className={styles.label}>Description (optional)</label>
                 <input id="description" name="description" className={styles.input} placeholder="Why are you interested in this?" />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
+                <textarea id="notes" name="notes" className={styles.input} rows={2} placeholder="Internal notes (not exported)" />
               </div>
 
               <div className={styles.field}>
@@ -213,6 +222,11 @@ export default function InterestsPage() {
               <div className={styles.field}>
                 <label htmlFor="edit-description" className={styles.label}>Description (optional)</label>
                 <input id="edit-description" name="description" className={styles.input} defaultValue={editInterest.description ?? ""} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-notes" className={styles.label}>Notes (optional)</label>
+                <textarea id="edit-notes" name="notes" className={styles.input} rows={2} defaultValue={editInterest.notes ?? ""} placeholder="Internal notes (not exported)" />
               </div>
 
               <div className={styles.field}>

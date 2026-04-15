@@ -154,4 +154,7 @@ export async function ensureTables(db: Database): Promise<void> {
   await db.execute(sql`ALTER TABLE skills ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT FALSE`);
   await db.execute(sql`ALTER TABLE goals ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT FALSE`);
   await db.execute(sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT FALSE`);
+
+  await db.execute(sql`ALTER TABLE goals ADD COLUMN IF NOT EXISTS notes TEXT`);
+  await db.execute(sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS notes TEXT`);
 }

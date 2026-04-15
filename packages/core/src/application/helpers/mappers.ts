@@ -32,6 +32,7 @@ export function toGoalOutput(goal: LearningGoal): GoalOutput {
     domainId: goal.domainId,
     ...(goal.description !== undefined && { description: goal.description }),
     ...(goal.motivation !== undefined && { motivation: goal.motivation }),
+    ...(goal.notes !== undefined && { notes: goal.notes }),
     priority: goal.priority,
     visibility: goal.visibility,
     featured: goal.featured,
@@ -55,6 +56,7 @@ export function toInterestOutput(interest: Interest): InterestOutput {
     ...(interest.description !== undefined && {
       description: interest.description,
     }),
+    ...(interest.notes !== undefined && { notes: interest.notes }),
     visibility: interest.visibility,
     featured: interest.featured,
     createdAt: interest.createdAt.toISOString(),

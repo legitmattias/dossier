@@ -96,6 +96,7 @@ export const goals = pgTable("goals", {
   domainId: text("domain_id").notNull().references(() => domains.id),
   description: text("description"),
   motivation: text("motivation"),
+  notes: text("notes"),
   priority: text("priority").notNull().default("medium"), // low | medium | high
   status: text("status").notNull().default("active"), // active | paused | completed | abandoned
   progress: jsonb("progress").notNull().default([]),
@@ -115,6 +116,7 @@ export const interests = pgTable("interests", {
   name: text("name").notNull(),
   domainId: text("domain_id").references(() => domains.id),
   description: text("description"),
+  notes: text("notes"),
   visibility: text("visibility").notNull().default("public"),
   featured: boolean("featured").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
