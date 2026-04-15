@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
@@ -121,9 +121,19 @@ export default function SkillsPage() {
   const editSkillId = searchParams.get("edit");
   const editSkill = editSkillId ? skills.find((s) => s.id === editSkillId) : undefined;
   const isSubmitting = navigation.state === "submitting";
+  const [saved, setSaved] = useState(false);
   const [filterDomain, setFilterDomain] = useState("");
   const [filterProficiency, setFilterProficiency] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
+
+  // Show "Saved!" confirmation briefly after successful save
+  useEffect(() => {
+    if (navigation.state === "idle" && actionData && "ok" in actionData) {
+      setSaved(true);
+      const timer = setTimeout(() => setSaved(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [navigation.state, actionData]);
 
   // Filter skills based on active filters
   const filteredSkills = skills.filter((s) => {
@@ -360,11 +370,11 @@ export default function SkillsPage() {
               </div>
 
               <div className={styles.formActions}>
-                <button type="button" onClick={() => setSearchParams({})} className={styles.cancelButton}>
-                  Cancel
+                <button type="button" onClick={() => { setSaved(false); setSearchParams({}); }} className={styles.cancelButton}>
+                  Close
                 </button>
-                <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
-                  {isSubmitting ? "Saving..." : "Save Changes"}
+                <button type="submit" disabled={isSubmitting || saved} className={styles.submitButton}>
+                  {saved ? "Saved!" : isSubmitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </Form>
@@ -441,11 +451,11 @@ export default function SkillsPage() {
               </div>
 
               <div className={styles.formActions}>
-                <button type="button" onClick={() => setSearchParams({})} className={styles.cancelButton}>
-                  Cancel
+                <button type="button" onClick={() => { setSaved(false); setSearchParams({}); }} className={styles.cancelButton}>
+                  Close
                 </button>
-                <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
-                  {isSubmitting ? "Adding..." : "Add Skill"}
+                <button type="submit" disabled={isSubmitting || saved} className={styles.submitButton}>
+                  {saved ? "Added!" : isSubmitting ? "Adding..." : "Add Skill"}
                 </button>
               </div>
             </Form>

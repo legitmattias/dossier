@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
@@ -113,8 +113,17 @@ export default function GoalsPage() {
   const showAdd = searchParams.get("add") === "true";
   const editId = searchParams.get("edit");
   const isSubmitting = navigation.state === "submitting";
+  const [saved, setSaved] = useState(false);
   const [filterPriority, setFilterPriority] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
+
+  useEffect(() => {
+    if (navigation.state === "idle" && actionData && "ok" in actionData) {
+      setSaved(true);
+      const timer = setTimeout(() => setSaved(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [navigation.state, actionData]);
 
   const filteredGoals = goals.filter((g) => {
     if (filterPriority && g.priority !== filterPriority) return false;
@@ -311,11 +320,11 @@ export default function GoalsPage() {
               </div>
 
               <div className={styles.formActions}>
-                <button type="button" onClick={() => setSearchParams({})} className={styles.cancelButton}>
-                  Cancel
+                <button type="button" onClick={() => { setSaved(false); setSearchParams({}); }} className={styles.cancelButton}>
+                  Close
                 </button>
-                <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
-                  {isSubmitting ? "Adding..." : "Add Goal"}
+                <button type="submit" disabled={isSubmitting || saved} className={styles.submitButton}>
+                  {saved ? "Added!" : isSubmitting ? "Adding..." : "Add Goal"}
                 </button>
               </div>
             </Form>
@@ -385,11 +394,11 @@ export default function GoalsPage() {
               </div>
 
               <div className={styles.formActions}>
-                <button type="button" onClick={() => setSearchParams({})} className={styles.cancelButton}>
-                  Cancel
+                <button type="button" onClick={() => { setSaved(false); setSearchParams({}); }} className={styles.cancelButton}>
+                  Close
                 </button>
-                <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
-                  {isSubmitting ? "Saving..." : "Save Changes"}
+                <button type="submit" disabled={isSubmitting || saved} className={styles.submitButton}>
+                  {saved ? "Saved!" : isSubmitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </Form>
