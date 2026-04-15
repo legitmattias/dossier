@@ -10,6 +10,7 @@ import styles from "~/styles/skills.module.css";
 interface Skill {
   id: string;
   name: string;
+  description?: string;
   proficiency: string;
   domainId: string;
   categoryId: string;
@@ -51,6 +52,7 @@ export async function action({ request }: ActionFunctionArgs) {
         token,
         body: {
           name: String(form.get("name")),
+          description: String(form.get("description") ?? "") || undefined,
           domainId: String(form.get("domainId")),
           categoryId: String(form.get("categoryId")),
           proficiency: String(form.get("proficiency")),
@@ -68,6 +70,7 @@ export async function action({ request }: ActionFunctionArgs) {
         token,
         body: {
           name: String(form.get("name")),
+          description: String(form.get("description") ?? "") || undefined,
           domainId: String(form.get("domainId")),
           categoryId: String(form.get("categoryId")),
           proficiency: String(form.get("proficiency")),
@@ -222,6 +225,7 @@ export default function SkillsPage() {
                             </Form>
                           </div>
                         </div>
+                        {skill.description && <div className={styles.cardDescription}>{skill.description}</div>}
                         <div className={styles.cardBadges}>
                           {skill.featured && <span className={styles.featuredBadge}>Featured</span>}
                           <span className={styles.proficiency} data-level={skill.proficiency}>
@@ -259,6 +263,17 @@ export default function SkillsPage() {
                   required
                   className={styles.input}
                   defaultValue={editSkill.name}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-description" className={styles.label}>Description (optional)</label>
+                <input
+                  id="edit-description"
+                  name="description"
+                  className={styles.input}
+                  defaultValue={editSkill.description ?? ""}
+                  placeholder="Brief description of this skill"
                 />
               </div>
 
@@ -350,6 +365,11 @@ export default function SkillsPage() {
               <div className={styles.field}>
                 <label htmlFor="name" className={styles.label}>Name</label>
                 <input id="name" name="name" required className={styles.input} placeholder="e.g. TypeScript, React, Swedish" />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="description" className={styles.label}>Description (optional)</label>
+                <input id="description" name="description" className={styles.input} placeholder="Brief description of this skill" />
               </div>
 
               <div className={styles.field}>

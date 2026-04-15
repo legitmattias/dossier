@@ -4,6 +4,7 @@ import type { SkillSource, SkillUsage } from "../../domain/index.js";
 
 export interface AddSkillInput {
   readonly name: string;
+  readonly description?: string;
   readonly domainId: string;
   readonly categoryId: string;
   readonly proficiency: string;
@@ -19,6 +20,7 @@ export interface UpdateSkillInput {
   readonly name?: string;
   readonly domainId?: string;
   readonly categoryId?: string;
+  readonly description?: string;
   readonly proficiency?: string;
   readonly notes?: string;
   readonly visibility?: string;
@@ -44,6 +46,7 @@ export interface SkillOutput {
   readonly id: string;
   readonly slug: string;
   readonly name: string;
+  readonly description?: string;
   readonly domainId: string;
   readonly categoryId: string;
   readonly proficiency: string;

@@ -44,6 +44,7 @@ export async function addSkill(
     id: skillId,
     slug,
     name: input.name,
+    description: input.description,
     domainId,
     categoryId,
     proficiency,

@@ -14,6 +14,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       description: "Add a new skill to the profile. Requires name, domainId, categoryId, and proficiency level.",
       inputSchema: z.object({
         name: z.string().describe("Skill name (e.g. 'TypeScript', 'Swedish')"),
+        description: z.string().optional().describe("Brief description of this skill"),
         domainId: z.string().describe("Domain ID, slug, or name (e.g. 'software-development' or 'Software Development')"),
         categoryId: z.string().describe("Category ID, slug, or name (e.g. 'languages' or 'Programming Languages')"),
         proficiency: z.enum(PROFICIENCY_LEVELS).describe("Proficiency level"),
@@ -73,6 +74,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       inputSchema: z.object({
         skillId: z.string().describe("Skill ID to update"),
         name: z.string().optional().describe("New name"),
+        description: z.string().optional().describe("Updated description"),
         proficiency: z.enum(PROFICIENCY_LEVELS).optional().describe("New proficiency level"),
         notes: z.string().optional().describe("Updated notes"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),

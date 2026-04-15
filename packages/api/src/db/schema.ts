@@ -72,6 +72,7 @@ export const skills = pgTable("skills", {
   profileId: text("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
   slug: text("slug").notNull(),
   name: text("name").notNull(),
+  description: text("description"),
   domainId: text("domain_id").notNull().references(() => domains.id),
   categoryId: text("category_id").notNull().references(() => categories.id),
   proficiency: text("proficiency").notNull(), // novice | familiar | proficient | advanced | expert

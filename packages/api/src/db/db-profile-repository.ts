@@ -64,7 +64,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       for (const skill of profile.skills) {
         await tx.insert(schema.skills).values({
           id: skill.id, profileId, slug: skill.slug, name: skill.name,
-          domainId: skill.domainId, categoryId: skill.categoryId,
+          description: skill.description, domainId: skill.domainId, categoryId: skill.categoryId,
           proficiency: skill.proficiency, notes: skill.notes,
           sources: skill.sources, usage: skill.usage, visibility: skill.visibility, featured: skill.featured,
           createdAt: skill.createdAt, updatedAt: skill.updatedAt,

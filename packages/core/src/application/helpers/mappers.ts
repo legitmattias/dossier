@@ -10,6 +10,7 @@ export function toSkillOutput(skill: Skill): SkillOutput {
     id: skill.id,
     slug: skill.slug,
     name: skill.name,
+    ...(skill.description !== undefined && { description: skill.description }),
     domainId: skill.domainId,
     categoryId: skill.categoryId,
     proficiency: skill.proficiency,

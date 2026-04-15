@@ -63,6 +63,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     id: toSkillId(s.id),
     slug: createSlug(s.slug),
     name: s.name,
+    ...(s.description != null && { description: s.description }),
     domainId: toDomainId(s.domainId),
     categoryId: toCategoryId(s.categoryId),
     proficiency: s.proficiency as Skill["proficiency"],

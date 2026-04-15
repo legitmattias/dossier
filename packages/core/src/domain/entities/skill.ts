@@ -19,6 +19,7 @@ export interface Skill {
   readonly id: SkillId;
   readonly slug: Slug;
   readonly name: string;
+  readonly description?: string;
   readonly domainId: DomainId;
   readonly categoryId: CategoryId;
   readonly proficiency: Proficiency;
@@ -35,6 +36,7 @@ export interface CreateSkillInput {
   readonly id: SkillId;
   readonly slug: Slug;
   readonly name: string;
+  readonly description?: string;
   readonly domainId: DomainId;
   readonly categoryId: CategoryId;
   readonly proficiency: Proficiency;
@@ -57,6 +59,7 @@ export function createSkill(input: CreateSkillInput): Readonly<Skill> {
     id: input.id,
     slug: input.slug,
     name: input.name.trim(),
+    ...(input.description !== undefined && { description: input.description }),
     domainId: input.domainId,
     categoryId: input.categoryId,
     proficiency: input.proficiency,
@@ -71,7 +74,7 @@ export function createSkill(input: CreateSkillInput): Readonly<Skill> {
 }
 
 export type UpdateSkillInput = Partial<
-  Pick<Skill, "name" | "domainId" | "categoryId" | "proficiency" | "notes" | "visibility" | "featured">
+  Pick<Skill, "name" | "description" | "domainId" | "categoryId" | "proficiency" | "notes" | "visibility" | "featured">
 > & {
   readonly addSources?: readonly SkillSource[];
   readonly addUsage?: readonly SkillUsage[];
@@ -86,6 +89,7 @@ export function updateSkill(skill: Skill, updates: UpdateSkillInput): Readonly<S
   return {
     ...skill,
     name,
+    ...(updates.description !== undefined ? { description: updates.description } : {}),
     domainId: updates.domainId ?? skill.domainId,
     categoryId: updates.categoryId ?? skill.categoryId,
     proficiency: updates.proficiency ?? skill.proficiency,

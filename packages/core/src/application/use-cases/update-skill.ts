@@ -34,6 +34,7 @@ export async function updateSkill(
 
   const updatedSkill = domainUpdateSkill(skill, {
     name: input.name,
+    description: input.description,
     domainId: input.domainId ? toDomainId(input.domainId) : undefined,
     categoryId: input.categoryId ? toCategoryId(input.categoryId) : undefined,
     proficiency,
