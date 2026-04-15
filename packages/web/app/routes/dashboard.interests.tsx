@@ -94,7 +94,7 @@ export default function InterestsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdd = searchParams.get("add") === "true";
   const editInterest = interests.find((i) => i.id === searchParams.get("edit"));
-  const isSubmitting = navigation.state === "submitting";
+  const isSubmitting = navigation.state !== "idle";
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {

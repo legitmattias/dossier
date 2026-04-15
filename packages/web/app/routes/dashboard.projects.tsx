@@ -112,7 +112,7 @@ export default function ProjectsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdd = searchParams.get("add") === "true";
   const editProject = projects.find((p) => p.id === searchParams.get("edit"));
-  const isSubmitting = navigation.state === "submitting";
+  const isSubmitting = navigation.state !== "idle";
   const [saved, setSaved] = useState(false);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
