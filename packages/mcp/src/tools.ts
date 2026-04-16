@@ -122,6 +122,8 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         skillId: z.string().describe("Skill ID to update"),
         name: z.string().optional().describe("New name"),
         description: z.string().optional().describe("Updated description"),
+        domainId: z.string().optional().describe("Move to domain (ID, slug, or name)"),
+        categoryId: z.string().optional().describe("Move to category (ID, slug, or name)"),
         proficiency: z.enum(PROFICIENCY_LEVELS).optional().describe("New proficiency level"),
         notes: z.string().optional().describe("Updated notes"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
