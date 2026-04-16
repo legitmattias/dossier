@@ -91,6 +91,16 @@ export function formatTimeSince(date: Date, now: Date = new Date()): string {
 }
 
 /**
+ * Get the display proficiency label for a skill.
+ * Priority: skill.proficiencyLabel → domain.proficiencyLabels[skill.proficiency] → skill.proficiency
+ */
+export function getDisplayProficiency(skill: Skill, domain?: Domain): string {
+  if (skill.proficiencyLabel) return skill.proficiencyLabel;
+  if (domain?.proficiencyLabels?.[skill.proficiency]) return domain.proficiencyLabels[skill.proficiency]!;
+  return skill.proficiency;
+}
+
+/**
  * Get the most recent usage date for a skill, or null if no usage recorded.
  */
 export function getLastUsedDate(skill: Skill): Date | null {

@@ -19,6 +19,7 @@ interface Domain {
   name: string;
   description?: string;
   visibility?: string;
+  proficiencyLabels?: Record<string, string>;
   isBuiltIn: boolean;
   categories: Category[];
 }
@@ -70,6 +71,19 @@ export async function action({ request }: ActionFunctionArgs) {
         body: {
           visibility: String(form.get("visibility")),
         },
+      });
+      return json({ ok: true });
+    }
+
+    if (intent === "update-labels") {
+      const domainId = String(form.get("domainId"));
+      const labels: Record<string, string> = {};
+      for (const level of ["novice", "familiar", "proficient", "advanced", "expert"]) {
+        const val = String(form.get(`label-${level}`) ?? "").trim();
+        if (val) labels[level] = val;
+      }
+      await api(`/profile/domains/${domainId}`, {
+        method: "PUT", token, body: { proficiencyLabels: labels },
       });
       return json({ ok: true });
     }
@@ -182,6 +196,23 @@ export default function DomainsPage() {
               >
                 Add Category
               </button>
+
+              {/* Proficiency Labels Editor */}
+              <div style={{ marginTop: "var(--space-md)", paddingTop: "var(--space-md)", borderTop: "1px solid var(--color-border)" }}>
+                <span className={styles.cardMeta} style={{ display: "block", marginBottom: "var(--space-xs)" }}>Proficiency Labels</span>
+                <Form method="post">
+                  <input type="hidden" name="intent" value="update-labels" />
+                  <input type="hidden" name="domainId" value={domain.id} />
+                  <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: "4px", fontSize: "0.8125rem", color: "var(--color-text-muted)", alignItems: "center" }}>
+                    <span>novice</span><input name="label-novice" defaultValue={domain.proficiencyLabels?.novice ?? ""} className={styles.filterSearch} placeholder="e.g. beginner" />
+                    <span>familiar</span><input name="label-familiar" defaultValue={domain.proficiencyLabels?.familiar ?? ""} className={styles.filterSearch} placeholder="e.g. elementary" />
+                    <span>proficient</span><input name="label-proficient" defaultValue={domain.proficiencyLabels?.proficient ?? ""} className={styles.filterSearch} placeholder="e.g. intermediate" />
+                    <span>advanced</span><input name="label-advanced" defaultValue={domain.proficiencyLabels?.advanced ?? ""} className={styles.filterSearch} placeholder="e.g. fluent" />
+                    <span>expert</span><input name="label-expert" defaultValue={domain.proficiencyLabels?.expert ?? ""} className={styles.filterSearch} placeholder="e.g. native" />
+                  </div>
+                  <button type="submit" className={styles.editButton} style={{ marginTop: "var(--space-sm)" }}>Save Labels</button>
+                </Form>
+              </div>
             </div>
           ))}
         </div>

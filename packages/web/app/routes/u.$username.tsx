@@ -17,10 +17,10 @@ interface PublicProject {
 
 interface PublicProfile {
   name: string;
-  skills: Array<{ name: string; proficiency: string; domainId: string; categoryId: string; description?: string; featured?: boolean; visibility?: string }>;
+  skills: Array<{ name: string; proficiency: string; proficiencyLabel?: string; domainId: string; categoryId: string; description?: string; featured?: boolean; visibility?: string }>;
   goals: Array<{ name: string; status: string; priority: string; domainId: string; description?: string; featured?: boolean; visibility?: string }>;
   interests: Array<{ name: string; domainId?: string; description?: string; featured?: boolean; visibility?: string }>;
-  domains: Array<{ id: string; name: string; visibility?: string; categories: Array<{ id: string; name: string }> }>;
+  domains: Array<{ id: string; name: string; visibility?: string; proficiencyLabels?: Record<string, string>; categories: Array<{ id: string; name: string }> }>;
   projects: PublicProject[];
 }
 
@@ -103,7 +103,7 @@ export default function PublicProfile() {
                     <span key={skill.name} className={styles.skillChip} title={skill.description}>
                       {skill.featured && <span className={styles.featuredBadge}>Featured</span>}
                       {skill.name}
-                      <span className={styles.skillLevel}>{skill.proficiency}</span>
+                      <span className={styles.skillLevel}>{skill.proficiencyLabel ?? domainMap.get(skill.domainId)?.proficiencyLabels?.[skill.proficiency] ?? skill.proficiency}</span>
                     </span>
                   ))}
                 </div>

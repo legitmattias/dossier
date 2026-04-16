@@ -23,6 +23,7 @@ export interface Skill {
   readonly domainId: DomainId;
   readonly categoryId: CategoryId;
   readonly proficiency: Proficiency;
+  readonly proficiencyLabel?: string;
   readonly sources: readonly SkillSource[];
   readonly usage: readonly SkillUsage[];
   readonly notes?: string;
@@ -40,6 +41,7 @@ export interface CreateSkillInput {
   readonly domainId: DomainId;
   readonly categoryId: CategoryId;
   readonly proficiency: Proficiency;
+  readonly proficiencyLabel?: string;
   readonly sources?: readonly SkillSource[];
   readonly usage?: readonly SkillUsage[];
   readonly notes?: string;
@@ -63,6 +65,7 @@ export function createSkill(input: CreateSkillInput): Readonly<Skill> {
     domainId: input.domainId,
     categoryId: input.categoryId,
     proficiency: input.proficiency,
+    ...(input.proficiencyLabel !== undefined && { proficiencyLabel: input.proficiencyLabel }),
     sources: input.sources ?? [],
     usage: input.usage ?? [],
     ...(input.notes !== undefined && { notes: input.notes }),
@@ -74,7 +77,7 @@ export function createSkill(input: CreateSkillInput): Readonly<Skill> {
 }
 
 export type UpdateSkillInput = Partial<
-  Pick<Skill, "name" | "description" | "domainId" | "categoryId" | "proficiency" | "notes" | "visibility" | "featured">
+  Pick<Skill, "name" | "description" | "domainId" | "categoryId" | "proficiency" | "proficiencyLabel" | "notes" | "visibility" | "featured">
 > & {
   readonly addSources?: readonly SkillSource[];
   readonly addUsage?: readonly SkillUsage[];
@@ -93,6 +96,7 @@ export function updateSkill(skill: Skill, updates: UpdateSkillInput): Readonly<S
     domainId: updates.domainId ?? skill.domainId,
     categoryId: updates.categoryId ?? skill.categoryId,
     proficiency: updates.proficiency ?? skill.proficiency,
+    ...(updates.proficiencyLabel !== undefined ? { proficiencyLabel: updates.proficiencyLabel } : {}),
     ...(updates.notes !== undefined ? { notes: updates.notes } : {}),
     visibility: updates.visibility ?? skill.visibility,
     featured: updates.featured ?? skill.featured,

@@ -42,7 +42,9 @@ export function registerListCommand(
           if (skill.description) {
             lines.push(`Description:  ${skill.description}`);
           }
-          lines.push(`Proficiency:  ${skill.proficiency}`);
+          const domain = profile.domains.find(d => d.id === skill.domainId);
+          const displayProf = skill.proficiencyLabel ?? domain?.proficiencyLabels?.[skill.proficiency] ?? skill.proficiency;
+          lines.push(`Proficiency:  ${displayProf}${displayProf !== skill.proficiency ? ` (${skill.proficiency})` : ""}`);
           lines.push(`Domain:       ${domainName}`);
           lines.push(`Category:     ${categoryName}`);
           if (skill.notes) {
@@ -50,7 +52,6 @@ export function registerListCommand(
           }
           lines.push(`Featured:     ${skill.featured ? "yes" : "no"}`);
           lines.push(`Visibility:   ${skill.visibility}`);
-          const domain = profile.domains.find(d => d.id === skill.domainId);
           if (domain?.visibility === "private") {
             lines.push(`Domain vis.:  private (hidden from exports)`);
           }

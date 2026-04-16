@@ -58,6 +58,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     categories: catsByDomain.get(d.id) ?? [],
     isBuiltIn: d.isBuiltIn,
     visibility: (d.visibility ?? "public") as "public" | "private",
+    ...(d.proficiencyLabels != null && Object.keys(d.proficiencyLabels as object).length > 0 && { proficiencyLabels: d.proficiencyLabels as Domain["proficiencyLabels"] }),
   }));
 
   const skills: Skill[] = skillRows.map((s) => ({
@@ -68,6 +69,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     domainId: toDomainId(s.domainId),
     categoryId: toCategoryId(s.categoryId),
     proficiency: s.proficiency as Skill["proficiency"],
+    ...(s.proficiencyLabel != null && { proficiencyLabel: s.proficiencyLabel }),
     ...(s.notes != null && { notes: s.notes }),
     sources: (s.sources as Skill["sources"]) ?? [],
     usage: (s.usage as Skill["usage"]) ?? [],

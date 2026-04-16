@@ -50,6 +50,7 @@ export const domains = pgTable("domains", {
   description: text("description"),
   isBuiltIn: boolean("is_built_in").notNull().default(false),
   visibility: text("visibility").notNull().default("public"),
+  proficiencyLabels: jsonb("proficiency_labels").default({}),
 }, (t) => [
   uniqueIndex("domains_profile_slug_idx").on(t.profileId, t.slug),
 ]);
@@ -77,6 +78,7 @@ export const skills = pgTable("skills", {
   domainId: text("domain_id").notNull().references(() => domains.id),
   categoryId: text("category_id").notNull().references(() => categories.id),
   proficiency: text("proficiency").notNull(), // novice | familiar | proficient | advanced | expert
+  proficiencyLabel: text("proficiency_label"),
   notes: text("notes"),
   sources: jsonb("sources").notNull().default([]),
   usage: jsonb("usage").notNull().default([]),

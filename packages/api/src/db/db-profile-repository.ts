@@ -52,6 +52,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
         await tx.insert(schema.domains).values({
           id: domain.id, profileId, slug: domain.slug, name: domain.name,
           description: domain.description, isBuiltIn: domain.isBuiltIn, visibility: domain.visibility,
+          proficiencyLabels: domain.proficiencyLabels ?? {},
         }).onConflictDoNothing();
         for (const cat of domain.categories) {
           await tx.insert(schema.categories).values({
@@ -65,7 +66,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
         await tx.insert(schema.skills).values({
           id: skill.id, profileId, slug: skill.slug, name: skill.name,
           description: skill.description, domainId: skill.domainId, categoryId: skill.categoryId,
-          proficiency: skill.proficiency, notes: skill.notes,
+          proficiency: skill.proficiency, proficiencyLabel: skill.proficiencyLabel, notes: skill.notes,
           sources: skill.sources, usage: skill.usage, visibility: skill.visibility, featured: skill.featured,
           createdAt: skill.createdAt, updatedAt: skill.updatedAt,
         });

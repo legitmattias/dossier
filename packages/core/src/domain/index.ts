@@ -58,7 +58,7 @@ export type { Project, CreateProjectInput, ProjectStatus, ProjectPriority } from
 export { createProject } from "./entities/project.js";
 
 // Entities — Domain
-export type { Domain, CreateDomainInput } from "./entities/domain-entity.js";
+export type { Domain, CreateDomainInput, ProficiencyLabels } from "./entities/domain-entity.js";
 export {
   createDomain,
   addCategoryToDomain,

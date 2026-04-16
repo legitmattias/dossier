@@ -65,6 +65,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         domainId: z.string().describe("Domain ID, slug, or name (e.g. 'software-development' or 'Software Development')"),
         categoryId: z.string().describe("Category ID, slug, or name (e.g. 'languages' or 'Programming Languages')"),
         proficiency: z.enum(PROFICIENCY_LEVELS).describe("Proficiency level"),
+        proficiencyLabel: z.string().optional().describe("Custom proficiency display label (e.g. 'native', 'CEFR B2') — overrides domain default"),
         notes: z.string().optional().describe("Optional notes about this skill"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
         featured: z.boolean().optional().describe("Mark as featured/showcase item"),
@@ -102,13 +103,16 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         return ok("No skills found matching the filters.");
       }
       const domains = await ops.getDomains();
-      const domainNames = new Map(domains.map((d) => [d.id, d.name]));
+      const domainMap = new Map(domains.map((d) => [d.id, d]));
       const categoryNames = new Map(domains.flatMap((d) => d.categories.map((c) => [c.id, c.name])));
       const privateDomainIds = new Set(domains.filter((d) => d.visibility === "private").map((d) => d.id));
       const lines = result.skills.map((s) => {
-        const domain = domainNames.get(s.domainId) ?? s.domainId;
+        const dom = domainMap.get(s.domainId);
+        const domainName = dom?.name ?? s.domainId;
         const category = categoryNames.get(s.categoryId) ?? s.categoryId;
-        let line = `- ${s.name} (${s.proficiency}) [${domain} > ${category}]`;
+        const labels = dom?.proficiencyLabels as Record<string, string> | undefined;
+        const displayProf = s.proficiencyLabel ?? labels?.[s.proficiency] ?? s.proficiency;
+        let line = `- ${s.name} (${displayProf}) [${domainName} > ${category}]`;
         if (privateDomainIds.has(s.domainId)) line += " (hidden by domain)";
         return line;
       });
@@ -128,6 +132,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         domainId: z.string().optional().describe("Move to domain (ID, slug, or name)"),
         categoryId: z.string().optional().describe("Move to category (ID, slug, or name)"),
         proficiency: z.enum(PROFICIENCY_LEVELS).optional().describe("New proficiency level"),
+        proficiencyLabel: z.string().optional().describe("Custom proficiency display label (overrides domain default)"),
         notes: z.string().optional().describe("Updated notes"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
         featured: z.boolean().optional().describe("Mark as featured/showcase item"),
@@ -419,6 +424,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         name: z.string().describe("Domain name"),
         description: z.string().optional().describe("Brief description"),
         visibility: z.enum(["public", "private"]).optional().describe("Domain visibility (default: public)"),
+        proficiencyLabels: z.record(z.string(), z.string()).optional().describe("Custom proficiency labels (e.g. {expert: 'native', advanced: 'fluent'})"),
       }),
     },
     withErrorHandler(async (input) => {
@@ -437,6 +443,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         name: z.string().optional().describe("New name"),
         description: z.string().optional().describe("Updated description"),
         visibility: z.enum(["public", "private"]).optional().describe("Domain visibility — private hides all child entities from exports"),
+        proficiencyLabels: z.record(z.string(), z.string()).optional().describe("Custom proficiency labels (e.g. {expert: 'native', advanced: 'fluent'})"),
       }),
     },
     withErrorHandler(async (input) => {

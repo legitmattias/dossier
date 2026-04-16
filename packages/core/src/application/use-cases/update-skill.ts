@@ -38,6 +38,7 @@ export async function updateSkill(
     domainId: input.domainId ? toDomainId(input.domainId) : undefined,
     categoryId: input.categoryId ? toCategoryId(input.categoryId) : undefined,
     proficiency,
+    proficiencyLabel: input.proficiencyLabel,
     notes: input.notes,
     visibility: input.visibility as "public" | "private" | undefined,
     featured: input.featured,

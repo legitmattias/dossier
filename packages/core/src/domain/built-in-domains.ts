@@ -71,6 +71,13 @@ export const LANGUAGES: Readonly<Domain> = createDomain({
   name: "Languages",
   description: "Human/natural languages and communication skills",
   isBuiltIn: true,
+  proficiencyLabels: {
+    novice: "beginner",
+    familiar: "elementary",
+    proficient: "intermediate",
+    advanced: "fluent",
+    expert: "native",
+  },
   categories: [
     createCategory({
       id: toCategoryId("builtin-category-languages-spoken"),

@@ -1,7 +1,10 @@
 import { CategoryNotFoundError, InvalidNameError } from "../errors/domain-errors.js";
 import type { CategoryId, DomainId } from "../value-objects/identifiers.js";
+import type { Proficiency } from "../value-objects/proficiency.js";
 import type { Slug } from "../value-objects/slug.js";
 import type { Category } from "./category.js";
+
+export type ProficiencyLabels = Readonly<Partial<Record<Proficiency, string>>>;
 
 export interface Domain {
   readonly id: DomainId;
@@ -11,6 +14,7 @@ export interface Domain {
   readonly categories: readonly Category[];
   readonly isBuiltIn: boolean;
   readonly visibility: "public" | "private";
+  readonly proficiencyLabels?: ProficiencyLabels;
 }
 
 export interface CreateDomainInput {
@@ -21,6 +25,7 @@ export interface CreateDomainInput {
   readonly categories?: readonly Category[];
   readonly isBuiltIn?: boolean;
   readonly visibility?: "public" | "private";
+  readonly proficiencyLabels?: ProficiencyLabels;
 }
 
 export function createDomain(input: CreateDomainInput): Readonly<Domain> {
@@ -36,6 +41,7 @@ export function createDomain(input: CreateDomainInput): Readonly<Domain> {
     categories: input.categories ?? [],
     isBuiltIn: input.isBuiltIn ?? false,
     visibility: input.visibility ?? "public",
+    ...(input.proficiencyLabels !== undefined && { proficiencyLabels: input.proficiencyLabels }),
   };
 }
 

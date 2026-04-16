@@ -1,8 +1,10 @@
+import type { Domain } from "../../domain/entities/domain-entity.js";
 import type { Profile } from "../../domain/entities/profile.js";
 import type { Skill } from "../../domain/entities/skill.js";
 import type { ExportOptions, IExporter } from "../../application/ports/exporter.js";
 import {
   formatTimeSince,
+  getDisplayProficiency,
   getLastUsedDate,
   getLatestProgress,
   groupByDomain,
@@ -40,8 +42,10 @@ export class ClaudeMdExporter implements IExporter {
     if (featuredSkills.length > 0) {
       lines.push("");
       lines.push("## Key Skills");
+      const domainMap = new Map(profile.domains.map((d) => [d.id, d]));
       lines.push(featuredSkills.map((s) => {
-        let entry = `**${s.name}** (${s.proficiency})`;
+        const dom = domainMap.get(s.domainId);
+        let entry = `**${s.name}** (${getDisplayProficiency(s, dom)})`;
         if (s.description) entry += ` — ${s.description}`;
         return entry;
       }).join(", "));
@@ -72,7 +76,7 @@ export class ClaudeMdExporter implements IExporter {
         for (const [categoryId, skills] of byCategory) {
           const category = group.domain.categories.find((c) => c.id === categoryId);
           const categoryName = category?.name ?? "Other";
-          lines.push(`**${categoryName}:** ${skills.map((s) => formatSkillLine(s, now)).join(", ")}`);
+          lines.push(`**${categoryName}:** ${skills.map((s) => formatSkillLine(s, now, group.domain)).join(", ")}`);
         }
       }
     }
@@ -212,13 +216,14 @@ export class ClaudeMdExporter implements IExporter {
   }
 }
 
-function formatSkillLine(skill: Skill, now: Date): string {
+function formatSkillLine(skill: Skill, now: Date, domain?: Domain): string {
   const lastUsed = getLastUsedDate(skill);
+  const displayProf = getDisplayProficiency(skill, domain);
   const descSuffix = skill.description ? ` — ${skill.description}` : "";
 
   // Only show freshness when there IS usage data
   if (!lastUsed) {
-    return `${skill.name} (${skill.proficiency})${descSuffix}`;
+    return `${skill.name} (${displayProf})${descSuffix}`;
   }
 
   const timeSince = formatTimeSince(lastUsed, now);
@@ -226,5 +231,5 @@ function formatSkillLine(skill: Skill, now: Date): string {
     ? "last used: recently"
     : `last used: ${timeSince}`;
 
-  return `${skill.name} (${skill.proficiency}) [${freshness}]${descSuffix}`;
+  return `${skill.name} (${displayProf}) [${freshness}]${descSuffix}`;
 }

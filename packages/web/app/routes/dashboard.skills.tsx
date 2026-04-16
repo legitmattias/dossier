@@ -12,6 +12,7 @@ interface Skill {
   name: string;
   description?: string;
   proficiency: string;
+  proficiencyLabel?: string;
   domainId: string;
   categoryId: string;
   notes?: string;
@@ -24,6 +25,7 @@ interface Domain {
   name: string;
   slug: string;
   visibility?: string;
+  proficiencyLabels?: Record<string, string>;
   categories: Array<{ id: string; name: string; slug: string }>;
 }
 
@@ -59,6 +61,7 @@ export async function action({ request }: ActionFunctionArgs) {
           domainId: String(form.get("domainId")),
           categoryId: String(form.get("categoryId")),
           proficiency: String(form.get("proficiency")),
+          proficiencyLabel: String(form.get("proficiencyLabel") ?? "") || undefined,
           notes: String(form.get("notes") ?? "") || undefined,
           visibility: form.get("visibility") as string || "public",
           featured: form.get("featured") === "on",
@@ -77,6 +80,7 @@ export async function action({ request }: ActionFunctionArgs) {
           domainId: String(form.get("domainId")),
           categoryId: String(form.get("categoryId")),
           proficiency: String(form.get("proficiency")),
+          proficiencyLabel: String(form.get("proficiencyLabel") ?? "") || undefined,
           notes: String(form.get("notes") ?? "") || undefined,
           visibility: String(form.get("visibility") ?? "public"),
           featured: form.get("featured") === "on",
@@ -277,7 +281,7 @@ export default function SkillsPage() {
                         <div className={styles.cardBadges}>
                           {skill.featured && <span className={styles.featuredBadge}>Featured</span>}
                           <span className={styles.proficiency} data-level={skill.proficiency}>
-                            {skill.proficiency}
+                            {skill.proficiencyLabel ?? domain?.proficiencyLabels?.[skill.proficiency] ?? skill.proficiency}
                           </span>
                           <span className={styles.cardMeta}>{category?.name ?? "—"}</span>
                           {skill.visibility === "private" && (
@@ -371,6 +375,17 @@ export default function SkillsPage() {
               </div>
 
               <div className={styles.field}>
+                <label htmlFor="edit-proficiencyLabel" className={styles.label}>Custom proficiency label (optional)</label>
+                <input
+                  id="edit-proficiencyLabel"
+                  name="proficiencyLabel"
+                  className={styles.input}
+                  defaultValue={editSkill.proficiencyLabel ?? ""}
+                  placeholder="e.g. native, CEFR B2 — overrides domain default"
+                />
+              </div>
+
+              <div className={styles.field}>
                 <label htmlFor="edit-notes" className={styles.label}>Notes (optional)</label>
                 <input
                   id="edit-notes"
@@ -459,6 +474,11 @@ export default function SkillsPage() {
                     <option key={level} value={level}>{level}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="proficiencyLabel" className={styles.label}>Custom proficiency label (optional)</label>
+                <input id="proficiencyLabel" name="proficiencyLabel" className={styles.input} placeholder="e.g. native, CEFR B2 — overrides domain default" />
               </div>
 
               <div className={styles.field}>

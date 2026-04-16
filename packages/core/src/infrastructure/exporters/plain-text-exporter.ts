@@ -1,6 +1,6 @@
 import type { Profile } from "../../domain/entities/profile.js";
 import type { ExportOptions, IExporter } from "../../application/ports/exporter.js";
-import { groupByDomain } from "./format-helpers.js";
+import { getDisplayProficiency, groupByDomain } from "./format-helpers.js";
 
 export class PlainTextExporter implements IExporter {
   export(profile: Profile, _options?: ExportOptions): string {
@@ -31,7 +31,7 @@ export class PlainTextExporter implements IExporter {
           for (const skill of skills) {
             const desc = skill.description ? ` — ${skill.description}` : "";
             const feat = skill.featured ? " [featured]" : "";
-            lines.push(`      ${skill.name} (${skill.proficiency})${desc}${feat}`);
+            lines.push(`      ${skill.name} (${getDisplayProficiency(skill, group.domain)})${desc}${feat}`);
           }
         }
       }

@@ -11,6 +11,7 @@ export interface UpdateDomainInput {
   readonly name?: string;
   readonly description?: string;
   readonly visibility?: string;
+  readonly proficiencyLabels?: Record<string, string>;
 }
 
 export interface UpdateDomainOutput {
@@ -21,6 +22,7 @@ export interface UpdateDomainOutput {
     readonly description?: string;
     readonly isBuiltIn: boolean;
     readonly visibility: string;
+    readonly proficiencyLabels?: Record<string, string>;
   };
 }
 
@@ -43,6 +45,7 @@ export async function updateDomain(
     ...(input.name !== undefined && { name: input.name }),
     ...(input.description !== undefined && { description: input.description }),
     ...(input.visibility !== undefined && { visibility: input.visibility as "public" | "private" }),
+    ...(input.proficiencyLabels !== undefined && { proficiencyLabels: input.proficiencyLabels }),
   };
 
   const updatedProfile = {
@@ -61,6 +64,7 @@ export async function updateDomain(
       description: updatedDomain.description,
       isBuiltIn: updatedDomain.isBuiltIn,
       visibility: updatedDomain.visibility,
+      ...(updatedDomain.proficiencyLabels !== undefined && { proficiencyLabels: updatedDomain.proficiencyLabels as Record<string, string> }),
     },
   };
 }

@@ -37,6 +37,7 @@ const skillSchema = z.object({
   domainId: z.string().min(1),
   categoryId: z.string().min(1),
   proficiency: z.literal([...PROFICIENCY_LEVELS]),
+  proficiencyLabel: z.string().optional(),
   sources: z.array(skillSourceSchema),
   usage: z.array(skillUsageSchema),
   notes: z.string().optional(),
@@ -92,6 +93,7 @@ const domainSchema = z.object({
   categories: z.array(categorySchema),
   isBuiltIn: z.boolean(),
   visibility: z.literal(["public", "private"]).optional().default("public"),
+  proficiencyLabels: z.record(z.string(), z.string()).optional(),
 });
 
 const interestSchema = z.object({
@@ -208,6 +210,7 @@ function serializeSkill(skill: Skill): object {
     domainId: skill.domainId,
     categoryId: skill.categoryId,
     proficiency: skill.proficiency,
+    ...(skill.proficiencyLabel !== undefined && { proficiencyLabel: skill.proficiencyLabel }),
     sources: skill.sources.map(serializeSkillSource),
     usage: skill.usage.map(serializeSkillUsage),
     ...(skill.notes !== undefined && { notes: skill.notes }),
@@ -273,6 +276,7 @@ function serializeDomain(domain: Domain): object {
     categories: domain.categories.map(serializeCategory),
     isBuiltIn: domain.isBuiltIn,
     visibility: domain.visibility,
+    ...(domain.proficiencyLabels !== undefined && { proficiencyLabels: domain.proficiencyLabels }),
   };
 }
 

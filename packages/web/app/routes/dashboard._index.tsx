@@ -15,10 +15,10 @@ interface Project {
 
 interface Profile {
   name: string;
-  skills: Array<{ name: string; proficiency: string }>;
+  skills: Array<{ name: string; proficiency: string; proficiencyLabel?: string; domainId: string }>;
   goals: Array<{ name: string; status: string; priority: string }>;
   interests: Array<{ name: string }>;
-  domains: Array<{ name: string; categories: Array<{ name: string }> }>;
+  domains: Array<{ id: string; name: string; proficiencyLabels?: Record<string, string>; categories: Array<{ name: string }> }>;
   projects: Project[];
 }
 
@@ -71,7 +71,7 @@ export default function DashboardOverview() {
             {profile.skills.slice(0, 10).map((skill) => (
               <span key={skill.name} className={styles.chip}>
                 {skill.name}
-                <span className={styles.chipMeta}>{skill.proficiency}</span>
+                <span className={styles.chipMeta}>{skill.proficiencyLabel ?? profile.domains.find(d => d.id === skill.domainId)?.proficiencyLabels?.[skill.proficiency] ?? skill.proficiency}</span>
               </span>
             ))}
           </div>

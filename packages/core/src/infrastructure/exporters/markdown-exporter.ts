@@ -1,6 +1,6 @@
 import type { Profile } from "../../domain/entities/profile.js";
 import type { ExportOptions, IExporter } from "../../application/ports/exporter.js";
-import { getLatestProgress, groupByDomain } from "./format-helpers.js";
+import { getDisplayProficiency, getLatestProgress, groupByDomain } from "./format-helpers.js";
 
 export class MarkdownExporter implements IExporter {
   export(profile: Profile, _options?: ExportOptions): string {
@@ -35,7 +35,7 @@ export class MarkdownExporter implements IExporter {
           for (const skill of skills) {
             const prefix = skill.featured ? "★ " : "";
             const desc = skill.description ?? "-";
-            lines.push(`| ${prefix}${skill.name} | ${skill.proficiency} | ${desc} |`);
+            lines.push(`| ${prefix}${skill.name} | ${getDisplayProficiency(skill, group.domain)} | ${desc} |`);
           }
         }
       }

@@ -48,6 +48,7 @@ export async function addSkill(
     domainId,
     categoryId,
     proficiency,
+    proficiencyLabel: input.proficiencyLabel,
     sources: input.sources,
     usage: input.usage,
     notes: input.notes,

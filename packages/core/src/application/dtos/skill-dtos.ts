@@ -8,6 +8,7 @@ export interface AddSkillInput {
   readonly domainId: string;
   readonly categoryId: string;
   readonly proficiency: string;
+  readonly proficiencyLabel?: string;
   readonly sources?: readonly SkillSource[];
   readonly usage?: readonly SkillUsage[];
   readonly notes?: string;
@@ -22,6 +23,7 @@ export interface UpdateSkillInput {
   readonly categoryId?: string;
   readonly description?: string;
   readonly proficiency?: string;
+  readonly proficiencyLabel?: string;
   readonly notes?: string;
   readonly visibility?: string;
   readonly featured?: boolean;
@@ -50,6 +52,7 @@ export interface SkillOutput {
   readonly domainId: string;
   readonly categoryId: string;
   readonly proficiency: string;
+  readonly proficiencyLabel?: string;
   readonly sources: readonly SkillSource[];
   readonly usage: readonly SkillUsage[];
   readonly notes?: string;
