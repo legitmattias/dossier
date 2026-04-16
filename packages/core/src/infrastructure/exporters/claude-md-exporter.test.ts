@@ -6,11 +6,14 @@ import {
   addProjectToProfile,
   addSkillToProfile,
   BUILT_IN_DOMAINS,
+  createDomain,
   createLearningGoal,
   createProfile,
   createProject,
   createSkill,
   createSlug,
+  LANGUAGES,
+  toDomainId,
   toGoalId,
   toProfileId,
   toProjectId,
@@ -170,5 +173,92 @@ describe("ClaudeMdExporter", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
     expect(output.endsWith("\n")).toBe(true);
+  });
+
+  it("renders domain proficiency labels instead of raw proficiency", () => {
+    const languagesDomain = LANGUAGES;
+    let profile = createProfile({ id: toProfileId("p"), name: "P" });
+    profile = addDomainToProfile(profile, languagesDomain);
+    const skill = createSkill({
+      id: toSkillId("s1"),
+      slug: slugify("Swedish"),
+      name: "Swedish",
+      domainId: languagesDomain.id,
+      categoryId: languagesDomain.categories[0]!.id,
+      proficiency: "expert",
+    });
+    profile = addSkillToProfile(profile, skill);
+
+    const output = exporter.export(profile);
+    // Languages domain maps expert -> "native"
+    expect(output).toContain("Swedish (native)");
+    expect(output).not.toContain("Swedish (expert)");
+  });
+
+  it("respects skill-level proficiencyLabel override", () => {
+    const languagesDomain = LANGUAGES;
+    let profile = createProfile({ id: toProfileId("p"), name: "P" });
+    profile = addDomainToProfile(profile, languagesDomain);
+    const skill = createSkill({
+      id: toSkillId("s1"),
+      slug: slugify("Norwegian"),
+      name: "Norwegian",
+      domainId: languagesDomain.id,
+      categoryId: languagesDomain.categories[0]!.id,
+      proficiency: "advanced",
+      proficiencyLabel: "near-native",
+    });
+    profile = addSkillToProfile(profile, skill);
+
+    const output = exporter.export(profile);
+    // Skill-level override should take precedence over domain label ("fluent")
+    expect(output).toContain("Norwegian (near-native)");
+    expect(output).not.toContain("Norwegian (fluent)");
+  });
+
+  it("hides skills in private domains from export", () => {
+    const privateDomain = createDomain({
+      id: toDomainId("private-domain"),
+      slug: slugify("Secret Skills"),
+      name: "Secret Skills",
+      visibility: "private",
+      categories: [{ id: "cat-1" as any, slug: "general" as any, name: "General" }],
+    });
+    let profile = createProfile({ id: toProfileId("p"), name: "P" });
+    profile = addDomainToProfile(profile, privateDomain);
+    const skill = createSkill({
+      id: toSkillId("s1"),
+      slug: slugify("Hidden Skill"),
+      name: "Hidden Skill",
+      domainId: privateDomain.id,
+      categoryId: "cat-1" as any,
+      proficiency: "advanced",
+    });
+    profile = addSkillToProfile(profile, skill);
+
+    const output = exporter.export(profile);
+    expect(output).not.toContain("Hidden Skill");
+    expect(output).not.toContain("Secret Skills");
+  });
+
+  it("featured skills section uses domain labels", () => {
+    const languagesDomain = LANGUAGES;
+    let profile = createProfile({ id: toProfileId("p"), name: "P" });
+    profile = addDomainToProfile(profile, languagesDomain);
+    const skill = createSkill({
+      id: toSkillId("s1"),
+      slug: slugify("English"),
+      name: "English",
+      domainId: languagesDomain.id,
+      categoryId: languagesDomain.categories[0]!.id,
+      proficiency: "expert",
+      featured: true,
+    });
+    profile = addSkillToProfile(profile, skill);
+
+    const output = exporter.export(profile);
+    expect(output).toContain("## Key Skills");
+    expect(output).toContain("**English** (native)");
+    expect(output).not.toContain("**English** (expert)");
   });
 });

@@ -42,6 +42,58 @@ describe("createDomain", () => {
     expect(domain.isBuiltIn).toBe(true);
   });
 
+  it("creates a domain with proficiencyLabels", () => {
+    const labels = {
+      novice: "beginner",
+      familiar: "elementary",
+      proficient: "intermediate",
+      advanced: "fluent",
+      expert: "native",
+    } as const;
+
+    const domain = createDomain({
+      id: toDomainId("domain-lang"),
+      slug: createSlug("languages"),
+      name: "Languages",
+      proficiencyLabels: labels,
+    });
+
+    expect(domain.proficiencyLabels).toEqual(labels);
+    expect(domain.proficiencyLabels!.expert).toBe("native");
+    expect(domain.proficiencyLabels!.novice).toBe("beginner");
+  });
+
+  it("creates a domain with visibility", () => {
+    const domain = createDomain({
+      id: toDomainId("domain-priv"),
+      slug: createSlug("private-stuff"),
+      name: "Private Stuff",
+      visibility: "private",
+    });
+
+    expect(domain.visibility).toBe("private");
+  });
+
+  it("defaults visibility to public", () => {
+    const domain = createDomain({
+      id: toDomainId("domain-pub"),
+      slug: createSlug("public-stuff"),
+      name: "Public Stuff",
+    });
+
+    expect(domain.visibility).toBe("public");
+  });
+
+  it("defaults proficiencyLabels to undefined", () => {
+    const domain = createDomain({
+      id: toDomainId("domain-nolabels"),
+      slug: createSlug("no-labels"),
+      name: "No Labels",
+    });
+
+    expect(domain.proficiencyLabels).toBeUndefined();
+  });
+
   it("trims the name", () => {
     const domain = createDomain({
       id: toDomainId("domain-3"),
