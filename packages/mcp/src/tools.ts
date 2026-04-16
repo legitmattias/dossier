@@ -139,7 +139,20 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       }),
     },
     withErrorHandler(async (input) => {
-      const result = await ops.updateSkill(input);
+      let resolvedInput = { ...input };
+      if (input.domainId || input.categoryId) {
+        const profile = await ops.getProfile();
+        if (!profile) throw new Error("No profile found.");
+        if (input.domainId) {
+          const domain = application.resolveDomainInProfile(profile, input.domainId);
+          resolvedInput = { ...resolvedInput, domainId: domain.id };
+          if (input.categoryId) {
+            const category = application.resolveCategoryInDomain(domain, input.categoryId);
+            resolvedInput = { ...resolvedInput, categoryId: category.id };
+          }
+        }
+      }
+      const result = await ops.updateSkill(resolvedInput);
       return ok(`Updated skill: ${result.skill.name} (${result.skill.proficiency})`);
     }),
   );
