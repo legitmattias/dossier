@@ -258,11 +258,6 @@ export default function SkillsPage() {
                         <div className={styles.cardHeader}>
                           <span className={styles.cardName}>{skill.name}</span>
                           <div className={styles.cardActions} style={{ borderTop: 'none', paddingTop: 0, marginTop: 0 }}>
-                            <Form method="post" style={{ display: "inline" }}>
-                              <input type="hidden" name="intent" value="mark-used" />
-                              <input type="hidden" name="skillId" value={skill.id} />
-                              <button type="submit" className={styles.editButton} title="Record recent usage for freshness tracking">Used</button>
-                            </Form>
                             <button
                               type="button"
                               className={styles.editButton}
@@ -423,6 +418,16 @@ export default function SkillsPage() {
                 </button>
               </div>
             </Form>
+            <div style={{ marginTop: "var(--space-md)", paddingTop: "var(--space-md)", borderTop: "1px solid var(--color-border)" }}>
+              <Form method="post" style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+                <input type="hidden" name="intent" value="mark-used" />
+                <input type="hidden" name="skillId" value={editSkill.id} />
+                <button type="submit" className={styles.editButton} title="Record recent usage for freshness tracking">
+                  {saved ? "Recorded!" : "Mark as recently used"}
+                </button>
+                <span className={styles.cardMeta}>Records usage for freshness tracking</span>
+              </Form>
+            </div>
           </div>
         </div>
       )}
