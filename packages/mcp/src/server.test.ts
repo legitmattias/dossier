@@ -67,9 +67,25 @@ function createTestOperations(repo: InMemoryProfileRepository, idGen: StubIdGene
     updateGoalProgress: (input) => application.updateGoalProgress(readDeps, input),
     completeGoal: (input) => application.completeGoal(deps, input),
     addInterest: (input) => application.addInterest(deps, input),
+    listInterests: async () => {
+      const p = await repo.load();
+      if (!p) return { interests: [] };
+      return { interests: p.interests.map(application.toInterestOutput) };
+    },
+    updateInterest: (input) => application.updateInterest(readDeps, input),
     removeInterest: (input) => application.removeInterest(readDeps, input),
+    promoteInterest: (input) => application.promoteInterest(deps, input),
+    addProject: (input) => application.addProject(deps, input),
+    listProjects: (input) => application.listProjects(readDeps, input),
+    updateProject: (input) => application.updateProject(readDeps, input),
+    removeProject: (input) => application.removeProject(readDeps, input),
+    searchProfile: (input) => application.searchProfile(readDeps, input),
     addDomain: (input) => application.addDomain(deps, input),
     addCategory: (input) => application.addCategory(deps, input),
+    updateGoal: (input) => application.updateGoal(readDeps, input),
+    removeGoal: async (input) => { await application.removeGoal(readDeps, input); },
+    removeDomain: async (input) => { await application.removeDomain(readDeps, input); },
+    removeCategory: async (input) => { await application.removeCategory(readDeps, input); },
     exportProfile: async (format) => {
       const exporter = infrastructure.createExporter(format);
       const result = await application.exportProfile({ profileRepository: repo, exporter });

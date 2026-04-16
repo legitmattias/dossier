@@ -92,13 +92,36 @@ export class RemoteOperations implements DossierOperations {
     return this.api<application.CompleteGoalOutput>(`/profile/goals/${goalId}/complete`, { method: "POST", body });
   }
 
+  async updateGoal(input: application.UpdateGoalInput) {
+    const { goalId, ...body } = input;
+    return this.api<application.UpdateGoalOutput>(`/profile/goals/${goalId}`, { method: "PUT", body });
+  }
+
+  async removeGoal(input: application.RemoveGoalInput) {
+    await this.api<void>(`/profile/goals/${input.goalId}`, { method: "DELETE" });
+  }
+
   // Interests
   async addInterest(input: application.AddInterestInput) {
     return this.api<application.AddInterestOutput>("/profile/interests", { method: "POST", body: input });
   }
 
+  async listInterests() {
+    return this.api<{ interests: readonly application.InterestOutput[] }>("/profile/interests");
+  }
+
+  async updateInterest(input: application.UpdateInterestInput) {
+    const { interestId, ...body } = input;
+    return this.api<application.UpdateInterestOutput>(`/profile/interests/${interestId}`, { method: "PUT", body });
+  }
+
   async removeInterest(input: application.RemoveInterestInput) {
     return this.api<application.RemoveInterestOutput>(`/profile/interests/${input.interestId}`, { method: "DELETE" });
+  }
+
+  async promoteInterest(input: application.PromoteInterestInput) {
+    const { interestId, ...body } = input;
+    return this.api<application.PromoteInterestOutput>(`/profile/interests/${interestId}/promote`, { method: "POST", body });
   }
 
   // Projects
@@ -137,6 +160,14 @@ export class RemoteOperations implements DossierOperations {
   async addCategory(input: application.AddCategoryInput) {
     const { domainId, ...body } = input;
     return this.api<application.AddCategoryOutput>(`/profile/domains/${domainId}/categories`, { method: "POST", body });
+  }
+
+  async removeDomain(input: application.RemoveDomainInput) {
+    await this.api<void>(`/profile/domains/${input.domainId}`, { method: "DELETE" });
+  }
+
+  async removeCategory(input: application.RemoveCategoryInput) {
+    await this.api<void>(`/profile/domains/${input.domainId}/categories/${input.categoryId}`, { method: "DELETE" });
   }
 
   // Export

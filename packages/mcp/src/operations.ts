@@ -24,7 +24,10 @@ export interface DossierOperations {
 
   // Interests
   addInterest(input: application.AddInterestInput): Promise<application.AddInterestOutput>;
+  listInterests(): Promise<{ interests: readonly application.InterestOutput[] }>;
+  updateInterest(input: application.UpdateInterestInput): Promise<application.UpdateInterestOutput>;
   removeInterest(input: application.RemoveInterestInput): Promise<application.RemoveInterestOutput>;
+  promoteInterest(input: application.PromoteInterestInput): Promise<application.PromoteInterestOutput>;
 
   // Projects
   addProject(input: application.AddProjectInput): Promise<application.AddProjectOutput>;
@@ -32,9 +35,15 @@ export interface DossierOperations {
   updateProject(input: application.UpdateProjectInput): Promise<application.UpdateProjectOutput>;
   removeProject(input: application.RemoveProjectInput): Promise<application.RemoveProjectOutput>;
 
+  // Goals (additional)
+  updateGoal(input: application.UpdateGoalInput): Promise<application.UpdateGoalOutput>;
+  removeGoal(input: application.RemoveGoalInput): Promise<void>;
+
   // Domains & Categories
   addDomain(input: application.AddDomainInput): Promise<application.AddDomainOutput>;
   addCategory(input: application.AddCategoryInput): Promise<application.AddCategoryOutput>;
+  removeDomain(input: application.RemoveDomainInput): Promise<void>;
+  removeCategory(input: application.RemoveCategoryInput): Promise<void>;
 
   // Search
   searchProfile(input: application.SearchProfileInput): Promise<application.SearchProfileOutput>;

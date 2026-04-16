@@ -78,6 +78,15 @@ export async function action({ request }: ActionFunctionArgs) {
       return json({ ok: true });
     }
 
+    if (intent === "promote") {
+      await api(`/profile/interests/${form.get("interestId")}/promote`, {
+        method: "POST",
+        token,
+        body: {},
+      });
+      return json({ ok: true });
+    }
+
     return json({ error: "Unknown action" }, { status: 400 });
   } catch (error) {
     if (error instanceof ApiError) {
@@ -129,6 +138,11 @@ export default function InterestsPage() {
               <div className={styles.cardHeader}>
                 <span className={styles.cardName}>{interest.name}</span>
                 <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+                  <Form method="post" style={{ display: "inline" }}>
+                    <input type="hidden" name="intent" value="promote" />
+                    <input type="hidden" name="interestId" value={interest.id} />
+                    <button type="submit" className={styles.editButton}>Promote to Goal</button>
+                  </Form>
                   <button
                     type="button"
                     className={styles.editButton}

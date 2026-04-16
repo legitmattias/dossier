@@ -92,6 +92,15 @@ export async function action({ request }: ActionFunctionArgs) {
       return json({ ok: true });
     }
 
+    if (intent === "mark-used") {
+      await api(`/profile/skills/${form.get("skillId")}/mark-used`, {
+        method: "POST",
+        token,
+        body: { context: "Manual" },
+      });
+      return json({ ok: true });
+    }
+
     return json({ error: "Unknown action" }, { status: 400 });
   } catch (error) {
     if (error instanceof ApiError) {
@@ -244,6 +253,11 @@ export default function SkillsPage() {
                         <div className={styles.cardHeader}>
                           <span className={styles.cardName}>{skill.name}</span>
                           <div className={styles.cardActions} style={{ borderTop: 'none', paddingTop: 0, marginTop: 0 }}>
+                            <Form method="post" style={{ display: "inline" }}>
+                              <input type="hidden" name="intent" value="mark-used" />
+                              <input type="hidden" name="skillId" value={skill.id} />
+                              <button type="submit" className={styles.editButton} title="Record recent usage for freshness tracking">Used</button>
+                            </Form>
                             <button
                               type="button"
                               className={styles.editButton}

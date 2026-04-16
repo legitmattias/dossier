@@ -28,13 +28,22 @@ publicRoutes.get("/:username", async (c) => {
   const profile = await loadProfileFromDb(db, userId);
   if (!profile) return c.json({ error: "Profile not found" }, 404);
 
+  // Filter out private entities for public access
+  const publicProfile = {
+    ...profile,
+    skills: profile.skills.filter((s) => s.visibility !== "private"),
+    goals: profile.goals.filter((g) => g.visibility !== "private"),
+    interests: profile.interests.filter((i) => i.visibility !== "private"),
+    projects: profile.projects.filter((p) => p.visibility !== "private"),
+  };
+
   const format = c.req.query("format") ?? "json";
 
   if (format === "json") {
-    const serialized = infrastructure.serializeProfile(profile);
+    const serialized = infrastructure.serializeProfile(publicProfile);
     return c.json(serialized);
   }
 
   const exporter = infrastructure.createExporter(format);
-  return c.text(exporter.export(profile));
+  return c.text(exporter.export(publicProfile));
 });

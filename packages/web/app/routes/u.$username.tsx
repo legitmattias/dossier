@@ -63,14 +63,17 @@ export default function PublicProfile() {
   }
 
   const domainMap = new Map(profile.domains.map((d) => [d.id, d]));
-  const activeGoals = profile.goals.filter((g) => g.status === "active");
+  // Filter out private entities
+  const publicSkills = profile.skills.filter((s) => s.visibility !== "private");
+  const activeGoals = profile.goals.filter((g) => g.status === "active" && g.visibility !== "private");
+  const publicInterests = profile.interests.filter((i) => i.visibility !== "private");
   const publicProjects = profile.projects
     .filter((p) => p.visibility !== "private")
     .sort((a, b) => (a.featured === b.featured ? 0 : a.featured ? -1 : 1));
 
   // Group skills by domain
   const skillsByDomain = new Map<string, typeof profile.skills>();
-  for (const skill of profile.skills) {
+  for (const skill of publicSkills) {
     const list = skillsByDomain.get(skill.domainId) ?? [];
     list.push(skill);
     skillsByDomain.set(skill.domainId, list);
@@ -159,11 +162,11 @@ export default function PublicProfile() {
         </section>
       )}
 
-      {profile.interests.length > 0 && (
+      {publicInterests.length > 0 && (
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Interests</h2>
           <div className={styles.skillGrid}>
-            {profile.interests.map((interest) => (
+            {publicInterests.map((interest) => (
               <span key={interest.name} className={styles.interestChip} title={interest.description}>
                 {interest.featured ? `★ ${interest.name}` : interest.name}
               </span>

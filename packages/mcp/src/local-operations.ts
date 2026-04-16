@@ -74,13 +74,35 @@ export class LocalOperations implements DossierOperations {
     return application.completeGoal(this.deps, input);
   }
 
+  async updateGoal(input: application.UpdateGoalInput) {
+    return application.updateGoal(this.readDeps, input);
+  }
+
+  async removeGoal(input: application.RemoveGoalInput) {
+    await application.removeGoal(this.readDeps, input);
+  }
+
   // Interests
   async addInterest(input: application.AddInterestInput) {
     return application.addInterest(this.deps, input);
   }
 
+  async listInterests() {
+    const profile = await this.repo.load();
+    if (!profile) return { interests: [] };
+    return { interests: profile.interests.map(application.toInterestOutput) };
+  }
+
+  async updateInterest(input: application.UpdateInterestInput) {
+    return application.updateInterest(this.readDeps, input);
+  }
+
   async removeInterest(input: application.RemoveInterestInput) {
     return application.removeInterest(this.readDeps, input);
+  }
+
+  async promoteInterest(input: application.PromoteInterestInput) {
+    return application.promoteInterest(this.deps, input);
   }
 
   // Projects
@@ -112,6 +134,14 @@ export class LocalOperations implements DossierOperations {
 
   async addCategory(input: application.AddCategoryInput) {
     return application.addCategory(this.deps, input);
+  }
+
+  async removeDomain(input: application.RemoveDomainInput) {
+    await application.removeDomain(this.readDeps, input);
+  }
+
+  async removeCategory(input: application.RemoveCategoryInput) {
+    await application.removeCategory(this.readDeps, input);
   }
 
   // Export

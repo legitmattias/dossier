@@ -24,6 +24,7 @@ interface Goal {
 interface Domain {
   id: string;
   name: string;
+  categories: Array<{ id: string; name: string }>;
 }
 
 export const meta: MetaFunction = () => [{ title: "Learning Goals — Dossier" }];
@@ -91,6 +92,18 @@ export async function action({ request }: ActionFunctionArgs) {
       return json({ ok: true });
     }
 
+    if (intent === "complete") {
+      await api(`/profile/goals/${form.get("goalId")}/complete`, {
+        method: "POST",
+        token,
+        body: {
+          categoryId: String(form.get("categoryId")),
+          proficiency: String(form.get("proficiency") || "novice"),
+        },
+      });
+      return json({ ok: true });
+    }
+
     if (intent === "delete") {
       await api(`/profile/goals/${form.get("goalId")}`, { method: "DELETE", token });
       return json({ ok: true });
@@ -140,6 +153,8 @@ export default function GoalsPage() {
   const completed = filteredGoals.filter((g) => g.status === "completed");
   const abandoned = filteredGoals.filter((g) => g.status === "abandoned");
   const editGoal = editId ? goals.find((g) => g.id === editId) : undefined;
+  const completeGoalId = searchParams.get("complete");
+  const completeGoal = completeGoalId ? goals.find((g) => g.id === completeGoalId) : undefined;
 
   function getProgress(goal: Goal): number {
     if (goal.progress.length === 0) return 0;
@@ -153,6 +168,15 @@ export default function GoalsPage() {
         <div className={styles.cardHeader}>
           <span className={styles.cardName}>{goal.name}</span>
           <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+            {goal.status === "active" && (
+              <button
+                type="button"
+                className={styles.editButton}
+                onClick={() => setSearchParams({ complete: goal.id })}
+              >
+                Complete
+              </button>
+            )}
             <button
               className={styles.editButton}
               onClick={() => setSearchParams({ edit: goal.id })}
@@ -333,6 +357,54 @@ export default function GoalsPage() {
                 </button>
                 <button type="submit" disabled={isSubmitting || saved} className={styles.submitButton}>
                   {saved ? "Added!" : isSubmitting ? "Adding..." : "Add Goal"}
+                </button>
+              </div>
+            </Form>
+          </div>
+        </div>
+      )}
+
+      {completeGoal && (
+        <div className={styles.modal} onClick={() => setSearchParams({})}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Complete Goal: {completeGoal.name}</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-md)', fontSize: '0.875rem' }}>
+              Completing a goal creates a new skill. Choose where the skill should be categorized.
+            </p>
+            <Form method="post" className={styles.form}>
+              <input type="hidden" name="intent" value="complete" />
+              <input type="hidden" name="goalId" value={completeGoal.id} />
+
+              <div className={styles.field}>
+                <label htmlFor="complete-categoryId" className={styles.label}>Category</label>
+                <select id="complete-categoryId" name="categoryId" required className={styles.select}>
+                  <option value="">Select category...</option>
+                  {(() => {
+                    const goalDomain = domains.find((d) => d.id === completeGoal.domainId);
+                    return goalDomain?.categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ));
+                  })()}
+                </select>
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="complete-proficiency" className={styles.label}>Initial Proficiency</label>
+                <select id="complete-proficiency" name="proficiency" className={styles.select} defaultValue="novice">
+                  <option value="novice">Novice</option>
+                  <option value="familiar">Familiar</option>
+                  <option value="proficient">Proficient</option>
+                  <option value="advanced">Advanced</option>
+                  <option value="expert">Expert</option>
+                </select>
+              </div>
+
+              <div className={styles.formActions}>
+                <button type="button" onClick={() => { setSaved(false); setSearchParams({}); }} className={styles.cancelButton}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSubmitting || saved} className={styles.submitButton}>
+                  {saved ? "Completed!" : isSubmitting ? "Completing..." : "Complete Goal"}
                 </button>
               </div>
             </Form>

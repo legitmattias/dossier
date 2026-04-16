@@ -240,6 +240,46 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
   );
 
   server.registerTool(
+    "dossier_edit_goal",
+    {
+      title: "Edit Goal",
+      description:
+        "Edit a learning goal's details — name, description, motivation, notes, priority, status, visibility, or featured flag. " +
+        "Use dossier_search to find the goal ID first. For updating progress percentage, use dossier_update_goal instead.",
+      inputSchema: z.object({
+        goalId: z.string().describe("Goal ID to edit"),
+        name: z.string().optional().describe("New name"),
+        description: z.string().optional().describe("Updated description"),
+        motivation: z.string().optional().describe("Updated motivation"),
+        notes: z.string().optional().describe("Updated notes"),
+        priority: z.enum(["low", "medium", "high"]).optional().describe("New priority level"),
+        status: z.enum(["active", "paused", "completed", "abandoned"]).optional().describe("New status"),
+        visibility: z.enum(["public", "private"]).optional().describe("Visibility"),
+        featured: z.boolean().optional().describe("Mark as featured/showcase item"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.updateGoal(input);
+      return ok(`Updated goal: ${result.goal.name} (${result.goal.status}, ${result.goal.priority} priority)`);
+    }),
+  );
+
+  server.registerTool(
+    "dossier_remove_goal",
+    {
+      title: "Remove Goal",
+      description: "Remove a learning goal from the profile. Use dossier_search to find the goal ID first.",
+      inputSchema: z.object({
+        goalId: z.string().describe("Goal ID to remove"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      await ops.removeGoal(input);
+      return ok("Goal removed.");
+    }),
+  );
+
+  server.registerTool(
     "dossier_add_interest",
     {
       title: "Add Interest",
@@ -259,6 +299,85 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       const domain = application.resolveDomainInProfile(profile, input.domainId);
       const result = await ops.addInterest({ ...input, domainId: domain.id });
       return ok(`Added interest: ${result.interest.name}`);
+    }),
+  );
+
+  server.registerTool(
+    "dossier_list_interests",
+    {
+      title: "List Interests",
+      description: "List all interests in the profile.",
+      inputSchema: z.object({}),
+    },
+    withErrorHandler(async () => {
+      const result = await ops.listInterests();
+      if (result.interests.length === 0) {
+        return ok("No interests found.");
+      }
+      const lines = result.interests.map((i) => {
+        let line = `- ${i.name} [id: ${i.id}]`;
+        if (i.featured) line += " ★";
+        if (i.description) line += ` — ${i.description}`;
+        return line;
+      });
+      return ok(lines.join("\n"));
+    }),
+  );
+
+  server.registerTool(
+    "dossier_update_interest",
+    {
+      title: "Update Interest",
+      description:
+        "Update an interest's name, description, notes, visibility, or featured flag. " +
+        "Use dossier_search to find the interest ID first.",
+      inputSchema: z.object({
+        interestId: z.string().describe("Interest ID to update"),
+        name: z.string().optional().describe("New name"),
+        description: z.string().optional().describe("Updated description"),
+        notes: z.string().optional().describe("Updated notes"),
+        visibility: z.enum(["public", "private"]).optional().describe("Visibility"),
+        featured: z.boolean().optional().describe("Mark as featured/showcase item"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.updateInterest(input);
+      return ok(`Updated interest: ${result.interest.name}`);
+    }),
+  );
+
+  server.registerTool(
+    "dossier_remove_interest",
+    {
+      title: "Remove Interest",
+      description: "Remove an interest from the profile. Use dossier_search to find the interest ID first.",
+      inputSchema: z.object({
+        interestId: z.string().describe("Interest ID to remove"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      await ops.removeInterest(input);
+      return ok("Interest removed.");
+    }),
+  );
+
+  server.registerTool(
+    "dossier_promote_interest",
+    {
+      title: "Promote Interest to Goal",
+      description:
+        "Promote an interest to a learning goal — removes the interest and creates a new goal with the same name and description. " +
+        "Use dossier_search to find the interest ID first.",
+      inputSchema: z.object({
+        interestId: z.string().describe("Interest ID to promote"),
+        priority: z.enum(["low", "medium", "high"]).optional().describe("Goal priority (default: medium)"),
+        description: z.string().optional().describe("Override description for the new goal"),
+        targetDate: z.string().optional().describe("Target date in ISO format (e.g. '2026-12-31')"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.promoteInterest(input);
+      return ok(`Promoted interest to goal: ${result.goal.name} (${result.goal.priority} priority)`);
     }),
   );
 
@@ -314,6 +433,47 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       const domain = application.resolveDomainInProfile(profile, input.domainId);
       const result = await ops.addCategory({ ...input, domainId: domain.id });
       return ok(`Added category: ${result.category.name} (id: ${result.category.id}) to domain ${domain.name}`);
+    }),
+  );
+
+  server.registerTool(
+    "dossier_remove_domain",
+    {
+      title: "Remove Domain",
+      description:
+        "Remove a custom domain from the profile. This will also remove all categories within the domain. " +
+        "Skills and goals referencing this domain will become orphaned. Use with caution.",
+      inputSchema: z.object({
+        domainId: z.string().describe("Domain ID, slug, or name to remove"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const profile = await ops.getProfile();
+      if (!profile) throw new Error("No profile found.");
+      const domain = application.resolveDomainInProfile(profile, input.domainId);
+      await ops.removeDomain({ domainId: domain.id });
+      return ok(`Removed domain: ${domain.name}`);
+    }),
+  );
+
+  server.registerTool(
+    "dossier_remove_category",
+    {
+      title: "Remove Category",
+      description:
+        "Remove a category from a domain. Skills referencing this category will become orphaned. Use with caution.",
+      inputSchema: z.object({
+        domainId: z.string().describe("Domain ID, slug, or name"),
+        categoryId: z.string().describe("Category ID, slug, or name to remove"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const profile = await ops.getProfile();
+      if (!profile) throw new Error("No profile found.");
+      const domain = application.resolveDomainInProfile(profile, input.domainId);
+      const category = application.resolveCategoryInDomain(domain, input.categoryId);
+      await ops.removeCategory({ domainId: domain.id, categoryId: category.id });
+      return ok(`Removed category: ${category.name} from domain ${domain.name}`);
     }),
   );
 
