@@ -28,13 +28,21 @@ publicRoutes.get("/:username", async (c) => {
   const profile = await loadProfileFromDb(db, userId);
   if (!profile) return c.json({ error: "Profile not found" }, 404);
 
-  // Filter out private entities for public access
+  // Filter out private entities for public access (domain visibility overrides entity visibility)
+  const privateDomainIds = new Set(
+    profile.domains.filter((d) => d.visibility === "private").map((d) => d.id),
+  );
+  const isVisible = (entity: { visibility: string; domainId?: string }) => {
+    if (entity.visibility === "private") return false;
+    if (entity.domainId && privateDomainIds.has(entity.domainId)) return false;
+    return true;
+  };
   const publicProfile = {
     ...profile,
-    skills: profile.skills.filter((s) => s.visibility !== "private"),
-    goals: profile.goals.filter((g) => g.visibility !== "private"),
-    interests: profile.interests.filter((i) => i.visibility !== "private"),
-    projects: profile.projects.filter((p) => p.visibility !== "private"),
+    skills: profile.skills.filter(isVisible),
+    goals: profile.goals.filter(isVisible),
+    interests: profile.interests.filter(isVisible),
+    projects: profile.projects.filter(isVisible),
   };
 
   const format = c.req.query("format") ?? "json";

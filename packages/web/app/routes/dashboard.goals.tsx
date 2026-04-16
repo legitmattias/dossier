@@ -24,6 +24,7 @@ interface Goal {
 interface Domain {
   id: string;
   name: string;
+  visibility?: string;
   categories: Array<{ id: string; name: string }>;
 }
 
@@ -147,7 +148,7 @@ export default function GoalsPage() {
     return true;
   });
 
-  const domainMap = new Map(domains.map((d) => [d.id, d.name]));
+  const domainMap = new Map(domains.map((d) => [d.id, d]));
   const active = filteredGoals.filter((g) => g.status === "active");
   const paused = filteredGoals.filter((g) => g.status === "paused");
   const completed = filteredGoals.filter((g) => g.status === "completed");
@@ -207,6 +208,9 @@ export default function GoalsPage() {
           <span className={styles.proficiency} data-level={goal.status}>{goal.status}</span>
           {goal.visibility === "private" && (
             <span className={styles.proficiency} data-level="private">private</span>
+          )}
+          {domainMap.get(goal.domainId)?.visibility === "private" && (
+            <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden by domain</span>
           )}
         </div>
         <div className={styles.progressBar}>

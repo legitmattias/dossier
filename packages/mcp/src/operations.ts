@@ -41,6 +41,7 @@ export interface DossierOperations {
 
   // Domains & Categories
   addDomain(input: application.AddDomainInput): Promise<application.AddDomainOutput>;
+  updateDomain(input: application.UpdateDomainInput): Promise<application.UpdateDomainOutput>;
   addCategory(input: application.AddCategoryInput): Promise<application.AddCategoryOutput>;
   removeDomain(input: application.RemoveDomainInput): Promise<void>;
   removeCategory(input: application.RemoveCategoryInput): Promise<void>;

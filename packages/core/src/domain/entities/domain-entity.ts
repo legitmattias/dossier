@@ -10,6 +10,7 @@ export interface Domain {
   readonly description?: string;
   readonly categories: readonly Category[];
   readonly isBuiltIn: boolean;
+  readonly visibility: "public" | "private";
 }
 
 export interface CreateDomainInput {
@@ -19,6 +20,7 @@ export interface CreateDomainInput {
   readonly description?: string;
   readonly categories?: readonly Category[];
   readonly isBuiltIn?: boolean;
+  readonly visibility?: "public" | "private";
 }
 
 export function createDomain(input: CreateDomainInput): Readonly<Domain> {
@@ -33,6 +35,7 @@ export function createDomain(input: CreateDomainInput): Readonly<Domain> {
     ...(input.description !== undefined && { description: input.description }),
     categories: input.categories ?? [],
     isBuiltIn: input.isBuiltIn ?? false,
+    visibility: input.visibility ?? "public",
   };
 }
 

@@ -132,6 +132,10 @@ export class LocalOperations implements DossierOperations {
     return application.addDomain(this.deps, input);
   }
 
+  async updateDomain(input: application.UpdateDomainInput) {
+    return application.updateDomain(this.readDeps, input);
+  }
+
   async addCategory(input: application.AddCategoryInput) {
     return application.addCategory(this.deps, input);
   }

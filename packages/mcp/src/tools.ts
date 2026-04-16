@@ -104,10 +104,13 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       const domains = await ops.getDomains();
       const domainNames = new Map(domains.map((d) => [d.id, d.name]));
       const categoryNames = new Map(domains.flatMap((d) => d.categories.map((c) => [c.id, c.name])));
+      const privateDomainIds = new Set(domains.filter((d) => d.visibility === "private").map((d) => d.id));
       const lines = result.skills.map((s) => {
         const domain = domainNames.get(s.domainId) ?? s.domainId;
         const category = categoryNames.get(s.categoryId) ?? s.categoryId;
-        return `- ${s.name} (${s.proficiency}) [${domain} > ${category}]`;
+        let line = `- ${s.name} (${s.proficiency}) [${domain} > ${category}]`;
+        if (privateDomainIds.has(s.domainId)) line += " (hidden by domain)";
+        return line;
       });
       return ok(lines.join("\n"));
     }),
@@ -190,9 +193,13 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       if (result.goals.length === 0) {
         return ok("No goals found matching the filter.");
       }
-      const lines = result.goals.map((g) =>
-        `- ${g.name} (${g.status}, ${g.priority} priority)`,
-      );
+      const domains = await ops.getDomains();
+      const privateDomainIds = new Set(domains.filter((d) => d.visibility === "private").map((d) => d.id));
+      const lines = result.goals.map((g) => {
+        let line = `- ${g.name} (${g.status}, ${g.priority} priority)`;
+        if (privateDomainIds.has(g.domainId)) line += " (hidden by domain)";
+        return line;
+      });
       return ok(lines.join("\n"));
     }),
   );
@@ -314,10 +321,13 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       if (result.interests.length === 0) {
         return ok("No interests found.");
       }
+      const domains = await ops.getDomains();
+      const privateDomainIds = new Set(domains.filter((d) => d.visibility === "private").map((d) => d.id));
       const lines = result.interests.map((i) => {
         let line = `- ${i.name} [id: ${i.id}]`;
         if (i.featured) line += " ★";
         if (i.description) line += ` — ${i.description}`;
+        if (privateDomainIds.has(i.domainId)) line += " (hidden by domain)";
         return line;
       });
       return ok(lines.join("\n"));
@@ -408,11 +418,33 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       inputSchema: z.object({
         name: z.string().describe("Domain name"),
         description: z.string().optional().describe("Brief description"),
+        visibility: z.enum(["public", "private"]).optional().describe("Domain visibility (default: public)"),
       }),
     },
     withErrorHandler(async (input) => {
       const result = await ops.addDomain(input);
       return ok(`Added domain: ${result.domain.name} (id: ${result.domain.id}, slug: ${result.domain.slug})`);
+    }),
+  );
+
+  server.registerTool(
+    "dossier_update_domain",
+    {
+      title: "Update Domain",
+      description: "Update a domain's name, description, or visibility. Setting visibility to 'private' hides all entities in this domain from exports.",
+      inputSchema: z.object({
+        domainId: z.string().describe("Domain ID, slug, or name"),
+        name: z.string().optional().describe("New name"),
+        description: z.string().optional().describe("Updated description"),
+        visibility: z.enum(["public", "private"]).optional().describe("Domain visibility — private hides all child entities from exports"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const profile = await ops.getProfile();
+      if (!profile) throw new Error("No profile found.");
+      const domain = application.resolveDomainInProfile(profile, input.domainId);
+      const result = await ops.updateDomain({ ...input, domainId: domain.id });
+      return ok(`Updated domain: ${result.domain.name} (visibility: ${result.domain.visibility})`);
     }),
   );
 

@@ -6,6 +6,7 @@ import {
   getLastUsedDate,
   getLatestProgress,
   groupByDomain,
+  isExportVisible,
 } from "./format-helpers.js";
 
 export class ClaudeMdExporter implements IExporter {
@@ -35,7 +36,7 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Featured skills — called out prominently
-    const featuredSkills = profile.skills.filter((s) => s.featured && s.visibility !== "private");
+    const featuredSkills = profile.skills.filter((s) => s.featured && isExportVisible(profile, s));
     if (featuredSkills.length > 0) {
       lines.push("");
       lines.push("## Key Skills");
@@ -77,7 +78,7 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Active goals
-    const activeGoals = profile.goals.filter((g) => g.status === "active" && g.visibility !== "private");
+    const activeGoals = profile.goals.filter((g) => g.status === "active" && isExportVisible(profile, g));
     if (activeGoals.length > 0) {
       lines.push("");
       lines.push("## Currently Learning");
@@ -97,7 +98,7 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Paused goals
-    const pausedGoals = profile.goals.filter((g) => g.status === "paused" && g.visibility !== "private");
+    const pausedGoals = profile.goals.filter((g) => g.status === "paused" && isExportVisible(profile, g));
     if (pausedGoals.length > 0) {
       lines.push("");
       lines.push("## Paused");
@@ -107,7 +108,7 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Completed goals
-    const completedGoals = profile.goals.filter((g) => g.status === "completed" && g.visibility !== "private");
+    const completedGoals = profile.goals.filter((g) => g.status === "completed" && isExportVisible(profile, g));
     if (completedGoals.length > 0) {
       lines.push("");
       lines.push("## Completed Learning");
@@ -120,7 +121,7 @@ export class ClaudeMdExporter implements IExporter {
     const skillNameMap = new Map<string, string>(profile.skills.map((s) => [s.id, s.name]));
 
     // Featured projects — shown prominently
-    const featuredProjects = profile.projects.filter((p) => p.featured && p.visibility !== "private");
+    const featuredProjects = profile.projects.filter((p) => p.featured && isExportVisible(profile, p));
     if (featuredProjects.length > 0) {
       lines.push("");
       lines.push("## Featured Projects");
@@ -145,7 +146,7 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Other active projects
-    const otherProjects = profile.projects.filter((p) => !p.featured && p.status === "active" && p.visibility !== "private");
+    const otherProjects = profile.projects.filter((p) => !p.featured && p.status === "active" && isExportVisible(profile, p));
     if (otherProjects.length > 0) {
       lines.push("");
       lines.push("## Active Projects");
@@ -164,7 +165,7 @@ export class ClaudeMdExporter implements IExporter {
     }
 
     // Interests
-    const visibleInterests = profile.interests.filter((i) => i.visibility !== "private");
+    const visibleInterests = profile.interests.filter((i) => isExportVisible(profile, i));
     if (visibleInterests.length > 0) {
       lines.push("");
       lines.push("## On My Radar");
@@ -182,13 +183,13 @@ export class ClaudeMdExporter implements IExporter {
 
     // Guidance section — compact summary, not per-skill lines
     const strongSkills = profile.skills.filter(
-      (s) => (s.proficiency === "advanced" || s.proficiency === "expert") && s.visibility !== "private",
+      (s) => (s.proficiency === "advanced" || s.proficiency === "expert") && isExportVisible(profile, s),
     );
     const noviceSkills = profile.skills.filter(
-      (s) => s.proficiency === "novice" && s.visibility !== "private",
+      (s) => s.proficiency === "novice" && isExportVisible(profile, s),
     );
     const activeGoalNames = profile.goals
-      .filter((g) => g.status === "active" && g.visibility !== "private")
+      .filter((g) => g.status === "active" && isExportVisible(profile, g))
       .map((g) => `${g.name} (${g.priority})`);
 
     if (strongSkills.length > 0 || noviceSkills.length > 0 || activeGoalNames.length > 0) {

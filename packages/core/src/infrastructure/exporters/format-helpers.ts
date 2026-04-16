@@ -13,8 +13,26 @@ export interface DomainGroup {
 }
 
 /**
+ * Check if an entity should be visible in exports.
+ * An entity is hidden if its own visibility is "private" OR if its parent domain is "private".
+ * Domain visibility overrides entity visibility ("domain wins").
+ */
+export function isExportVisible(
+  profile: Profile,
+  entity: { visibility: "public" | "private"; domainId?: DomainId },
+): boolean {
+  if (entity.visibility === "private") return false;
+  if (entity.domainId) {
+    const domain = profile.domains.find((d) => d.id === entity.domainId);
+    if (domain?.visibility === "private") return false;
+  }
+  return true;
+}
+
+/**
  * Group a profile's entities by domain. Only includes domains that have
- * at least one skill, goal, or interest (or are present in profile.domains).
+ * at least one visible skill, goal, or interest.
+ * Respects both entity-level and domain-level visibility.
  */
 export function groupByDomain(profile: Profile): readonly DomainGroup[] {
   const domainMap = new Map<string, DomainGroup>();
@@ -23,7 +41,7 @@ export function groupByDomain(profile: Profile): readonly DomainGroup[] {
     domainMap.set(domain.id, { domain, skills: [], goals: [], interests: [] });
   }
 
-  for (const skill of profile.skills.filter((s) => s.visibility !== "private")) {
+  for (const skill of profile.skills.filter((s) => isExportVisible(profile, s))) {
     const group = domainMap.get(skill.domainId);
     if (group) {
       domainMap.set(skill.domainId, {
@@ -33,7 +51,7 @@ export function groupByDomain(profile: Profile): readonly DomainGroup[] {
     }
   }
 
-  for (const goal of profile.goals.filter((g) => g.visibility !== "private")) {
+  for (const goal of profile.goals.filter((g) => isExportVisible(profile, g))) {
     const group = domainMap.get(goal.domainId);
     if (group) {
       domainMap.set(goal.domainId, {
@@ -43,7 +61,7 @@ export function groupByDomain(profile: Profile): readonly DomainGroup[] {
     }
   }
 
-  for (const interest of profile.interests.filter((i) => i.visibility !== "private")) {
+  for (const interest of profile.interests.filter((i) => isExportVisible(profile, i))) {
     const group = domainMap.get(interest.domainId);
     if (group) {
       domainMap.set(interest.domainId, {

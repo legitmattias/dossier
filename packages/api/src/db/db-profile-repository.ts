@@ -51,7 +51,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       for (const domain of profile.domains) {
         await tx.insert(schema.domains).values({
           id: domain.id, profileId, slug: domain.slug, name: domain.name,
-          description: domain.description, isBuiltIn: domain.isBuiltIn,
+          description: domain.description, isBuiltIn: domain.isBuiltIn, visibility: domain.visibility,
         }).onConflictDoNothing();
         for (const cat of domain.categories) {
           await tx.insert(schema.categories).values({

@@ -157,6 +157,11 @@ export class RemoteOperations implements DossierOperations {
     return this.api<application.AddDomainOutput>("/profile/domains", { method: "POST", body: input });
   }
 
+  async updateDomain(input: application.UpdateDomainInput) {
+    const { domainId, ...body } = input;
+    return this.api<application.UpdateDomainOutput>(`/profile/domains/${domainId}`, { method: "PUT", body });
+  }
+
   async addCategory(input: application.AddCategoryInput) {
     const { domainId, ...body } = input;
     return this.api<application.AddCategoryOutput>(`/profile/domains/${domainId}/categories`, { method: "POST", body });

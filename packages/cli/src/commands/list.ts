@@ -50,6 +50,10 @@ export function registerListCommand(
           }
           lines.push(`Featured:     ${skill.featured ? "yes" : "no"}`);
           lines.push(`Visibility:   ${skill.visibility}`);
+          const domain = profile.domains.find(d => d.id === skill.domainId);
+          if (domain?.visibility === "private") {
+            lines.push(`Domain vis.:  private (hidden from exports)`);
+          }
           lines.push(`Created:      ${skill.createdAt.toISOString().slice(0, 10)}`);
 
           if (skill.usage.length > 0) {

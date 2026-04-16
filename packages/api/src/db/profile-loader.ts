@@ -57,6 +57,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     ...(d.description != null && { description: d.description }),
     categories: catsByDomain.get(d.id) ?? [],
     isBuiltIn: d.isBuiltIn,
+    visibility: (d.visibility ?? "public") as "public" | "private",
   }));
 
   const skills: Skill[] = skillRows.map((s) => ({

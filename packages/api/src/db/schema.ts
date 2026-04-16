@@ -49,6 +49,7 @@ export const domains = pgTable("domains", {
   name: text("name").notNull(),
   description: text("description"),
   isBuiltIn: boolean("is_built_in").notNull().default(false),
+  visibility: text("visibility").notNull().default("public"),
 }, (t) => [
   uniqueIndex("domains_profile_slug_idx").on(t.profileId, t.slug),
 ]);

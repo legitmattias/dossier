@@ -110,6 +110,8 @@ export { addCategory } from "./use-cases/add-category.js";
 export type { AddCategoryDeps, AddCategoryInput, AddCategoryOutput } from "./use-cases/add-category.js";
 export { removeCategory } from "./use-cases/remove-category.js";
 export type { RemoveCategoryDeps, RemoveCategoryInput } from "./use-cases/remove-category.js";
+export { updateDomain } from "./use-cases/update-domain.js";
+export type { UpdateDomainDeps, UpdateDomainInput, UpdateDomainOutput } from "./use-cases/update-domain.js";
 
 // Use Cases — Projects
 export { addProject } from "./use-cases/add-project.js";

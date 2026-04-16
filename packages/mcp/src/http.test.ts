@@ -78,6 +78,7 @@ function createTestOps(repo: InMemoryProfileRepository): DossierOperations {
     removeProject: (input) => application.removeProject(readDeps, input),
     searchProfile: (input) => application.searchProfile(readDeps, input),
     addDomain: (input) => application.addDomain(deps, input),
+    updateDomain: (input) => application.updateDomain(readDeps, input),
     addCategory: (input) => application.addCategory(deps, input),
     updateGoal: (input) => application.updateGoal(readDeps, input),
     removeGoal: async (input) => { await application.removeGoal(readDeps, input); },

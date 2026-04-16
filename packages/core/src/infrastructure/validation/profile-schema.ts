@@ -91,6 +91,7 @@ const domainSchema = z.object({
   description: z.string().optional(),
   categories: z.array(categorySchema),
   isBuiltIn: z.boolean(),
+  visibility: z.literal(["public", "private"]).optional().default("public"),
 });
 
 const interestSchema = z.object({
@@ -271,6 +272,7 @@ function serializeDomain(domain: Domain): object {
     ...(domain.description !== undefined && { description: domain.description }),
     categories: domain.categories.map(serializeCategory),
     isBuiltIn: domain.isBuiltIn,
+    visibility: domain.visibility,
   };
 }
 

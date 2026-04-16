@@ -17,10 +17,10 @@ interface PublicProject {
 
 interface PublicProfile {
   name: string;
-  skills: Array<{ name: string; proficiency: string; domainId: string; categoryId: string; description?: string; featured?: boolean }>;
-  goals: Array<{ name: string; status: string; priority: string; description?: string; featured?: boolean }>;
-  interests: Array<{ name: string; description?: string; featured?: boolean }>;
-  domains: Array<{ id: string; name: string; categories: Array<{ id: string; name: string }> }>;
+  skills: Array<{ name: string; proficiency: string; domainId: string; categoryId: string; description?: string; featured?: boolean; visibility?: string }>;
+  goals: Array<{ name: string; status: string; priority: string; domainId: string; description?: string; featured?: boolean; visibility?: string }>;
+  interests: Array<{ name: string; domainId?: string; description?: string; featured?: boolean; visibility?: string }>;
+  domains: Array<{ id: string; name: string; visibility?: string; categories: Array<{ id: string; name: string }> }>;
   projects: PublicProject[];
 }
 
@@ -63,10 +63,14 @@ export default function PublicProfile() {
   }
 
   const domainMap = new Map(profile.domains.map((d) => [d.id, d]));
-  // Filter out private entities
-  const publicSkills = profile.skills.filter((s) => s.visibility !== "private");
-  const activeGoals = profile.goals.filter((g) => g.status === "active" && g.visibility !== "private");
-  const publicInterests = profile.interests.filter((i) => i.visibility !== "private");
+  // Build set of private domain IDs for domain-level visibility filtering
+  const privateDomainIds = new Set(
+    profile.domains.filter((d) => d.visibility === "private").map((d) => d.id),
+  );
+  // Filter out private entities and entities belonging to private domains
+  const publicSkills = profile.skills.filter((s) => s.visibility !== "private" && !privateDomainIds.has(s.domainId));
+  const activeGoals = profile.goals.filter((g) => g.status === "active" && g.visibility !== "private" && !privateDomainIds.has(g.domainId));
+  const publicInterests = profile.interests.filter((i) => i.visibility !== "private" && (!i.domainId || !privateDomainIds.has(i.domainId)));
   const publicProjects = profile.projects
     .filter((p) => p.visibility !== "private")
     .sort((a, b) => (a.featured === b.featured ? 0 : a.featured ? -1 : 1));

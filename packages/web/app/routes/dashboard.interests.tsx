@@ -20,6 +20,7 @@ interface Interest {
 interface Domain {
   id: string;
   name: string;
+  visibility?: string;
 }
 
 export const meta: MetaFunction = () => [{ title: "Interests — Dossier" }];
@@ -114,7 +115,7 @@ export default function InterestsPage() {
     }
   }, [navigation.state, actionData]);
 
-  const domainMap = new Map(domains.map((d) => [d.id, d.name]));
+  const domainMap = new Map(domains.map((d) => [d.id, d]));
 
   return (
     <div>
@@ -157,11 +158,14 @@ export default function InterestsPage() {
                   </Form>
                 </div>
               </div>
-              {interest.domainId && <div className={styles.cardMeta}>{domainMap.get(interest.domainId) ?? "—"}</div>}
+              {interest.domainId && <div className={styles.cardMeta}>{domainMap.get(interest.domainId)?.name ?? "—"}</div>}
               <div className={styles.cardBadges}>
                 {interest.featured && <span className={styles.featuredBadge}>Featured</span>}
                 {interest.visibility === "private" && (
                   <span className={styles.proficiency} data-level="private">private</span>
+                )}
+                {interest.domainId && domainMap.get(interest.domainId)?.visibility === "private" && (
+                  <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden by domain</span>
                 )}
               </div>
               {interest.description && <div className={styles.cardDescription}>{interest.description}</div>}

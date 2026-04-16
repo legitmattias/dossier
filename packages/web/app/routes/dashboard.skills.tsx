@@ -23,6 +23,7 @@ interface Domain {
   id: string;
   name: string;
   slug: string;
+  visibility?: string;
   categories: Array<{ id: string; name: string; slug: string }>;
 }
 
@@ -281,6 +282,9 @@ export default function SkillsPage() {
                           <span className={styles.cardMeta}>{category?.name ?? "—"}</span>
                           {skill.visibility === "private" && (
                             <span className={styles.proficiency} data-level="private">private</span>
+                          )}
+                          {domain?.visibility === "private" && (
+                            <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden by domain</span>
                           )}
                         </div>
                         {skill.notes && <div className={styles.cardNotes}>{skill.notes}</div>}

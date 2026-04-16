@@ -18,6 +18,7 @@ interface Domain {
   slug: string;
   name: string;
   description?: string;
+  visibility?: string;
   isBuiltIn: boolean;
   categories: Category[];
 }
@@ -56,6 +57,18 @@ export async function action({ request }: ActionFunctionArgs) {
         body: {
           name: String(form.get("name")),
           description: String(form.get("description") ?? "") || undefined,
+        },
+      });
+      return json({ ok: true });
+    }
+
+    if (intent === "update-domain") {
+      const domainId = String(form.get("domainId"));
+      await api(`/profile/domains/${domainId}`, {
+        method: "PUT",
+        token,
+        body: {
+          visibility: String(form.get("visibility")),
         },
       });
       return json({ ok: true });
@@ -121,7 +134,18 @@ export default function DomainsPage() {
                 <span className={styles.cardName}>
                   {domain.name}
                   {domain.isBuiltIn && <span className={styles.cardMeta}> (built-in)</span>}
+                  {domain.visibility === "private" && (
+                    <span className={styles.proficiency} data-level="private" style={{ marginLeft: "var(--space-xs)" }}>private</span>
+                  )}
                 </span>
+                <Form method="post" style={{ display: "inline" }}>
+                  <input type="hidden" name="intent" value="update-domain" />
+                  <input type="hidden" name="domainId" value={domain.id} />
+                  <select name="visibility" defaultValue={domain.visibility ?? "public"} className={styles.filterSelect} onChange={(e) => e.target.form?.requestSubmit()}>
+                    <option value="public">Public</option>
+                    <option value="private">Private</option>
+                  </select>
+                </Form>
                 {!domain.isBuiltIn && (
                   <Form method="post">
                     <input type="hidden" name="intent" value="delete-domain" />

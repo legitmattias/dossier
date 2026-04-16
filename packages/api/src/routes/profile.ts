@@ -235,6 +235,14 @@ profileRoutes.post("/domains", requireAuth, requireScope("write"), async (c) => 
   return c.json(result, 201);
 });
 
+// PUT /profile/domains/:domainId
+profileRoutes.put("/domains/:domainId", requireAuth, requireScope("write"), async (c) => {
+  const body = await c.req.json();
+  const deps = getDeps(c);
+  const result = await application.updateDomain(deps, { domainId: c.req.param("domainId"), ...body });
+  return c.json(result);
+});
+
 // DELETE /profile/domains/:domainId
 profileRoutes.delete("/domains/:domainId", requireAuth, requireScope("write"), async (c) => {
   const deps = getDeps(c);
