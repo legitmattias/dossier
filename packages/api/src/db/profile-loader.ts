@@ -46,6 +46,8 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
       slug: createSlug(c.slug),
       name: c.name,
       ...(c.description != null && { description: c.description }),
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt ?? c.createdAt,
     });
     catsByDomain.set(c.domainId, list);
   }
@@ -59,6 +61,8 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     isBuiltIn: d.isBuiltIn,
     visibility: (d.visibility ?? "public") as "public" | "private",
     ...(d.proficiencyLabels != null && Object.keys(d.proficiencyLabels as object).length > 0 && { proficiencyLabels: d.proficiencyLabels as Domain["proficiencyLabels"] }),
+    createdAt: d.createdAt,
+    updatedAt: d.updatedAt ?? d.createdAt,
   }));
 
   const skills: Skill[] = skillRows.map((s) => ({
@@ -105,6 +109,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     visibility: i.visibility as "public" | "private",
     featured: i.featured ?? false,
     createdAt: i.createdAt,
+    updatedAt: i.updatedAt ?? i.createdAt,
   }));
 
   const projects: Project[] = projectRows.map((p) => ({

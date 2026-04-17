@@ -76,6 +76,8 @@ const categorySchema = z.object({
   slug: z.string().min(1),
   name: z.string().min(1),
   description: z.string().optional(),
+  createdAt: z.coerce.date().optional().default(() => new Date()),
+  updatedAt: z.coerce.date().optional().default(() => new Date()),
 });
 
 const domainSchema = z.object({
@@ -87,6 +89,8 @@ const domainSchema = z.object({
   isBuiltIn: z.boolean(),
   visibility: z.literal(["public", "private"]).optional().default("public"),
   proficiencyLabels: z.record(z.string(), z.string()).optional(),
+  createdAt: z.coerce.date().optional().default(() => new Date()),
+  updatedAt: z.coerce.date().optional().default(() => new Date()),
 });
 
 const interestSchema = z.object({
@@ -98,6 +102,7 @@ const interestSchema = z.object({
   visibility: z.literal(["public", "private"]).optional().default("public"),
   featured: z.boolean().optional().default(false),
   createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date().optional().default(() => new Date()),
 });
 
 const projectSchema = z.object({
@@ -143,6 +148,9 @@ const profileSchema = z.object({
 /**
  * Migrate raw profile JSON from older formats before validation.
  * - Remaps proficiency "beginner" → "novice" (v1 → v2 change).
+ * - Backfills updatedAt for interests (default to createdAt).
+ * - Backfills createdAt/updatedAt for domains and categories
+ *   (default to the profile's createdAt, falling back to now).
  */
 function migrateProfileData(json: unknown): unknown {
   if (typeof json !== "object" || json === null) return json;
@@ -154,6 +162,34 @@ function migrateProfileData(json: unknown): unknown {
         return { ...skill, proficiency: "novice" };
       }
       return skill;
+    });
+  }
+
+  const profileFallback = (data.createdAt as string | Date | undefined) ?? new Date().toISOString();
+
+  if (Array.isArray(data.interests)) {
+    data.interests = (data.interests as Record<string, unknown>[]).map((interest) => {
+      if (interest.updatedAt == null) {
+        return { ...interest, updatedAt: interest.createdAt ?? profileFallback };
+      }
+      return interest;
+    });
+  }
+
+  if (Array.isArray(data.domains)) {
+    data.domains = (data.domains as Record<string, unknown>[]).map((domain) => {
+      const next: Record<string, unknown> = { ...domain };
+      if (next.createdAt == null) next.createdAt = profileFallback;
+      if (next.updatedAt == null) next.updatedAt = next.createdAt ?? profileFallback;
+      if (Array.isArray(next.categories)) {
+        next.categories = (next.categories as Record<string, unknown>[]).map((cat) => {
+          const nextCat: Record<string, unknown> = { ...cat };
+          if (nextCat.createdAt == null) nextCat.createdAt = next.createdAt ?? profileFallback;
+          if (nextCat.updatedAt == null) nextCat.updatedAt = nextCat.createdAt ?? profileFallback;
+          return nextCat;
+        });
+      }
+      return next;
     });
   }
 
@@ -248,6 +284,8 @@ function serializeCategory(category: Category): object {
     slug: category.slug,
     name: category.name,
     ...(category.description !== undefined && { description: category.description }),
+    createdAt: serializeDate(category.createdAt),
+    updatedAt: serializeDate(category.updatedAt),
   };
 }
 
@@ -261,6 +299,8 @@ function serializeDomain(domain: Domain): object {
     isBuiltIn: domain.isBuiltIn,
     visibility: domain.visibility,
     ...(domain.proficiencyLabels !== undefined && { proficiencyLabels: domain.proficiencyLabels }),
+    createdAt: serializeDate(domain.createdAt),
+    updatedAt: serializeDate(domain.updatedAt),
   };
 }
 
@@ -274,6 +314,7 @@ function serializeInterest(interest: Interest): object {
     visibility: interest.visibility,
     featured: interest.featured,
     createdAt: serializeDate(interest.createdAt),
+    updatedAt: serializeDate(interest.updatedAt),
   };
 }
 

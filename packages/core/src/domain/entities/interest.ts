@@ -10,6 +10,7 @@ export interface Interest {
   readonly visibility: "public" | "private";
   readonly featured: boolean;
   readonly createdAt: Date;
+  readonly updatedAt: Date;
 }
 
 export interface CreateInterestInput {
@@ -21,6 +22,7 @@ export interface CreateInterestInput {
   readonly visibility?: "public" | "private";
   readonly featured?: boolean;
   readonly createdAt?: Date;
+  readonly updatedAt?: Date;
 }
 
 export function createInterest(input: CreateInterestInput): Readonly<Interest> {
@@ -28,6 +30,8 @@ export function createInterest(input: CreateInterestInput): Readonly<Interest> {
     throw new InvalidNameError("Interest", input.name);
   }
 
+  const now = new Date();
+  const createdAt = input.createdAt ?? now;
   return {
     id: input.id,
     name: input.name.trim(),
@@ -36,6 +40,7 @@ export function createInterest(input: CreateInterestInput): Readonly<Interest> {
     ...(input.notes !== undefined && { notes: input.notes }),
     visibility: input.visibility ?? "public",
     featured: input.featured ?? false,
-    createdAt: input.createdAt ?? new Date(),
+    createdAt,
+    updatedAt: input.updatedAt ?? createdAt,
   };
 }

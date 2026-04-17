@@ -46,6 +46,7 @@ export async function updateDomain(
     ...(input.description !== undefined && { description: input.description }),
     ...(input.visibility !== undefined && { visibility: input.visibility as "public" | "private" }),
     ...(input.proficiencyLabels !== undefined && { proficiencyLabels: input.proficiencyLabels }),
+    updatedAt: new Date(),
   };
 
   const updatedProfile = {

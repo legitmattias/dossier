@@ -31,6 +31,7 @@ export interface InterestOutput {
   readonly visibility: string;
   readonly featured: boolean;
   readonly createdAt: string;
+  readonly updatedAt: string;
 }
 
 export interface AddInterestOutput {

@@ -41,6 +41,7 @@ export async function updateInterest(
     ...(input.notes !== undefined && { notes: input.notes }),
     ...(input.visibility !== undefined && { visibility: input.visibility as "public" | "private" }),
     ...(input.featured !== undefined && { featured: input.featured }),
+    updatedAt: new Date(),
   };
 
   const updatedProfile = {

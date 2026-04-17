@@ -108,6 +108,10 @@ export default function InterestsPage() {
   const editInterest = interests.find((i) => i.id === searchParams.get("edit"));
   const isSubmitting = navigation.state !== "idle";
   const [saved, setSaved] = useState(false);
+  const [filterDomain, setFilterDomain] = useState("");
+  const [filterFeatured, setFilterFeatured] = useState("");
+  const [filterSearch, setFilterSearch] = useState("");
+  const [sortBy, setSortBy] = useState("name");
 
   useEffect(() => {
     if (navigation.state === "idle" && actionData && "ok" in actionData) {
@@ -118,6 +122,24 @@ export default function InterestsPage() {
   }, [navigation.state, actionData]);
 
   const domainMap = new Map(domains.map((d) => [d.id, d]));
+
+  const filteredInterests = interests.filter((i) => {
+    if (filterDomain && i.domainId !== filterDomain) return false;
+    if (filterFeatured === "yes" && !i.featured) return false;
+    if (filterFeatured === "no" && i.featured) return false;
+    if (filterSearch && !i.name.toLowerCase().includes(filterSearch.toLowerCase())) return false;
+    return true;
+  });
+
+  const sortedInterests = [...filteredInterests].sort((a, b) => {
+    if (sortBy === "added") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (sortBy === "updated") {
+      const bUpdated = b.updatedAt ? new Date(b.updatedAt).getTime() : new Date(b.createdAt).getTime();
+      const aUpdated = a.updatedAt ? new Date(a.updatedAt).getTime() : new Date(a.createdAt).getTime();
+      return bUpdated - aUpdated;
+    }
+    return a.name.localeCompare(b.name);
+  });
 
   return (
     <div>
@@ -132,11 +154,38 @@ export default function InterestsPage() {
         <div className={styles.error}>{actionData.error}</div>
       )}
 
+      {interests.length > 0 && (
+        <div className={styles.filterBar}>
+          <input type="text" className={styles.filterSearch} placeholder="Search interests..." value={filterSearch} onChange={(e) => setFilterSearch(e.target.value)} />
+          <select className={styles.filterSelect} value={filterDomain} onChange={(e) => setFilterDomain(e.target.value)}>
+            <option value="">All domains</option>
+            {domains.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+          <select className={styles.filterSelect} value={filterFeatured} onChange={(e) => setFilterFeatured(e.target.value)}>
+            <option value="">All</option>
+            <option value="yes">Featured</option>
+            <option value="no">Not featured</option>
+          </select>
+          <select className={styles.filterSelect} value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="name">Sort: Name</option>
+            <option value="added">Sort: Recently added</option>
+            <option value="updated">Sort: Recently updated</option>
+          </select>
+          {(filterDomain || filterFeatured || filterSearch) && (
+            <button className={styles.filterClear} onClick={() => { setFilterDomain(""); setFilterFeatured(""); setFilterSearch(""); }}>Clear filters</button>
+          )}
+        </div>
+      )}
+
       {interests.length === 0 ? (
         <p className={styles.emptyState}>No interests yet. Track topics you're curious about.</p>
+      ) : sortedInterests.length === 0 ? (
+        <p className={styles.emptyState}>No interests match your filters.</p>
       ) : (
         <div className={styles.cardGrid}>
-          {interests.map((interest) => (
+          {sortedInterests.map((interest) => (
             <div key={interest.id} className={styles.card}>
               <div className={styles.cardHeader}>
                 <span className={styles.cardName}>{interest.name}</span>
@@ -174,6 +223,9 @@ export default function InterestsPage() {
               {interest.notes && <div className={styles.cardNotes}>{interest.notes}</div>}
               <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
                 Added {new Date(interest.createdAt).toLocaleDateString()}
+                {interest.updatedAt && new Date(interest.updatedAt).getTime() - new Date(interest.createdAt).getTime() > 60000 && (
+                  <> · Updated {new Date(interest.updatedAt).toLocaleDateString()}</>
+                )}
               </div>
             </div>
           ))}
@@ -243,7 +295,7 @@ export default function InterestsPage() {
         <div className={styles.modal}>
           <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Edit Interest</h2>
-            <Form method="post" className={styles.form}>
+            <Form method="post" className={styles.form} key={editInterest.id}>
               <input type="hidden" name="intent" value="update" />
               <input type="hidden" name="interestId" value={editInterest.id} />
 

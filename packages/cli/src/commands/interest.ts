@@ -20,6 +20,7 @@ export function registerInterestCommand(
     .option("--notes <text>", "Internal notes (not exported)")
     .option("--featured", "Mark as featured")
     .option("--visibility <vis>", "Visibility: public or private", "public")
+    .option("-s, --sort <by>", "Sort by: name (default), added, updated (list only)")
     .action(
       withErrorHandler(async (name: string | undefined, opts: {
         domain?: string;
@@ -30,6 +31,7 @@ export function registerInterestCommand(
         notes?: string;
         featured?: boolean;
         visibility?: string;
+        sort?: string;
       }) => {
         const container = getContainer();
 
@@ -50,6 +52,12 @@ export function registerInterestCommand(
             info("No interests found.");
             return;
           }
+
+          interests.sort((a, b) => {
+            if (opts.sort === "added") return b.createdAt.getTime() - a.createdAt.getTime();
+            if (opts.sort === "updated") return b.updatedAt.getTime() - a.updatedAt.getTime();
+            return a.name.localeCompare(b.name);
+          });
 
           table(
             ["Name", "Domain", "Created"],

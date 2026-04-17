@@ -18,6 +18,7 @@ interface Skill {
   notes?: string;
   visibility?: string;
   featured?: boolean;
+  createdAt: string;
   updatedAt: string;
 }
 
@@ -132,6 +133,7 @@ export default function SkillsPage() {
   const [filterProficiency, setFilterProficiency] = useState("");
   const [filterFeatured, setFilterFeatured] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
+  const [sortBy, setSortBy] = useState("name");
   const [addDomainId, setAddDomainId] = useState("");
   const [editDomainId, setEditDomainId] = useState(editSkill?.domainId ?? "");
 
@@ -159,12 +161,19 @@ export default function SkillsPage() {
     return true;
   });
 
+  // Sort skills (applied within each domain group below)
+  const sortedSkills = [...filteredSkills].sort((a, b) => {
+    if (sortBy === "added") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (sortBy === "updated") return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    return a.name.localeCompare(b.name);
+  });
+
   // Build domain/category lookup maps
   const domainMap = new Map(domains.map((d) => [d.id, d]));
 
-  // Group skills by domain
+  // Group skills by domain (preserves sort order within each group)
   const skillsByDomain = new Map<string, Skill[]>();
-  for (const skill of filteredSkills) {
+  for (const skill of sortedSkills) {
     const list = skillsByDomain.get(skill.domainId) ?? [];
     list.push(skill);
     skillsByDomain.set(skill.domainId, list);
@@ -224,6 +233,15 @@ export default function SkillsPage() {
             <option value="yes">Featured</option>
             <option value="no">Not featured</option>
           </select>
+          <select
+            className={styles.filterSelect}
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="name">Sort: Name</option>
+            <option value="added">Sort: Recently added</option>
+            <option value="updated">Sort: Recently updated</option>
+          </select>
           {(filterDomain || filterProficiency || filterFeatured || filterSearch) && (
             <button
               className={styles.filterClear}
@@ -272,12 +290,16 @@ export default function SkillsPage() {
                           </div>
                         </div>
                         {skill.description && <div className={styles.cardDescription}>{skill.description}</div>}
+                        {category && (
+                          <div className={styles.cardMeta}>
+                            <span className={styles.cardMetaLabel}>Category:</span> {category.name}
+                          </div>
+                        )}
                         <div className={styles.cardBadges}>
                           {skill.featured && <span className={styles.featuredBadge}>Featured</span>}
                           <span className={styles.proficiency} data-level={skill.proficiency}>
                             {skill.proficiencyLabel ?? domain?.proficiencyLabels?.[skill.proficiency] ?? skill.proficiency}
                           </span>
-                          <span className={styles.cardMeta}>{category?.name ?? "—"}</span>
                           {skill.visibility === "private" && (
                             <span className={styles.proficiency} data-level="private">private</span>
                           )}
@@ -294,7 +316,10 @@ export default function SkillsPage() {
                           </div>
                         )}
                         <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
-                          Updated {new Date(skill.updatedAt).toLocaleDateString()}
+                          Added {new Date(skill.createdAt).toLocaleDateString()}
+                          {new Date(skill.updatedAt).getTime() - new Date(skill.createdAt).getTime() > 60000 && (
+                            <> · Updated {new Date(skill.updatedAt).toLocaleDateString()}</>
+                          )}
                         </div>
                       </div>
                     );
@@ -310,7 +335,7 @@ export default function SkillsPage() {
         <div className={styles.modal}>
           <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Edit Skill: {editSkill.name}</h2>
-            <Form method="post" className={styles.form}>
+            <Form method="post" className={styles.form} key={editSkill.id}>
               <input type="hidden" name="intent" value="update" />
               <input type="hidden" name="skillId" value={editSkill.id} />
 

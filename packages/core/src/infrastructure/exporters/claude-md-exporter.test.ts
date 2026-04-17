@@ -195,7 +195,7 @@ describe("ClaudeMdExporter", () => {
       slug: slugify("Secret Skills"),
       name: "Secret Skills",
       visibility: "private",
-      categories: [{ id: "cat-1" as any, slug: "general" as any, name: "General" }],
+      categories: [{ id: "cat-1" as any, slug: "general" as any, name: "General", createdAt: new Date(), updatedAt: new Date() }],
     });
     let profile = createProfile({ id: toProfileId("p"), name: "P" });
     profile = addDomainToProfile(profile, privateDomain);

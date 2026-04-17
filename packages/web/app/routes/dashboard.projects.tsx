@@ -119,6 +119,7 @@ export default function ProjectsPage() {
   const [filterFeatured, setFilterFeatured] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
   const [skillFilter, setSkillFilter] = useState("");
+  const [sortBy, setSortBy] = useState("name");
 
   useEffect(() => {
     if (navigation.state === "idle" && actionData && "ok" in actionData) {
@@ -135,6 +136,12 @@ export default function ProjectsPage() {
     if (filterFeatured === "no" && p.featured) return false;
     if (filterSearch && !p.name.toLowerCase().includes(filterSearch.toLowerCase())) return false;
     return true;
+  });
+
+  const sortedProjects = [...filteredProjects].sort((a, b) => {
+    if (sortBy === "added") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (sortBy === "updated") return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    return a.name.localeCompare(b.name);
   });
 
   return (
@@ -169,6 +176,11 @@ export default function ProjectsPage() {
             <option value="yes">Featured</option>
             <option value="no">Not featured</option>
           </select>
+          <select className={styles.filterSelect} value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="name">Sort: Name</option>
+            <option value="added">Sort: Recently added</option>
+            <option value="updated">Sort: Recently updated</option>
+          </select>
           {(filterStatus || filterPriority || filterFeatured || filterSearch) && (
             <button className={styles.filterClear} onClick={() => { setFilterStatus(""); setFilterPriority(""); setFilterFeatured(""); setFilterSearch(""); }}>Clear filters</button>
           )}
@@ -185,7 +197,7 @@ export default function ProjectsPage() {
         </p>
       ) : (
         <div className={styles.cardGrid}>
-          {filteredProjects.map((project) => (
+          {sortedProjects.map((project) => (
             <div className={styles.card} key={project.id}>
               <div className={styles.cardHeader}>
                 {project.url ? (
@@ -233,7 +245,10 @@ export default function ProjectsPage() {
                 </Form>
               </div>
               <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
-                Updated {new Date(project.updatedAt).toLocaleDateString()}
+                Added {new Date(project.createdAt).toLocaleDateString()}
+                {new Date(project.updatedAt).getTime() - new Date(project.createdAt).getTime() > 60000 && (
+                  <> · Updated {new Date(project.updatedAt).toLocaleDateString()}</>
+                )}
               </div>
             </div>
           ))}
@@ -349,7 +364,7 @@ export default function ProjectsPage() {
         <div className={styles.modal}>
           <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Edit Project</h2>
-            <Form method="post" className={styles.form}>
+            <Form method="post" className={styles.form} key={editProject.id}>
               <input type="hidden" name="intent" value="update" />
               <input type="hidden" name="projectId" value={editProject.id} />
 

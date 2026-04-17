@@ -22,6 +22,7 @@ export function registerProjectCommand(
     .option("--description <text>", "Project description")
     .option("--notes <text>", "Internal notes (not exported)")
     .option("--visibility <vis>", "Visibility: public or private", "public")
+    .option("-s, --sort <by>", "Sort by: name (default), added, updated (list only)")
     .action(
       withErrorHandler(async (name: string | undefined, opts: {
         list?: boolean;
@@ -34,6 +35,7 @@ export function registerProjectCommand(
         description?: string;
         notes?: string;
         visibility?: string;
+        sort?: string;
       }) => {
         const container = getContainer();
 
@@ -48,9 +50,15 @@ export function registerProjectCommand(
             return;
           }
 
+          const sortedProjects = [...result.projects].sort((a, b) => {
+            if (opts.sort === "added") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            if (opts.sort === "updated") return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            return a.name.localeCompare(b.name);
+          });
+
           table(
             ["Name", "Status", "Priority", "Featured"],
-            result.projects.map((p) => [
+            sortedProjects.map((p) => [
               p.name,
               p.status,
               p.priority,

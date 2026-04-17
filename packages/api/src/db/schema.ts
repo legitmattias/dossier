@@ -51,6 +51,8 @@ export const domains = pgTable("domains", {
   isBuiltIn: boolean("is_built_in").notNull().default(false),
   visibility: text("visibility").notNull().default("public"),
   proficiencyLabels: jsonb("proficiency_labels").default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   uniqueIndex("domains_profile_slug_idx").on(t.profileId, t.slug),
 ]);
@@ -63,6 +65,8 @@ export const categories = pgTable("categories", {
   slug: text("slug").notNull(),
   name: text("name").notNull(),
   description: text("description"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   uniqueIndex("categories_domain_slug_idx").on(t.domainId, t.slug),
 ]);
@@ -122,6 +126,7 @@ export const interests = pgTable("interests", {
   visibility: text("visibility").notNull().default("public"),
   featured: boolean("featured").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // --- Relations ---

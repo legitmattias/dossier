@@ -16,12 +16,14 @@ export function registerGoalsCommand(
     .option("--paused", "Show only paused goals")
     .option("--completed", "Show only completed goals")
     .option("-d, --domain <domain>", "Filter by domain")
+    .option("-s, --sort <by>", "Sort by: name (default), added, updated")
     .action(
       withErrorHandler(async (name: string | undefined, opts: {
         active?: boolean;
         paused?: boolean;
         completed?: boolean;
         domain?: string;
+        sort?: string;
       }) => {
         const container = getContainer();
         const profile = await container.profileRepository.load();
@@ -95,6 +97,12 @@ export function registerGoalsCommand(
           info("No goals found.");
           return;
         }
+
+        goals.sort((a, b) => {
+          if (opts.sort === "added") return b.createdAt.getTime() - a.createdAt.getTime();
+          if (opts.sort === "updated") return b.updatedAt.getTime() - a.updatedAt.getTime();
+          return a.name.localeCompare(b.name);
+        });
 
         table(
           ["Name", "Priority", "Status", "Progress"],

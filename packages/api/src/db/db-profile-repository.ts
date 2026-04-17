@@ -53,11 +53,13 @@ export class DatabaseProfileRepository implements application.IProfileRepository
           id: domain.id, profileId, slug: domain.slug, name: domain.name,
           description: domain.description, isBuiltIn: domain.isBuiltIn, visibility: domain.visibility,
           proficiencyLabels: domain.proficiencyLabels ?? {},
+          createdAt: domain.createdAt, updatedAt: domain.updatedAt,
         }).onConflictDoNothing();
         for (const cat of domain.categories) {
           await tx.insert(schema.categories).values({
             id: cat.id, domainId: domain.id, slug: cat.slug, name: cat.name,
             description: cat.description,
+            createdAt: cat.createdAt, updatedAt: cat.updatedAt,
           }).onConflictDoNothing();
         }
       }
@@ -85,7 +87,8 @@ export class DatabaseProfileRepository implements application.IProfileRepository
       for (const interest of profile.interests) {
         await tx.insert(schema.interests).values({
           id: interest.id, profileId, name: interest.name, domainId: interest.domainId,
-          description: interest.description, notes: interest.notes, visibility: interest.visibility, featured: interest.featured, createdAt: interest.createdAt,
+          description: interest.description, notes: interest.notes, visibility: interest.visibility, featured: interest.featured,
+          createdAt: interest.createdAt, updatedAt: interest.updatedAt,
         });
       }
 

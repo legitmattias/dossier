@@ -15,11 +15,13 @@ export function registerListCommand(
     .option("-d, --domain <domain>", "Filter by domain")
     .option("-c, --category <category>", "Filter by category (requires --domain)")
     .option("-p, --proficiency <level>", "Filter by proficiency level")
+    .option("-s, --sort <by>", "Sort by: name (default), added, updated")
     .action(
       withErrorHandler(async (name: string | undefined, opts: {
         domain?: string;
         category?: string;
         proficiency?: string;
+        sort?: string;
       }) => {
         const container = getContainer();
         const profile = await container.profileRepository.load();
@@ -95,6 +97,12 @@ export function registerListCommand(
           return;
         }
 
+        const sortedSkills = [...result.skills].sort((a, b) => {
+          if (opts.sort === "added") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          if (opts.sort === "updated") return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          return a.name.localeCompare(b.name);
+        });
+
         // Build ID → name lookup maps (keyed by plain string for DTO compatibility)
         const domainNames = new Map<string, string>(profile.domains.map((d) => [d.id, d.name]));
         const categoryNames = new Map<string, string>(
@@ -103,7 +111,7 @@ export function registerListCommand(
 
         table(
           ["Name", "Proficiency", "Domain", "Category"],
-          result.skills.map((s) => [
+          sortedSkills.map((s) => [
             s.featured ? `★ ${s.name}` : s.name,
             s.proficiency,
             domainNames.get(s.domainId) ?? s.domainId,

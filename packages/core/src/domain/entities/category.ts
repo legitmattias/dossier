@@ -7,6 +7,8 @@ export interface Category {
   readonly slug: Slug;
   readonly name: string;
   readonly description?: string;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
 }
 
 export interface CreateCategoryInput {
@@ -14,6 +16,8 @@ export interface CreateCategoryInput {
   readonly slug: Slug;
   readonly name: string;
   readonly description?: string;
+  readonly createdAt?: Date;
+  readonly updatedAt?: Date;
 }
 
 export function createCategory(input: CreateCategoryInput): Readonly<Category> {
@@ -21,10 +25,14 @@ export function createCategory(input: CreateCategoryInput): Readonly<Category> {
     throw new InvalidNameError("Category", input.name);
   }
 
+  const now = new Date();
+  const createdAt = input.createdAt ?? now;
   return {
     id: input.id,
     slug: input.slug,
     name: input.name.trim(),
     ...(input.description !== undefined && { description: input.description }),
+    createdAt,
+    updatedAt: input.updatedAt ?? createdAt,
   };
 }

@@ -60,6 +60,7 @@ export function toInterestOutput(interest: Interest): InterestOutput {
     visibility: interest.visibility,
     featured: interest.featured,
     createdAt: interest.createdAt.toISOString(),
+    updatedAt: interest.updatedAt.toISOString(),
   };
 }
 

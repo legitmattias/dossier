@@ -19,6 +19,7 @@ interface Goal {
   notes?: string;
   visibility?: string;
   featured?: boolean;
+  createdAt: string;
   updatedAt: string;
 }
 
@@ -132,6 +133,7 @@ export default function GoalsPage() {
   const [filterPriority, setFilterPriority] = useState("");
   const [filterFeatured, setFilterFeatured] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
+  const [sortBy, setSortBy] = useState("name");
 
   useEffect(() => {
     if (navigation.state === "idle" && actionData && "ok" in actionData) {
@@ -149,11 +151,17 @@ export default function GoalsPage() {
     return true;
   });
 
+  const sortedGoals = [...filteredGoals].sort((a, b) => {
+    if (sortBy === "added") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (sortBy === "updated") return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    return a.name.localeCompare(b.name);
+  });
+
   const domainMap = new Map(domains.map((d) => [d.id, d]));
-  const active = filteredGoals.filter((g) => g.status === "active");
-  const paused = filteredGoals.filter((g) => g.status === "paused");
-  const completed = filteredGoals.filter((g) => g.status === "completed");
-  const abandoned = filteredGoals.filter((g) => g.status === "abandoned");
+  const active = sortedGoals.filter((g) => g.status === "active");
+  const paused = sortedGoals.filter((g) => g.status === "paused");
+  const completed = sortedGoals.filter((g) => g.status === "completed");
+  const abandoned = sortedGoals.filter((g) => g.status === "abandoned");
   const editGoal = editId ? goals.find((g) => g.id === editId) : undefined;
   const completeGoalId = searchParams.get("complete");
   const completeGoal = completeGoalId ? goals.find((g) => g.id === completeGoalId) : undefined;
@@ -235,7 +243,10 @@ export default function GoalsPage() {
           </Form>
         </div>
         <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
-          Updated {new Date(goal.updatedAt).toLocaleDateString()}
+          Added {new Date(goal.createdAt).toLocaleDateString()}
+          {new Date(goal.updatedAt).getTime() - new Date(goal.createdAt).getTime() > 60000 && (
+            <> · Updated {new Date(goal.updatedAt).toLocaleDateString()}</>
+          )}
         </div>
       </div>
     );
@@ -279,6 +290,11 @@ export default function GoalsPage() {
             <option value="">All</option>
             <option value="yes">Featured</option>
             <option value="no">Not featured</option>
+          </select>
+          <select className={styles.filterSelect} value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="name">Sort: Name</option>
+            <option value="added">Sort: Recently added</option>
+            <option value="updated">Sort: Recently updated</option>
           </select>
           {(filterPriority || filterFeatured || filterSearch) && (
             <button className={styles.filterClear} onClick={() => { setFilterPriority(""); setFilterFeatured(""); setFilterSearch(""); }}>Clear filters</button>
@@ -424,7 +440,7 @@ export default function GoalsPage() {
         <div className={styles.modal}>
           <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Edit Learning Goal</h2>
-            <Form method="post" className={styles.form}>
+            <Form method="post" className={styles.form} key={editGoal.id}>
               <input type="hidden" name="intent" value="update" />
               <input type="hidden" name="goalId" value={editGoal.id} />
 

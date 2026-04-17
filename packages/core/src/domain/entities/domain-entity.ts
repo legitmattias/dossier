@@ -15,6 +15,8 @@ export interface Domain {
   readonly isBuiltIn: boolean;
   readonly visibility: "public" | "private";
   readonly proficiencyLabels?: ProficiencyLabels;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
 }
 
 export interface CreateDomainInput {
@@ -26,6 +28,8 @@ export interface CreateDomainInput {
   readonly isBuiltIn?: boolean;
   readonly visibility?: "public" | "private";
   readonly proficiencyLabels?: ProficiencyLabels;
+  readonly createdAt?: Date;
+  readonly updatedAt?: Date;
 }
 
 export function createDomain(input: CreateDomainInput): Readonly<Domain> {
@@ -33,6 +37,8 @@ export function createDomain(input: CreateDomainInput): Readonly<Domain> {
     throw new InvalidNameError("Domain", input.name);
   }
 
+  const now = new Date();
+  const createdAt = input.createdAt ?? now;
   return {
     id: input.id,
     slug: input.slug,
@@ -42,6 +48,8 @@ export function createDomain(input: CreateDomainInput): Readonly<Domain> {
     isBuiltIn: input.isBuiltIn ?? false,
     visibility: input.visibility ?? "public",
     ...(input.proficiencyLabels !== undefined && { proficiencyLabels: input.proficiencyLabels }),
+    createdAt,
+    updatedAt: input.updatedAt ?? createdAt,
   };
 }
 

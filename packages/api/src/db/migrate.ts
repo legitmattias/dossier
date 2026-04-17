@@ -161,4 +161,11 @@ export async function ensureTables(db: Database): Promise<void> {
   await db.execute(sql`ALTER TABLE domains ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'`);
   await db.execute(sql`ALTER TABLE domains ADD COLUMN IF NOT EXISTS proficiency_labels JSONB DEFAULT '{}'`);
   await db.execute(sql`ALTER TABLE skills ADD COLUMN IF NOT EXISTS proficiency_label TEXT`);
+
+  // Timestamps on domains/categories/interests (added in entity model updates)
+  await db.execute(sql`ALTER TABLE domains ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
+  await db.execute(sql`ALTER TABLE domains ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
+  await db.execute(sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
+  await db.execute(sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
+  await db.execute(sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
 }
