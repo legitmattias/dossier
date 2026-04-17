@@ -220,8 +220,8 @@ export default function DomainsPage() {
 
       {/* Add Domain modal */}
       {showAdd && (
-        <div className={styles.modal} onClick={() => setSearchParams({})}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal}>
+          <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Add Domain</h2>
             <Form method="post" className={styles.form}>
               <input type="hidden" name="intent" value="add-domain" />
@@ -251,8 +251,8 @@ export default function DomainsPage() {
 
       {/* Add Category modal */}
       {addCatDomainId && (
-        <div className={styles.modal} onClick={() => setSearchParams({})}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal}>
+          <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>
               Add Category to {domains.find((d) => d.id === addCatDomainId)?.name ?? "Domain"}
             </h2>

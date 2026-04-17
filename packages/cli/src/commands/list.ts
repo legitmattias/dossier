@@ -56,6 +56,7 @@ export function registerListCommand(
             lines.push(`Domain vis.:  private (hidden from exports)`);
           }
           lines.push(`Created:      ${skill.createdAt.toISOString().slice(0, 10)}`);
+          lines.push(`Updated:      ${skill.updatedAt.toISOString().slice(0, 10)}`);
 
           if (skill.sources.length > 0) {
             lines.push("");

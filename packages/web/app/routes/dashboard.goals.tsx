@@ -19,6 +19,7 @@ interface Goal {
   notes?: string;
   visibility?: string;
   featured?: boolean;
+  updatedAt: string;
 }
 
 interface Domain {
@@ -233,6 +234,9 @@ export default function GoalsPage() {
             <button type="submit" className={styles.editButton}>Set</button>
           </Form>
         </div>
+        <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
+          Updated {new Date(goal.updatedAt).toLocaleDateString()}
+        </div>
       </div>
     );
   }
@@ -296,8 +300,8 @@ export default function GoalsPage() {
       )}
 
       {showAdd && (
-        <div className={styles.modal} onClick={() => setSearchParams({})}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal}>
+          <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Add Learning Goal</h2>
             <Form method="post" className={styles.form}>
               <input type="hidden" name="intent" value="add" />
@@ -369,8 +373,8 @@ export default function GoalsPage() {
       )}
 
       {completeGoal && (
-        <div className={styles.modal} onClick={() => setSearchParams({})}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal}>
+          <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Complete Goal: {completeGoal.name}</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-md)', fontSize: '0.875rem' }}>
               Completing a goal creates a new skill. Choose where the skill should be categorized.
@@ -417,8 +421,8 @@ export default function GoalsPage() {
       )}
 
       {editGoal && (
-        <div className={styles.modal} onClick={() => setSearchParams({})}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal}>
+          <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Edit Learning Goal</h2>
             <Form method="post" className={styles.form}>
               <input type="hidden" name="intent" value="update" />

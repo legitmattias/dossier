@@ -55,6 +55,8 @@ export function registerGoalsCommand(
           }
           lines.push(`Featured:     ${goal.featured ? "yes" : "no"}`);
           lines.push(`Visibility:   ${goal.visibility}`);
+          lines.push(`Created:      ${goal.createdAt.toISOString().slice(0, 10)}`);
+          lines.push(`Updated:      ${goal.updatedAt.toISOString().slice(0, 10)}`);
           const domain = profile.domains.find(d => d.id === goal.domainId);
           if (domain?.visibility === "private") {
             lines.push(`Domain vis.:  private (hidden from exports)`);

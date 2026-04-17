@@ -232,6 +232,9 @@ export default function ProjectsPage() {
                   <button type="submit" className={styles.deleteButton}>Remove</button>
                 </Form>
               </div>
+              <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
+                Updated {new Date(project.updatedAt).toLocaleDateString()}
+              </div>
             </div>
           ))}
         </div>
@@ -239,8 +242,8 @@ export default function ProjectsPage() {
 
       {/* Add Project Modal */}
       {showAdd && (
-        <div className={styles.modal} onClick={() => setSearchParams({})}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal}>
+          <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Add Project</h2>
             <Form method="post" className={styles.form}>
               <input type="hidden" name="intent" value="add" />
@@ -343,8 +346,8 @@ export default function ProjectsPage() {
 
       {/* Edit Project Modal */}
       {editProject && (
-        <div className={styles.modal} onClick={() => setSearchParams({})}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal}>
+          <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Edit Project</h2>
             <Form method="post" className={styles.form}>
               <input type="hidden" name="intent" value="update" />

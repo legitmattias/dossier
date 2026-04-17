@@ -18,6 +18,7 @@ interface Skill {
   notes?: string;
   visibility?: string;
   featured?: boolean;
+  updatedAt: string;
 }
 
 interface Domain {
@@ -131,6 +132,13 @@ export default function SkillsPage() {
   const [filterProficiency, setFilterProficiency] = useState("");
   const [filterFeatured, setFilterFeatured] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
+  const [addDomainId, setAddDomainId] = useState("");
+  const [editDomainId, setEditDomainId] = useState(editSkill?.domainId ?? "");
+
+  // Sync edit domain state when switching skills
+  useEffect(() => {
+    setEditDomainId(editSkill?.domainId ?? "");
+  }, [editSkill?.id]);
 
   // Show "Saved!" confirmation briefly after successful save
   useEffect(() => {
@@ -285,6 +293,9 @@ export default function SkillsPage() {
                             ))}
                           </div>
                         )}
+                        <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
+                          Updated {new Date(skill.updatedAt).toLocaleDateString()}
+                        </div>
                       </div>
                     );
                   })}
@@ -296,8 +307,8 @@ export default function SkillsPage() {
 
       {/* Edit Skill Modal */}
       {editSkill && (
-        <div className={styles.modal} onClick={() => setSearchParams({})}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal}>
+          <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Edit Skill: {editSkill.name}</h2>
             <Form method="post" className={styles.form}>
               <input type="hidden" name="intent" value="update" />
@@ -327,7 +338,7 @@ export default function SkillsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="edit-domainId" className={styles.label}>Domain</label>
-                <select id="edit-domainId" name="domainId" required className={styles.select} defaultValue={editSkill.domainId}>
+                <select id="edit-domainId" name="domainId" required className={styles.select} value={editDomainId} onChange={(e) => setEditDomainId(e.target.value)}>
                   {domains.map((d) => (
                     <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
@@ -337,11 +348,9 @@ export default function SkillsPage() {
               <div className={styles.field}>
                 <label htmlFor="edit-categoryId" className={styles.label}>Category</label>
                 <select id="edit-categoryId" name="categoryId" required className={styles.select} defaultValue={editSkill.categoryId}>
-                  {domains.flatMap((d) =>
-                    d.categories.map((c) => (
-                      <option key={c.id} value={c.id}>{d.name} &gt; {c.name}</option>
-                    ))
-                  )}
+                  {(domains.find((d) => d.id === editDomainId)?.categories ?? []).map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
                 </select>
               </div>
 
@@ -415,8 +424,8 @@ export default function SkillsPage() {
 
       {/* Add Skill Modal */}
       {showAdd && (
-        <div className={styles.modal} onClick={() => setSearchParams({})}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal}>
+          <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Add Skill</h2>
             <Form method="post" className={styles.form}>
               <input type="hidden" name="intent" value="add" />
@@ -433,7 +442,7 @@ export default function SkillsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="domainId" className={styles.label}>Domain</label>
-                <select id="domainId" name="domainId" required className={styles.select}>
+                <select id="domainId" name="domainId" required className={styles.select} value={addDomainId} onChange={(e) => setAddDomainId(e.target.value)}>
                   <option value="">Select domain...</option>
                   {domains.map((d) => (
                     <option key={d.id} value={d.id}>{d.name}</option>
@@ -445,11 +454,9 @@ export default function SkillsPage() {
                 <label htmlFor="categoryId" className={styles.label}>Category</label>
                 <select id="categoryId" name="categoryId" required className={styles.select}>
                   <option value="">Select category...</option>
-                  {domains.flatMap((d) =>
-                    d.categories.map((c) => (
-                      <option key={c.id} value={c.id}>{d.name} &gt; {c.name}</option>
-                    ))
-                  )}
+                  {(domains.find((d) => d.id === addDomainId)?.categories ?? []).map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
                 </select>
               </div>
 

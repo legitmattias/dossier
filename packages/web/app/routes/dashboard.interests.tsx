@@ -15,6 +15,8 @@ interface Interest {
   notes?: string;
   visibility?: string;
   featured?: boolean;
+  updatedAt?: string;
+  createdAt: string;
 }
 
 interface Domain {
@@ -170,14 +172,17 @@ export default function InterestsPage() {
               </div>
               {interest.description && <div className={styles.cardDescription}>{interest.description}</div>}
               {interest.notes && <div className={styles.cardNotes}>{interest.notes}</div>}
+              <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
+                Added {new Date(interest.createdAt).toLocaleDateString()}
+              </div>
             </div>
           ))}
         </div>
       )}
 
       {showAdd && (
-        <div className={styles.modal} onClick={() => setSearchParams({})}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal}>
+          <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Add Interest</h2>
             <Form method="post" className={styles.form}>
               <input type="hidden" name="intent" value="add" />
@@ -235,8 +240,8 @@ export default function InterestsPage() {
       )}
 
       {editInterest && (
-        <div className={styles.modal} onClick={() => setSearchParams({})}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal}>
+          <div className={styles.modalCard}>
             <h2 className={styles.modalTitle}>Edit Interest</h2>
             <Form method="post" className={styles.form}>
               <input type="hidden" name="intent" value="update" />
