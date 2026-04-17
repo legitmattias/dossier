@@ -58,7 +58,6 @@ export function createExportTestProfile(): Profile {
     categoryId: domain.categories[0]!.id,
     proficiency: "advanced",
     notes: "Primary language",
-    usage: [{ context: "work", lastUsed: new Date("2026-06-01"), frequency: "daily" }],
     createdAt: new Date("2026-01-01"),
     updatedAt: new Date("2026-06-01"),
   });

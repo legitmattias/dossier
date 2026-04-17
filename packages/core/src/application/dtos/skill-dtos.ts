@@ -1,4 +1,4 @@
-import type { SkillSource, SkillUsage } from "../../domain/index.js";
+import type { SkillSource } from "../../domain/index.js";
 
 // --- Input DTOs (plain strings, no branded types) ---
 
@@ -10,7 +10,6 @@ export interface AddSkillInput {
   readonly proficiency: string;
   readonly proficiencyLabel?: string;
   readonly sources?: readonly SkillSource[];
-  readonly usage?: readonly SkillUsage[];
   readonly notes?: string;
   readonly visibility?: string;
   readonly featured?: boolean;
@@ -28,7 +27,6 @@ export interface UpdateSkillInput {
   readonly visibility?: string;
   readonly featured?: boolean;
   readonly addSources?: readonly SkillSource[];
-  readonly addUsage?: readonly SkillUsage[];
 }
 
 export interface RemoveSkillInput {
@@ -39,7 +37,6 @@ export interface ListSkillsInput {
   readonly domainId?: string;
   readonly categoryId?: string;
   readonly proficiency?: string;
-  readonly minFreshness?: number;
 }
 
 // --- Output DTOs (plain types, ISO date strings) ---
@@ -54,7 +51,6 @@ export interface SkillOutput {
   readonly proficiency: string;
   readonly proficiencyLabel?: string;
   readonly sources: readonly SkillSource[];
-  readonly usage: readonly SkillUsage[];
   readonly notes?: string;
   readonly visibility: string;
   readonly featured: boolean;

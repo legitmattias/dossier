@@ -46,15 +46,13 @@ describe("updateSkill", () => {
     expect(result.skill.name).toBe("TypeScript 5");
   });
 
-  it("adds sources and usage", async () => {
+  it("adds sources", async () => {
     const result = await updateSkill({ profileRepository: repo }, {
       skillId: "skill-1",
       addSources: [{ type: "assessed", detail: "Code review", date: new Date() }],
-      addUsage: [{ context: "Backend API", lastUsed: new Date() }],
     });
 
     expect(result.skill.sources).toHaveLength(1);
-    expect(result.skill.usage).toHaveLength(1);
   });
 
   it("persists changes in the repository", async () => {

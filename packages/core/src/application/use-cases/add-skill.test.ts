@@ -53,19 +53,17 @@ describe("addSkill", () => {
     expect(stored!.skills[0].name).toBe("TypeScript");
   });
 
-  it("includes optional sources, usage, and notes", async () => {
+  it("includes optional sources and notes", async () => {
     const result = await addSkill({ profileRepository: repo, idGenerator: idGen }, {
       name: "Python",
       domainId: "builtin-domain-software-development",
       categoryId: "builtin-category-software-development-languages",
       proficiency: "familiar",
       sources: [{ type: "self-reported", date: new Date() }],
-      usage: [{ context: "scripting", lastUsed: new Date() }],
       notes: "Used for data analysis",
     });
 
     expect(result.skill.sources).toHaveLength(1);
-    expect(result.skill.usage).toHaveLength(1);
     expect(result.skill.notes).toBe("Used for data analysis");
   });
 

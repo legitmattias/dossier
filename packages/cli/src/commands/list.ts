@@ -57,14 +57,6 @@ export function registerListCommand(
           }
           lines.push(`Created:      ${skill.createdAt.toISOString().slice(0, 10)}`);
 
-          if (skill.usage.length > 0) {
-            lines.push("");
-            lines.push("Usage:");
-            for (const u of skill.usage) {
-              lines.push(`  - ${u.lastUsed.toISOString().slice(0, 10)} (${u.context})`);
-            }
-          }
-
           if (skill.sources.length > 0) {
             lines.push("");
             lines.push("Sources:");

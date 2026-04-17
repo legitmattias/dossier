@@ -39,9 +39,6 @@ function createFullProfile() {
     sources: [
       { type: "self-reported", detail: "Primary language", date: new Date("2026-01-15") },
     ],
-    usage: [
-      { context: "work", lastUsed: new Date("2026-06-01"), frequency: "daily" },
-    ],
     notes: "Main language",
     createdAt: new Date("2026-01-01"),
     updatedAt: new Date("2026-06-01"),
@@ -114,9 +111,6 @@ describe("profile-schema", () => {
       expect(parsedSkill.sources[0]!.date.getTime()).toBe(
         originalSkill.sources[0]!.date.getTime(),
       );
-      expect(parsedSkill.usage).toHaveLength(1);
-      expect(parsedSkill.usage[0]!.lastUsed).toBeInstanceOf(Date);
-      expect(parsedSkill.usage[0]!.frequency).toBe("daily");
 
       // Goals
       expect(parsed.goals).toHaveLength(1);
@@ -295,9 +289,6 @@ describe("profile-schema", () => {
 
       const source = (skill["sources"] as Array<Record<string, unknown>>)[0]!;
       expect(typeof source["date"]).toBe("string");
-
-      const usage = (skill["usage"] as Array<Record<string, unknown>>)[0]!;
-      expect(typeof usage["lastUsed"]).toBe("string");
 
       const goal = (serialized["goals"] as Array<Record<string, unknown>>)[0]!;
       expect(typeof goal["createdAt"]).toBe("string");

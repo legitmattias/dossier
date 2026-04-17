@@ -69,11 +69,10 @@ export {
 export type {
   Skill,
   SkillSource,
-  SkillUsage,
   CreateSkillInput,
   UpdateSkillInput,
 } from "./entities/skill.js";
-export { createSkill, updateSkill, getSkillFreshness } from "./entities/skill.js";
+export { createSkill, updateSkill } from "./entities/skill.js";
 
 // Entities — Learning Goal
 export type {

@@ -3,9 +3,7 @@ import type { Profile } from "../../domain/entities/profile.js";
 import type { Skill } from "../../domain/entities/skill.js";
 import type { ExportOptions, IExporter } from "../../application/ports/exporter.js";
 import {
-  formatTimeSince,
   getDisplayProficiency,
-  getLastUsedDate,
   getLatestProgress,
   groupByDomain,
   isExportVisible,
@@ -14,7 +12,6 @@ import {
 export class ClaudeMdExporter implements IExporter {
   export(profile: Profile, _options?: ExportOptions): string {
     const lines: string[] = [];
-    const now = new Date();
 
     lines.push(`# Dossier Profile: ${profile.name}`);
 
@@ -76,7 +73,7 @@ export class ClaudeMdExporter implements IExporter {
         for (const [categoryId, skills] of byCategory) {
           const category = group.domain.categories.find((c) => c.id === categoryId);
           const categoryName = category?.name ?? "Other";
-          lines.push(`**${categoryName}:** ${skills.map((s) => formatSkillLine(s, now, group.domain)).join(", ")}`);
+          lines.push(`**${categoryName}:** ${skills.map((s) => formatSkillLine(s, group.domain)).join(", ")}`);
         }
       }
     }
@@ -216,20 +213,8 @@ export class ClaudeMdExporter implements IExporter {
   }
 }
 
-function formatSkillLine(skill: Skill, now: Date, domain?: Domain): string {
-  const lastUsed = getLastUsedDate(skill);
+function formatSkillLine(skill: Skill, domain?: Domain): string {
   const displayProf = getDisplayProficiency(skill, domain);
   const descSuffix = skill.description ? ` — ${skill.description}` : "";
-
-  // Only show freshness when there IS usage data
-  if (!lastUsed) {
-    return `${skill.name} (${displayProf})${descSuffix}`;
-  }
-
-  const timeSince = formatTimeSince(lastUsed, now);
-  const freshness = timeSince === "recently"
-    ? "last used: recently"
-    : `last used: ${timeSince}`;
-
-  return `${skill.name} (${displayProf}) [${freshness}]${descSuffix}`;
+  return `${skill.name} (${displayProf})${descSuffix}`;
 }

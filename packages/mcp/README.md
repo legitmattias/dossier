@@ -90,7 +90,6 @@ Actions the AI can perform on your profile. All tools accept domain/category by 
 | `dossier_list_skills` | List skills with optional filters |
 | `dossier_update_skill` | Update proficiency, notes, or name |
 | `dossier_remove_skill` | Remove a skill |
-| `dossier_mark_used` | Record recent skill usage |
 | `dossier_add_goal` | Add a learning goal |
 | `dossier_list_goals` | List goals with optional status filter |
 | `dossier_update_goal` | Update goal progress (0-100%) |

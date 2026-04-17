@@ -10,7 +10,7 @@ Every LLM session starts cold. Dossier provides persistent context about what yo
 
 ## Features
 
-- **Skills tracking** — proficiency levels, usage freshness, notes
+- **Skills tracking** — proficiency levels, domain-specific labels, notes
 - **Learning goals** — priorities, progress tracking, motivation
 - **Projects** — active work with featured highlights, linked skills
 - **Interests** — topics on your radar for future exploration

@@ -12,7 +12,7 @@ import type {
   Resource,
 } from "../../domain/entities/learning-goal.js";
 import type { Profile, ProfileSettings } from "../../domain/entities/profile.js";
-import type { Skill, SkillSource, SkillUsage } from "../../domain/entities/skill.js";
+import type { Skill, SkillSource } from "../../domain/entities/skill.js";
 import { PROFICIENCY_LEVELS } from "../../domain/value-objects/proficiency.js";
 
 // --- Sub-schemas ---
@@ -21,12 +21,6 @@ const skillSourceSchema = z.object({
   type: z.literal(["self-reported", "assessed", "inferred"]),
   detail: z.string().optional(),
   date: z.coerce.date(),
-});
-
-const skillUsageSchema = z.object({
-  context: z.string(),
-  lastUsed: z.coerce.date(),
-  frequency: z.literal(["daily", "weekly", "monthly", "rarely"]).optional(),
 });
 
 const skillSchema = z.object({
@@ -39,7 +33,6 @@ const skillSchema = z.object({
   proficiency: z.literal([...PROFICIENCY_LEVELS]),
   proficiencyLabel: z.string().optional(),
   sources: z.array(skillSourceSchema),
-  usage: z.array(skillUsageSchema),
   notes: z.string().optional(),
   visibility: z.literal(["public", "private"]).optional().default("public"),
   featured: z.boolean().optional().default(false),
@@ -193,14 +186,6 @@ function serializeSkillSource(source: SkillSource): object {
   };
 }
 
-function serializeSkillUsage(usage: SkillUsage): object {
-  return {
-    context: usage.context,
-    lastUsed: serializeDate(usage.lastUsed),
-    ...(usage.frequency !== undefined && { frequency: usage.frequency }),
-  };
-}
-
 function serializeSkill(skill: Skill): object {
   return {
     id: skill.id,
@@ -212,7 +197,6 @@ function serializeSkill(skill: Skill): object {
     proficiency: skill.proficiency,
     ...(skill.proficiencyLabel !== undefined && { proficiencyLabel: skill.proficiencyLabel }),
     sources: skill.sources.map(serializeSkillSource),
-    usage: skill.usage.map(serializeSkillUsage),
     ...(skill.notes !== undefined && { notes: skill.notes }),
     visibility: skill.visibility,
     featured: skill.featured,

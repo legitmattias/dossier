@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { InvalidNameError } from "../errors/domain-errors.js";
 import { toCategoryId, toDomainId, toSkillId } from "../value-objects/identifiers.js";
 import { createSlug } from "../value-objects/slug.js";
-import { createSkill, getSkillFreshness, updateSkill } from "./skill.js";
-import type { SkillSource, SkillUsage } from "./skill.js";
+import { createSkill, updateSkill } from "./skill.js";
+import type { SkillSource } from "./skill.js";
 
 const baseInput = {
   id: toSkillId("skill-1"),
@@ -25,7 +25,6 @@ describe("createSkill", () => {
     expect(skill.categoryId).toBe("cat-languages");
     expect(skill.proficiency).toBe("proficient");
     expect(skill.sources).toEqual([]);
-    expect(skill.usage).toEqual([]);
     expect(skill.notes).toBeUndefined();
     expect(skill.createdAt).toBeInstanceOf(Date);
     expect(skill.updatedAt).toBeInstanceOf(Date);
@@ -37,23 +36,15 @@ describe("createSkill", () => {
       detail: "10 years experience",
       date: new Date("2026-01-01"),
     };
-    const usage: SkillUsage = {
-      context: "Daily development work",
-      lastUsed: new Date("2026-06-01"),
-      frequency: "daily",
-    };
 
     const skill = createSkill({
       ...baseInput,
       sources: [source],
-      usage: [usage],
       notes: "Primary language",
     });
 
     expect(skill.sources).toHaveLength(1);
     expect(skill.sources[0]!.type).toBe("self-reported");
-    expect(skill.usage).toHaveLength(1);
-    expect(skill.usage[0]!.frequency).toBe("daily");
     expect(skill.notes).toBe("Primary language");
   });
 
@@ -119,16 +110,6 @@ describe("updateSkill", () => {
     expect(updated2.sources).toHaveLength(2);
   });
 
-  it("appends new usage records", () => {
-    const usage: SkillUsage = {
-      context: "New project",
-      lastUsed: new Date(),
-      frequency: "weekly",
-    };
-    const updated = updateSkill(skill, { addUsage: [usage] });
-    expect(updated.usage).toHaveLength(1);
-  });
-
   it("updates the updatedAt timestamp", () => {
     const before = skill.updatedAt;
     const updated = updateSkill(skill, { proficiency: "expert" });
@@ -143,76 +124,5 @@ describe("updateSkill", () => {
 
   it("throws InvalidNameError for empty name update", () => {
     expect(() => updateSkill(skill, { name: "" })).toThrow(InvalidNameError);
-  });
-});
-
-describe("getSkillFreshness", () => {
-  it("returns 0 for skill with no usage", () => {
-    const skill = createSkill(baseInput);
-    expect(getSkillFreshness(skill)).toBe(0);
-  });
-
-  it("returns 1.0 for skill used today", () => {
-    const now = new Date("2026-06-15T12:00:00Z");
-    const skill = createSkill({
-      ...baseInput,
-      usage: [{ context: "work", lastUsed: now }],
-    });
-    expect(getSkillFreshness(skill, now)).toBe(1);
-  });
-
-  it("returns ~0.5 at half-life (90 days)", () => {
-    const lastUsed = new Date("2026-01-01");
-    const now = new Date("2026-04-01"); // ~90 days later
-    const skill = createSkill({
-      ...baseInput,
-      usage: [{ context: "work", lastUsed }],
-    });
-
-    const freshness = getSkillFreshness(skill, now);
-    expect(freshness).toBeCloseTo(0.5, 1);
-  });
-
-  it("decays over time", () => {
-    const lastUsed = new Date("2026-01-01");
-    const skill = createSkill({
-      ...baseInput,
-      usage: [{ context: "work", lastUsed }],
-    });
-
-    const fresh30 = getSkillFreshness(skill, new Date("2026-01-31"));
-    const fresh90 = getSkillFreshness(skill, new Date("2026-04-01"));
-    const fresh180 = getSkillFreshness(skill, new Date("2026-06-30"));
-
-    expect(fresh30).toBeGreaterThan(fresh90);
-    expect(fresh90).toBeGreaterThan(fresh180);
-    expect(fresh180).toBeGreaterThan(0);
-  });
-
-  it("uses the most recent usage date", () => {
-    const now = new Date("2026-06-15");
-    const skill = createSkill({
-      ...baseInput,
-      usage: [
-        { context: "old project", lastUsed: new Date("2025-01-01") },
-        { context: "recent work", lastUsed: new Date("2026-06-14") },
-      ],
-    });
-
-    const freshness = getSkillFreshness(skill, now);
-    // 1 day ago — should be very fresh
-    expect(freshness).toBeGreaterThan(0.99);
-  });
-
-  it("supports custom half-life", () => {
-    const lastUsed = new Date("2026-01-01");
-    const now = new Date("2026-01-31"); // 30 days
-    const skill = createSkill({
-      ...baseInput,
-      usage: [{ context: "work", lastUsed }],
-    });
-
-    const freshness = getSkillFreshness(skill, now, 30);
-    expect(freshness).toBeCloseTo(0.5, 1);
   });
 });

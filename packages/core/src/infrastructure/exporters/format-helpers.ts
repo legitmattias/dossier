@@ -101,16 +101,6 @@ export function getDisplayProficiency(skill: Skill, domain?: Domain): string {
 }
 
 /**
- * Get the most recent usage date for a skill, or null if no usage recorded.
- */
-export function getLastUsedDate(skill: Skill): Date | null {
-  if (skill.usage.length === 0) return null;
-  return skill.usage.reduce((latest, u) =>
-    u.lastUsed > latest.lastUsed ? u : latest,
-  ).lastUsed;
-}
-
-/**
  * Get the latest progress percentage for a goal, or 0 if no progress recorded.
  */
 export function getLatestProgress(goal: LearningGoal): number {

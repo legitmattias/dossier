@@ -214,17 +214,6 @@ profileRoutes.post("/interests/:id/promote", requireAuth, requireScope("write"),
   return c.json(result, 201);
 });
 
-// POST /profile/skills/:id/mark-used
-profileRoutes.post("/skills/:id/mark-used", requireAuth, requireScope("write"), async (c) => {
-  const body = await c.req.json().catch(() => ({}));
-  const deps = getDeps(c);
-  const result = await application.updateSkill(deps, {
-    skillId: c.req.param("id"),
-    addUsage: [{ context: body.context ?? "Used", lastUsed: new Date() }],
-  });
-  return c.json(result);
-});
-
 // --- Domains ---
 
 // POST /profile/domains

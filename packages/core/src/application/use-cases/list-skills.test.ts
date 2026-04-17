@@ -7,7 +7,6 @@ import {
 import { InvalidInputError, ProfileNotFoundError } from "../errors/application-errors.js";
 import { addSkill } from "./add-skill.js";
 import { listSkills } from "./list-skills.js";
-import { updateSkill } from "./update-skill.js";
 
 describe("listSkills", () => {
   let repo: InMemoryProfileRepository;
@@ -87,22 +86,6 @@ describe("listSkills", () => {
     });
 
     expect(result.skills).toHaveLength(0);
-  });
-
-  it("filters by freshness", async () => {
-    // Add usage to TypeScript so it has freshness > 0
-    await updateSkill({ profileRepository: repo }, {
-      skillId: "skill-1",
-      addUsage: [{ context: "Work", lastUsed: new Date() }],
-    });
-
-    const result = await listSkills({ profileRepository: repo }, {
-      minFreshness: 0.5,
-    });
-
-    // Only TypeScript has usage, so only it passes the freshness filter
-    expect(result.skills).toHaveLength(1);
-    expect(result.skills[0].name).toBe("TypeScript");
   });
 
   it("throws ProfileNotFoundError when no profile exists", async () => {

@@ -9,12 +9,6 @@ export interface SkillSource {
   readonly date: Date;
 }
 
-export interface SkillUsage {
-  readonly context: string;
-  readonly lastUsed: Date;
-  readonly frequency?: "daily" | "weekly" | "monthly" | "rarely";
-}
-
 export interface Skill {
   readonly id: SkillId;
   readonly slug: Slug;
@@ -25,7 +19,6 @@ export interface Skill {
   readonly proficiency: Proficiency;
   readonly proficiencyLabel?: string;
   readonly sources: readonly SkillSource[];
-  readonly usage: readonly SkillUsage[];
   readonly notes?: string;
   readonly visibility: "public" | "private";
   readonly featured: boolean;
@@ -43,7 +36,6 @@ export interface CreateSkillInput {
   readonly proficiency: Proficiency;
   readonly proficiencyLabel?: string;
   readonly sources?: readonly SkillSource[];
-  readonly usage?: readonly SkillUsage[];
   readonly notes?: string;
   readonly visibility?: "public" | "private";
   readonly featured?: boolean;
@@ -67,7 +59,6 @@ export function createSkill(input: CreateSkillInput): Readonly<Skill> {
     proficiency: input.proficiency,
     ...(input.proficiencyLabel !== undefined && { proficiencyLabel: input.proficiencyLabel }),
     sources: input.sources ?? [],
-    usage: input.usage ?? [],
     ...(input.notes !== undefined && { notes: input.notes }),
     visibility: input.visibility ?? "public",
     featured: input.featured ?? false,
@@ -80,7 +71,6 @@ export type UpdateSkillInput = Partial<
   Pick<Skill, "name" | "description" | "domainId" | "categoryId" | "proficiency" | "proficiencyLabel" | "notes" | "visibility" | "featured">
 > & {
   readonly addSources?: readonly SkillSource[];
-  readonly addUsage?: readonly SkillUsage[];
 };
 
 export function updateSkill(skill: Skill, updates: UpdateSkillInput): Readonly<Skill> {
@@ -103,34 +93,6 @@ export function updateSkill(skill: Skill, updates: UpdateSkillInput): Readonly<S
     sources: updates.addSources
       ? [...skill.sources, ...updates.addSources]
       : skill.sources,
-    usage: updates.addUsage ? [...skill.usage, ...updates.addUsage] : skill.usage,
     updatedAt: new Date(),
   };
-}
-
-/**
- * Returns a freshness score (0-1) based on the most recent usage date.
- * 1.0 = used today, decays toward 0 over the given halfLifeDays (default 90).
- * Returns 0 if the skill has no usage records.
- */
-export function getSkillFreshness(
-  skill: Skill,
-  now: Date = new Date(),
-  halfLifeDays: number = 90,
-): number {
-  if (skill.usage.length === 0) {
-    return 0;
-  }
-
-  const mostRecent = skill.usage.reduce((latest, u) =>
-    u.lastUsed > latest.lastUsed ? u : latest,
-  );
-
-  const daysSinceUse =
-    (now.getTime() - mostRecent.lastUsed.getTime()) / (1000 * 60 * 60 * 24);
-
-  if (daysSinceUse <= 0) return 1;
-
-  // Exponential decay: freshness = 2^(-days / halfLife)
-  return Math.pow(2, -daysSinceUse / halfLifeDays);
 }

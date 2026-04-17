@@ -59,7 +59,6 @@ function createFullTestProfile() {
     categoryId: domain.categories[0]!.id,
     proficiency: "proficient",
     sources: [{ type: "self-reported", date: new Date("2026-01-15") }],
-    usage: [{ context: "work", lastUsed: new Date("2026-06-01"), frequency: "daily" }],
     notes: "Primary language",
     createdAt: new Date("2026-01-01"),
     updatedAt: new Date("2026-06-01"),
@@ -197,7 +196,6 @@ describe("FileProfileRepository", () => {
       expect(loaded!.skills[0]!.proficiency).toBe("proficient");
       expect(loaded!.skills[0]!.notes).toBe("Primary language");
       expect(loaded!.skills[0]!.sources[0]!.date).toBeInstanceOf(Date);
-      expect(loaded!.skills[0]!.usage[0]!.lastUsed).toBeInstanceOf(Date);
 
       // Goals
       expect(loaded!.goals).toHaveLength(1);

@@ -410,25 +410,6 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
   );
 
   server.registerTool(
-    "dossier_mark_used",
-    {
-      title: "Mark Skill Used",
-      description: "Record that a skill was used recently.",
-      inputSchema: z.object({
-        skillId: z.string().describe("Skill ID to mark as used"),
-        context: z.string().optional().describe("Usage context (e.g. 'work project')"),
-      }),
-    },
-    withErrorHandler(async (input) => {
-      const result = await ops.updateSkill({
-        skillId: input.skillId,
-        addUsage: [{ context: input.context ?? "Used", lastUsed: new Date() }],
-      });
-      return ok(`Marked as used: ${result.skill.name}`);
-    }),
-  );
-
-  server.registerTool(
     "dossier_add_domain",
     {
       title: "Add Custom Domain",

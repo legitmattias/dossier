@@ -16,7 +16,6 @@ export function toSkillOutput(skill: Skill): SkillOutput {
     proficiency: skill.proficiency,
     ...(skill.proficiencyLabel !== undefined && { proficiencyLabel: skill.proficiencyLabel }),
     sources: skill.sources,
-    usage: skill.usage,
     ...(skill.notes !== undefined && { notes: skill.notes }),
     visibility: skill.visibility,
     featured: skill.featured,

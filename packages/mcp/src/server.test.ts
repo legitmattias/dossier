@@ -317,22 +317,6 @@ describe("tools - skills", () => {
     expect(profile.skills).toHaveLength(0);
   });
 
-  it("marks a skill as used", async () => {
-    await client.callTool({
-      name: "dossier_add_skill",
-      arguments: { name: "Go", domainId: "software-development", categoryId: "languages", proficiency: "familiar" },
-    });
-
-    const result = await client.callTool({
-      name: "dossier_mark_used",
-      arguments: { skillId: "skill-1", context: "side project" },
-    });
-
-    expect(result.content[0].text).toContain("Marked as used: Go");
-    const profile = repo.getStoredProfile()!;
-    expect(profile.skills[0].usage).toHaveLength(1);
-    expect(profile.skills[0].usage[0].context).toBe("side project");
-  });
 });
 
 // --- Tools: Goals ---

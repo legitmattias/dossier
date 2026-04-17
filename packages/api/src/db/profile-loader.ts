@@ -72,7 +72,6 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     ...(s.proficiencyLabel != null && { proficiencyLabel: s.proficiencyLabel }),
     ...(s.notes != null && { notes: s.notes }),
     sources: (s.sources as Skill["sources"]) ?? [],
-    usage: (s.usage as Skill["usage"]) ?? [],
     visibility: (s.visibility ?? "public") as "public" | "private",
     featured: s.featured ?? false,
     createdAt: s.createdAt,

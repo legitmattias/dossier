@@ -1,6 +1,4 @@
 import {
-  getSkillFreshness,
-  isProficiency,
   toCategoryId,
   toDomainId,
 } from "../../domain/index.js";
@@ -39,13 +37,6 @@ export async function listSkills(
   if (input.proficiency !== undefined) {
     const proficiency = validateProficiency(input.proficiency);
     skills = skills.filter((s) => s.proficiency === proficiency);
-  }
-
-  if (input.minFreshness !== undefined) {
-    const now = new Date();
-    skills = skills.filter(
-      (s) => getSkillFreshness(s, now) >= input.minFreshness!,
-    );
   }
 
   return { skills: skills.map(toSkillOutput) };

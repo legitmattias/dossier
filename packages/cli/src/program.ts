@@ -7,8 +7,6 @@ import { registerAddCommand } from "./commands/add.js";
 import { registerListCommand } from "./commands/list.js";
 import { registerEditCommand } from "./commands/edit.js";
 import { registerRemoveCommand } from "./commands/remove.js";
-import { registerUsedCommand } from "./commands/used.js";
-import { registerStaleCommand } from "./commands/stale.js";
 import { registerLearnCommand } from "./commands/learn.js";
 import { registerGoalsCommand } from "./commands/goals.js";
 import { registerProgressCommand } from "./commands/progress.js";
@@ -38,8 +36,6 @@ export function createProgram(): Command {
   registerListCommand(program, lazyContainer);
   registerEditCommand(program, lazyContainer);
   registerRemoveCommand(program, lazyContainer);
-  registerUsedCommand(program, lazyContainer);
-  registerStaleCommand(program, lazyContainer);
   registerLearnCommand(program, lazyContainer);
   registerGoalsCommand(program, lazyContainer);
   registerProgressCommand(program, lazyContainer);

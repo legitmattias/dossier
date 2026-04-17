@@ -21,7 +21,8 @@ export { createExporter, getSupportedFormats } from "./exporters/exporter-factor
 export {
   groupByDomain,
   formatTimeSince,
-  getLastUsedDate,
+  getDisplayProficiency,
   getLatestProgress,
+  isExportVisible,
 } from "./exporters/format-helpers.js";
 export type { DomainGroup } from "./exporters/format-helpers.js";

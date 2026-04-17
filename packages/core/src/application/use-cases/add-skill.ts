@@ -50,7 +50,6 @@ export async function addSkill(
     proficiency,
     proficiencyLabel: input.proficiencyLabel,
     sources: input.sources,
-    usage: input.usage,
     notes: input.notes,
     visibility: input.visibility as "public" | "private" | undefined,
     featured: input.featured,

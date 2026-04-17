@@ -67,7 +67,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
           id: skill.id, profileId, slug: skill.slug, name: skill.name,
           description: skill.description, domainId: skill.domainId, categoryId: skill.categoryId,
           proficiency: skill.proficiency, proficiencyLabel: skill.proficiencyLabel, notes: skill.notes,
-          sources: skill.sources, usage: skill.usage, visibility: skill.visibility, featured: skill.featured,
+          sources: skill.sources, visibility: skill.visibility, featured: skill.featured,
           createdAt: skill.createdAt, updatedAt: skill.updatedAt,
         });
       }

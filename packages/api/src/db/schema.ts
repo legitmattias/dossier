@@ -81,7 +81,6 @@ export const skills = pgTable("skills", {
   proficiencyLabel: text("proficiency_label"),
   notes: text("notes"),
   sources: jsonb("sources").notNull().default([]),
-  usage: jsonb("usage").notNull().default([]),
   visibility: text("visibility").notNull().default("public"),
   featured: boolean("featured").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
