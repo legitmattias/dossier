@@ -9,6 +9,7 @@ export interface AddGoalInput {
   readonly motivation?: string;
   readonly notes?: string;
   readonly priority?: string;
+  readonly status?: string;
   readonly visibility?: string;
   readonly featured?: boolean;
   readonly resources?: readonly Resource[];

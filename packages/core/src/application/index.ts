@@ -67,7 +67,7 @@ export type {
 // Helpers
 export { slugify } from "./helpers/slugify.js";
 export { toSkillOutput, toGoalOutput, toInterestOutput, toProjectOutput } from "./helpers/mappers.js";
-export { validateProficiency, validatePriority } from "./helpers/validation.js";
+export { validateProficiency, validatePriority, validateGoalStatus } from "./helpers/validation.js";
 
 // Use Cases — Skills
 export { addSkill } from "./use-cases/add-skill.js";

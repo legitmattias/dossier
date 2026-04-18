@@ -22,6 +22,7 @@ export interface UpdateGoalInput {
   readonly status?: string;
   readonly visibility?: string;
   readonly featured?: boolean;
+  readonly targetDate?: string | Date | null;
 }
 
 export interface UpdateGoalOutput {
@@ -48,6 +49,13 @@ export async function updateGoal(
     ...(input.status !== undefined && { status: input.status as typeof goal.status }),
     ...(input.visibility !== undefined && { visibility: input.visibility as typeof goal.visibility }),
     ...(input.featured !== undefined && { featured: input.featured }),
+    ...(input.targetDate !== undefined && {
+      targetDate: input.targetDate === null
+        ? undefined
+        : input.targetDate instanceof Date
+          ? input.targetDate
+          : new Date(input.targetDate),
+    }),
     updatedAt: new Date(),
   };
 

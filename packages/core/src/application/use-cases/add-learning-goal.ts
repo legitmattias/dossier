@@ -8,7 +8,7 @@ import {
 import type { AddGoalInput, AddGoalOutput } from "../dtos/goal-dtos.js";
 import { ProfileNotFoundError } from "../errors/application-errors.js";
 import { toGoalOutput } from "../helpers/mappers.js";
-import { validatePriority } from "../helpers/validation.js";
+import { validatePriority, validateGoalStatus } from "../helpers/validation.js";
 import type { IIdGenerator } from "../ports/id-generator.js";
 import type { IProfileRepository } from "../ports/profile-repository.js";
 
@@ -34,6 +34,10 @@ export async function addLearningGoal(
     ? validatePriority(input.priority)
     : undefined;
 
+  const status = input.status !== undefined
+    ? validateGoalStatus(input.status)
+    : undefined;
+
   const targetDate = input.targetDate !== undefined
     ? (input.targetDate instanceof Date ? input.targetDate : new Date(input.targetDate))
     : undefined;
@@ -48,6 +52,7 @@ export async function addLearningGoal(
     motivation: input.motivation,
     notes: input.notes,
     priority,
+    status,
     resources: input.resources,
     targetDate,
     visibility: input.visibility as "public" | "private" | undefined,
