@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { CLI_VERSION } from "./index.js";
+import { getCliVersionString } from "./index.js";
 import { createContainer } from "./container.js";
 import type { Container } from "./container.js";
 import { registerInitCommand } from "./commands/init.js";
@@ -25,7 +25,7 @@ export function createProgram(): Command {
   program
     .name("dossier")
     .description("Personal knowledge profile tool for LLM personalization")
-    .version(CLI_VERSION)
+    .version(getCliVersionString())
     .option("--profile <path>", "Path to profile file");
 
   // Use a lazy getter so --profile is resolved after parsing

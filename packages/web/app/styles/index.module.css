@@ -78,3 +78,13 @@
   color: var(--color-primary-hover);
   text-decoration: none;
 }
+
+.versionFooter {
+  position: fixed;
+  bottom: var(--space-md);
+  right: var(--space-md);
+  font-size: 0.6875rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-faint);
+  letter-spacing: 0.02em;
+}

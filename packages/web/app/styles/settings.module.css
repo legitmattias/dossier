@@ -40,3 +40,41 @@
 .createForm > div {
   flex: 1;
 }
+
+.versionGrid {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-sm) var(--space-md);
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.versionLabel {
+  color: var(--color-text-muted);
+}
+
+.versionValue {
+  color: var(--color-text);
+}
+
+.versionBadge {
+  font-size: 0.6875rem;
+  padding: 2px var(--space-xs);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.versionMatch {
+  composes: versionBadge;
+  background: var(--color-success-muted);
+  color: var(--color-success);
+}
+
+.versionMismatch {
+  composes: versionBadge;
+  background: var(--color-warning-muted, rgba(234, 179, 8, 0.15));
+  color: var(--color-warning);
+}

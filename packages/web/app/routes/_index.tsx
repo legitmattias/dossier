@@ -30,6 +30,10 @@ export default function Index() {
           Log In
         </Link>
       </div>
+      <div className={styles.versionFooter}>
+        v{__DOSSIER_VERSION__}
+        {__DOSSIER_SHA__ !== "dev" && ` · ${__DOSSIER_SHA__.slice(0, 7)}`}
+      </div>
     </div>
   );
 }

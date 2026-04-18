@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 
-import { application } from "@dossier/core";
+import { application, getVersionInfo } from "@dossier/core";
 import type { DbConnection } from "./db/connection.js";
 import { optionalAuth } from "./middleware/auth.js";
 import { authRoutes } from "./routes/auth.js";
@@ -63,7 +63,10 @@ export function createApp(dbConnection: DbConnection): Hono<AppEnv> {
   });
 
   // Health check
-  app.get("/health", (c) => c.json({ status: "ok" }));
+  app.get("/health", (c) => c.json({ status: "ok", ...getVersionInfo() }));
+
+  // Version info
+  app.get("/version", (c) => c.json({ ...getVersionInfo(), api: "v1" }));
 
   // Routes
   app.route("/auth", authRoutes);

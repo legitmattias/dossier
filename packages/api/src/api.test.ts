@@ -56,10 +56,24 @@ afterEach(async () => {
 // --- Health ---
 
 describe("health", () => {
-  it("returns ok", async () => {
+  it("returns ok with version info", async () => {
     const res = await req("/health");
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ status: "ok" });
+    const body = await res.json() as { status: string; version: string; commitSha: string; builtAt: string };
+    expect(body.status).toBe("ok");
+    expect(body.version).toMatch(/^\d+\.\d+\.\d+/);
+    expect(typeof body.commitSha).toBe("string");
+    expect(typeof body.builtAt).toBe("string");
+  });
+});
+
+describe("version", () => {
+  it("returns version info with api contract", async () => {
+    const res = await req("/version");
+    expect(res.status).toBe(200);
+    const body = await res.json() as { version: string; commitSha: string; builtAt: string; api: string };
+    expect(body.version).toMatch(/^\d+\.\d+\.\d+/);
+    expect(body.api).toBe("v1");
   });
 });
 

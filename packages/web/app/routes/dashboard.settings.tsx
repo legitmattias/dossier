@@ -23,17 +23,25 @@ interface ApiKey {
   createdAt: string;
 }
 
+interface ApiVersion {
+  version: string;
+  commitSha: string;
+  builtAt: string;
+  api: string;
+}
+
 export const meta: MetaFunction = () => [{ title: "Settings — Dossier" }];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const token = await requireToken(request);
-  const [{ user }, { keys }, exportClaude, profileData] = await Promise.all([
+  const [{ user }, { keys }, exportClaude, profileData, apiVersion] = await Promise.all([
     api<{ user: { id: string; username: string; email: string } }>("/auth/me", { token }),
     api<{ keys: ApiKey[] }>("/auth/api-keys", { token }),
     api<string>("/profile/export?format=claude", { token }),
     api<Profile>("/profile", { token }).catch(() => ({} as Profile)),
+    api<ApiVersion>("/version").catch(() => null),
   ]);
-  return json({ user, keys, exportPreview: exportClaude, profile: profileData });
+  return json({ user, keys, exportPreview: exportClaude, profile: profileData, apiVersion });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -83,7 +91,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function SettingsPage() {
-  const { user, keys, exportPreview, profile } = useLoaderData<typeof loader>();
+  const { user, keys, exportPreview, profile, apiVersion } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -280,6 +288,39 @@ export default function SettingsPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Version */}
+      <div className={styles.domainGroup}>
+        <h2 className={styles.domainName}>Version</h2>
+        <div className={settingsStyles.versionGrid}>
+          <span className={settingsStyles.versionLabel}>Web</span>
+          <span className={settingsStyles.versionValue}>
+            v{__DOSSIER_VERSION__}
+            {__DOSSIER_SHA__ !== "dev" && ` · ${__DOSSIER_SHA__.slice(0, 7)}`}
+          </span>
+          <span />
+
+          <span className={settingsStyles.versionLabel}>API</span>
+          <span className={settingsStyles.versionValue}>
+            {apiVersion
+              ? `v${apiVersion.version}${apiVersion.commitSha !== "dev" ? ` · ${apiVersion.commitSha.slice(0, 7)}` : ""}`
+              : "unreachable"}
+          </span>
+          {apiVersion && (
+            <span
+              className={
+                apiVersion.version === __DOSSIER_VERSION__ && apiVersion.commitSha === __DOSSIER_SHA__
+                  ? settingsStyles.versionMatch
+                  : settingsStyles.versionMismatch
+              }
+            >
+              {apiVersion.version === __DOSSIER_VERSION__ && apiVersion.commitSha === __DOSSIER_SHA__
+                ? "In sync"
+                : "Mismatch"}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Export Preview */}

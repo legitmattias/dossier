@@ -42,6 +42,10 @@ RUN rm -rf packages/core/src packages/api/src tsconfig.base.json
 # Create data directory for SQLite mode
 RUN mkdir -p /data && chown dossier:dossier /data
 
+ARG DOSSIER_COMMIT_SHA=dev
+ARG DOSSIER_BUILT_AT=development
+ENV DOSSIER_COMMIT_SHA=${DOSSIER_COMMIT_SHA}
+ENV DOSSIER_BUILT_AT=${DOSSIER_BUILT_AT}
 ENV PORT=3200
 ENV HOST=0.0.0.0
 ENV NODE_ENV=production

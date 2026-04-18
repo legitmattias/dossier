@@ -81,6 +81,11 @@ export default function DashboardLayout() {
         <Form method="post" action="/auth/logout" className={styles.logoutForm}>
           <button type="submit" className={styles.logoutButton}>Log Out</button>
         </Form>
+
+        <div className={styles.versionFooter}>
+          v{__DOSSIER_VERSION__}
+          {__DOSSIER_SHA__ !== "dev" && ` · ${__DOSSIER_SHA__.slice(0, 7)}`}
+        </div>
       </aside>
 
       <main className={styles.main}>

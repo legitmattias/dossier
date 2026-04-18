@@ -1,4 +1,5 @@
-export const VERSION = "0.0.1";
+export { VERSION, getVersionInfo } from "./version.js";
+export type { VersionInfo } from "./version.js";
 
 export * from "./domain/index.js";
 export * as application from "./application/index.js";

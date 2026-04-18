@@ -43,6 +43,11 @@ RUN rm -rf packages/core/src packages/mcp/src tsconfig.base.json
 # Create data directory for profile storage
 RUN mkdir -p /data && chown dossier:dossier /data
 
+ARG DOSSIER_COMMIT_SHA=dev
+ARG DOSSIER_BUILT_AT=development
+ENV DOSSIER_COMMIT_SHA=${DOSSIER_COMMIT_SHA}
+ENV DOSSIER_BUILT_AT=${DOSSIER_BUILT_AT}
+
 # Default env vars
 ENV DOSSIER_TRANSPORT=http
 ENV DOSSIER_PORT=3100
