@@ -6,6 +6,8 @@ export class MarkdownExporter implements IExporter {
   export(profile: Profile, _options?: ExportOptions): string {
     const lines: string[] = [];
     lines.push(`# ${profile.name} — Dossier Profile`);
+    lines.push("");
+    lines.push(`_Profile last updated: ${formatDate(profile.updatedAt)}_`);
 
     const groups = groupByDomain(profile);
 
@@ -30,12 +32,12 @@ export class MarkdownExporter implements IExporter {
           const categoryName = category?.name ?? "Other";
           lines.push("");
           lines.push(`#### ${categoryName}`);
-          lines.push("| Skill | Proficiency | Description |");
-          lines.push("|-------|-------------|-------------|");
+          lines.push("| Skill | Proficiency | Updated | Description |");
+          lines.push("|-------|-------------|---------|-------------|");
           for (const skill of skills) {
             const prefix = skill.featured ? "★ " : "";
             const desc = skill.description ?? "-";
-            lines.push(`| ${prefix}${skill.name} | ${getDisplayProficiency(skill, group.domain)} | ${desc} |`);
+            lines.push(`| ${prefix}${skill.name} | ${getDisplayProficiency(skill, group.domain)} | ${formatDate(skill.updatedAt)} | ${desc} |`);
           }
         }
       }
@@ -50,7 +52,7 @@ export class MarkdownExporter implements IExporter {
           const progress = getLatestProgress(goal);
           const prefix = goal.featured ? "★ " : "";
           lines.push(
-            `- ${prefix}**${goal.name}** (${goal.status}, ${goal.priority} priority) — ${progress}% complete`,
+            `- ${prefix}**${goal.name}** (${goal.status}, ${goal.priority} priority) — ${progress}% complete — updated ${formatDate(goal.updatedAt)}`,
           );
         }
       }
@@ -76,4 +78,10 @@ export class MarkdownExporter implements IExporter {
     lines.push("");
     return lines.join("\n");
   }
+}
+
+function formatDate(date: Date | string | undefined): string {
+  if (!date) return "—";
+  const d = date instanceof Date ? date : new Date(date);
+  return d.toISOString().slice(0, 10);
 }

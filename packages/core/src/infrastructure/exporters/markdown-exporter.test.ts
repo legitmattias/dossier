@@ -7,10 +7,11 @@ import { createExportTestProfile, createExportTestProfileWithCompletedGoal } fro
 describe("MarkdownExporter", () => {
   const exporter = new MarkdownExporter();
 
-  it("starts with Dossier Profile heading", () => {
+  it("starts with Dossier Profile heading and last-updated line", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
     expect(output.startsWith("# Test User — Dossier Profile\n")).toBe(true);
+    expect(output).toContain("_Profile last updated:");
   });
 
   it("groups content by domain", () => {
@@ -23,7 +24,7 @@ describe("MarkdownExporter", () => {
     const profile = createExportTestProfile();
     const output = exporter.export(profile);
     expect(output).toContain("#### Programming Languages");
-    expect(output).toContain("| Skill | Proficiency | Description |");
+    expect(output).toContain("| Skill | Proficiency | Updated | Description |");
     expect(output).toContain("| TypeScript | advanced |");
   });
 
@@ -53,7 +54,9 @@ describe("MarkdownExporter", () => {
   it("handles empty profile", () => {
     const profile = createProfile({ id: toProfileId("empty"), name: "Empty" });
     const output = exporter.export(profile);
-    expect(output).toBe("# Empty — Dossier Profile\n");
+    expect(output).toContain("# Empty — Dossier Profile");
+    expect(output).toContain("_Profile last updated:");
+    expect(output.endsWith("\n")).toBe(true);
   });
 
   it("ends with trailing newline", () => {

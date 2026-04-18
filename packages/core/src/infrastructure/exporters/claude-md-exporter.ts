@@ -14,6 +14,8 @@ export class ClaudeMdExporter implements IExporter {
     const lines: string[] = [];
 
     lines.push(`# Dossier Profile: ${profile.name}`);
+    lines.push("");
+    lines.push(`_Profile last updated: ${formatDate(profile.updatedAt)}_`);
 
     // Bio
     if (profile.bio) {
@@ -87,7 +89,7 @@ export class ClaudeMdExporter implements IExporter {
       for (const goal of sortedGoals) {
         const progress = getLatestProgress(goal);
         const prefix = goal.featured ? "[Featured] " : "";
-        let line = `- ${prefix}**${goal.name}** — ${goal.priority} priority, ${progress}% complete`;
+        let line = `- ${prefix}**${goal.name}** — ${goal.priority} priority, ${progress}% complete — updated ${formatDate(goal.updatedAt)}`;
         if (goal.motivation) {
           line += ` (${goal.motivation})`;
         }
@@ -217,4 +219,10 @@ function formatSkillLine(skill: Skill, domain?: Domain): string {
   const displayProf = getDisplayProficiency(skill, domain);
   const descSuffix = skill.description ? ` — ${skill.description}` : "";
   return `${skill.name} (${displayProf})${descSuffix}`;
+}
+
+function formatDate(date: Date | string | undefined): string {
+  if (!date) return "—";
+  const d = date instanceof Date ? date : new Date(date);
+  return d.toISOString().slice(0, 10);
 }

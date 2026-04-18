@@ -109,7 +109,9 @@ describe("ClaudeMdExporter", () => {
   it("handles empty profile", () => {
     const profile = createProfile({ id: toProfileId("empty"), name: "Empty" });
     const output = exporter.export(profile);
-    expect(output).toBe("# Dossier Profile: Empty\n");
+    expect(output).toContain("# Dossier Profile: Empty");
+    expect(output).toContain("_Profile last updated:");
+    expect(output.endsWith("\n")).toBe(true);
   });
 
   it("shows featured projects section", () => {
