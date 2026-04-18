@@ -13,44 +13,28 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       title: "Search Profile",
       description:
         "Search across all entity types (skills, goals, interests, projects) by partial name match. " +
-        "Use this to check for duplicates before adding items, or to discover existing entries. " +
+        "Pass a single `query` or an array of `queries` for batched lookups in one call (useful before bulk-linking skills to a project). " +
         "Returns results grouped by type with IDs for follow-up operations.",
       inputSchema: z.object({
-        query: z.string().min(1).describe("Search term (case-insensitive substring match)"),
+        query: z.string().min(1).optional().describe("Single search term (case-insensitive substring match)"),
+        queries: z.array(z.string().min(1)).optional().describe("Batch search terms — results are grouped by query"),
       }),
     },
     withErrorHandler(async (input) => {
-      const result = await ops.searchProfile({ query: input.query });
-      if (result.total === 0) {
-        return ok(`No matches found for "${input.query}".`);
+      const terms = input.queries ?? (input.query ? [input.query] : []);
+      if (terms.length === 0) {
+        throw new Error("Provide `query` or `queries`.");
       }
-      const sections: string[] = [];
-      sections.push(`Found ${result.total} match${result.total === 1 ? "" : "es"} for "${input.query}":`);
-      if (result.results.skills.length > 0) {
-        sections.push("\nSkills:");
-        for (const s of result.results.skills) {
-          sections.push(`  - ${s.name} (${s.meta}) [id: ${s.id}]`);
-        }
+
+      if (terms.length === 1) {
+        const term = terms[0]!;
+        const result = await ops.searchProfile({ query: term });
+        return ok(renderSearchResult(term, result));
       }
-      if (result.results.goals.length > 0) {
-        sections.push("\nGoals:");
-        for (const g of result.results.goals) {
-          sections.push(`  - ${g.name} (${g.meta}) [id: ${g.id}]`);
-        }
-      }
-      if (result.results.interests.length > 0) {
-        sections.push("\nInterests:");
-        for (const i of result.results.interests) {
-          sections.push(`  - ${i.name} [id: ${i.id}]`);
-        }
-      }
-      if (result.results.projects.length > 0) {
-        sections.push("\nProjects:");
-        for (const p of result.results.projects) {
-          sections.push(`  - ${p.name} (${p.meta}) [id: ${p.id}]`);
-        }
-      }
-      return ok(sections.join("\n"));
+
+      const results = await Promise.all(terms.map((t) => ops.searchProfile({ query: t })));
+      const sections = terms.map((t, i) => renderSearchResult(t, results[i]!));
+      return ok(sections.join("\n\n---\n\n"));
     }),
   );
 
@@ -112,7 +96,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         const category = categoryNames.get(s.categoryId) ?? s.categoryId;
         const labels = dom?.proficiencyLabels as Record<string, string> | undefined;
         const displayProf = s.proficiencyLabel ?? labels?.[s.proficiency] ?? s.proficiency;
-        let line = `- ${s.name} (${displayProf}) [${domainName} > ${category}]`;
+        let line = `- ${s.name} (${displayProf}) [${domainName} > ${category}] [id: ${s.id}]`;
         if (privateDomainIds.has(s.domainId)) line += " (hidden by domain)";
         return line;
       });
@@ -181,7 +165,9 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         name: z.string().describe("Goal name (e.g. 'Learn Rust')"),
         domainId: z.string().describe("Domain ID, slug, or name"),
         priority: z.enum(["low", "medium", "high"]).optional().describe("Priority level (default: medium)"),
-        description: z.string().optional().describe("Goal description or motivation"),
+        status: z.enum(["active", "paused", "completed", "abandoned"]).optional().describe("Initial status (default: active)"),
+        description: z.string().optional().describe("What this goal is — the objective, separate from the motivation"),
+        motivation: z.string().optional().describe("Why pursuing this goal matters — exported alongside description"),
         notes: z.string().optional().describe("Internal notes (not exported)"),
         targetDate: z.string().optional().describe("Target date in ISO format (e.g. '2026-12-31')"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
@@ -214,7 +200,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       const domains = await ops.getDomains();
       const privateDomainIds = new Set(domains.filter((d) => d.visibility === "private").map((d) => d.id));
       const lines = result.goals.map((g) => {
-        let line = `- ${g.name} (${g.status}, ${g.priority} priority)`;
+        let line = `- ${g.name} (${g.status}, ${g.priority} priority) [id: ${g.id}]`;
         if (privateDomainIds.has(g.domainId)) line += " (hidden by domain)";
         return line;
       });
@@ -269,22 +255,26 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
     {
       title: "Edit Goal",
       description:
-        "Edit a learning goal's details — name, description, motivation, notes, priority, status, visibility, or featured flag. " +
+        "Edit a learning goal's details — name, description, motivation, notes, priority, status, target date, visibility, or featured flag. " +
         "Use dossier_search to find the goal ID first. For updating progress percentage, use dossier_update_goal instead.",
       inputSchema: z.object({
         goalId: z.string().describe("Goal ID to edit"),
         name: z.string().optional().describe("New name"),
-        description: z.string().optional().describe("Updated description"),
-        motivation: z.string().optional().describe("Updated motivation"),
+        description: z.string().optional().describe("Updated description — the objective"),
+        motivation: z.string().optional().describe("Updated motivation — why this matters"),
         notes: z.string().optional().describe("Updated notes"),
         priority: z.enum(["low", "medium", "high"]).optional().describe("New priority level"),
         status: z.enum(["active", "paused", "completed", "abandoned"]).optional().describe("New status"),
+        targetDate: z.string().optional().describe("Target date in ISO format (e.g. '2026-12-31'); empty string clears"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility"),
         featured: z.boolean().optional().describe("Mark as featured/showcase item"),
       }),
     },
     withErrorHandler(async (input) => {
-      const result = await ops.updateGoal(input);
+      const normalized = input.targetDate === ""
+        ? { ...input, targetDate: null }
+        : input;
+      const result = await ops.updateGoal(normalized);
       return ok(`Updated goal: ${result.goal.name} (${result.goal.status}, ${result.goal.priority} priority)`);
     }),
   );
@@ -514,7 +504,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
     "dossier_add_project",
     {
       title: "Add Project",
-      description: "Add a project to the profile — something you're working on or have worked on. After adding, link relevant skills by updating the project with dossier_update_project and providing skillIds. Use dossier_search or dossier_list_skills to find skill IDs.",
+      description: "Add a project to the profile — something you're working on or have worked on. Pass skillNames to auto-resolve skills by name (exact match), or skillIds if you already have them. Both can be combined.",
       inputSchema: z.object({
         name: z.string().describe("Project name"),
         description: z.string().optional().describe("Brief description"),
@@ -524,13 +514,18 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         priority: z.enum(["low", "medium", "high"]).optional().describe("Project priority (default: medium)"),
         featured: z.boolean().optional().describe("Whether this is a featured/showcase project"),
         skillIds: z.array(z.string()).optional().describe("IDs of skills used in this project"),
+        skillNames: z.array(z.string()).optional().describe("Skill names to resolve to IDs (case-insensitive exact match). Merged with skillIds."),
         highlights: z.array(z.string()).optional().describe("Key achievements or highlights"),
         notes: z.string().optional().describe("Internal notes about this project"),
+        startDate: z.string().optional().describe("Start date in ISO format (e.g. '2026-03-01')"),
+        endDate: z.string().optional().describe("End date in ISO format (e.g. '2026-09-30')"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
       }),
     },
     withErrorHandler(async (input) => {
-      const result = await ops.addProject(input);
+      const { skillNames, ...rest } = input;
+      const skillIds = await mergeSkillIds(ops, rest.skillIds, skillNames);
+      const result = await ops.addProject({ ...rest, skillIds });
       return ok(`Added project: ${result.project.name} (${result.project.status})`);
     }),
   );
@@ -551,7 +546,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         return ok("No projects found matching the filters.");
       }
       const lines = result.projects.map((p) => {
-        let line = `- ${p.name} (${p.status}, ${p.priority} priority)`;
+        let line = `- ${p.name} (${p.status}, ${p.priority} priority) [id: ${p.id}]`;
         if (p.featured) line += " ★";
         if (p.description) line += ` — ${p.description}`;
         return line;
@@ -564,7 +559,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
     "dossier_update_project",
     {
       title: "Update Project",
-      description: "Update an existing project's details. Use skillIds to link skills to this project — find skill IDs with dossier_search or dossier_list_skills.",
+      description: "Update an existing project's details. Pass skillNames to auto-resolve by name, or skillIds if already known. Both can be combined — they merge into the final skill list (replacing the project's current skills).",
       inputSchema: z.object({
         projectId: z.string().describe("Project ID to update"),
         name: z.string().optional().describe("New name"),
@@ -574,14 +569,21 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         status: z.enum(["active", "completed", "paused", "ideation"]).optional().describe("New status"),
         priority: z.enum(["low", "medium", "high"]).optional().describe("New priority"),
         featured: z.boolean().optional().describe("Set featured flag"),
-        skillIds: z.array(z.string()).optional().describe("Updated skill IDs"),
+        skillIds: z.array(z.string()).optional().describe("Updated skill IDs (replaces current list)"),
+        skillNames: z.array(z.string()).optional().describe("Skill names to resolve to IDs (case-insensitive exact match). Merged with skillIds, replaces current list."),
         highlights: z.array(z.string()).optional().describe("Updated highlights"),
         notes: z.string().optional().describe("Updated notes"),
+        startDate: z.string().optional().describe("Start date in ISO format"),
+        endDate: z.string().optional().describe("End date in ISO format"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
       }),
     },
     withErrorHandler(async (input) => {
-      const result = await ops.updateProject(input);
+      const { skillNames, ...rest } = input;
+      const skillIds = (rest.skillIds !== undefined || skillNames !== undefined)
+        ? await mergeSkillIds(ops, rest.skillIds, skillNames)
+        : undefined;
+      const result = await ops.updateProject({ ...rest, ...(skillIds !== undefined && { skillIds }) });
       return ok(`Updated project: ${result.project.name} (${result.project.status})`);
     }),
   );
@@ -621,6 +623,39 @@ function ok(message: string): CallToolResult {
   return { content: [{ type: "text", text: message }] };
 }
 
+function renderSearchResult(query: string, result: application.SearchProfileOutput): string {
+  if (result.total === 0) {
+    return `No matches found for "${query}".`;
+  }
+  const sections: string[] = [];
+  sections.push(`Found ${result.total} match${result.total === 1 ? "" : "es"} for "${query}":`);
+  if (result.results.skills.length > 0) {
+    sections.push("\nSkills:");
+    for (const s of result.results.skills) {
+      sections.push(`  - ${s.name} (${s.meta}) [id: ${s.id}]`);
+    }
+  }
+  if (result.results.goals.length > 0) {
+    sections.push("\nGoals:");
+    for (const g of result.results.goals) {
+      sections.push(`  - ${g.name} (${g.meta}) [id: ${g.id}]`);
+    }
+  }
+  if (result.results.interests.length > 0) {
+    sections.push("\nInterests:");
+    for (const i of result.results.interests) {
+      sections.push(`  - ${i.name} [id: ${i.id}]`);
+    }
+  }
+  if (result.results.projects.length > 0) {
+    sections.push("\nProjects:");
+    for (const p of result.results.projects) {
+      sections.push(`  - ${p.name} (${p.meta}) [id: ${p.id}]`);
+    }
+  }
+  return sections.join("\n");
+}
+
 function fail(message: string): CallToolResult {
   return { content: [{ type: "text", text: message }], isError: true };
 }
@@ -649,4 +684,43 @@ async function resolveIds(
   const domain = application.resolveDomainInProfile(profile, domainIdOrSlug);
   const category = application.resolveCategoryInDomain(domain, categoryIdOrSlug);
   return { domainId: domain.id, categoryId: category.id };
+}
+
+async function mergeSkillIds(
+  ops: DossierOperations,
+  skillIds: readonly string[] | undefined,
+  skillNames: readonly string[] | undefined,
+): Promise<string[] | undefined> {
+  if (skillIds === undefined && skillNames === undefined) return undefined;
+  const ids = new Set<string>(skillIds ?? []);
+  if (skillNames && skillNames.length > 0) {
+    const profile = await ops.getProfile();
+    if (!profile) throw new Error("No profile found.");
+    const byName = new Map<string, string[]>();
+    for (const s of profile.skills) {
+      const key = s.name.toLowerCase();
+      const list = byName.get(key) ?? [];
+      list.push(s.id);
+      byName.set(key, list);
+    }
+    const unresolved: string[] = [];
+    const ambiguous: string[] = [];
+    for (const name of skillNames) {
+      const matches = byName.get(name.toLowerCase()) ?? [];
+      if (matches.length === 0) {
+        unresolved.push(name);
+      } else if (matches.length > 1) {
+        ambiguous.push(name);
+      } else {
+        ids.add(matches[0]!);
+      }
+    }
+    if (unresolved.length > 0 || ambiguous.length > 0) {
+      const parts: string[] = [];
+      if (unresolved.length > 0) parts.push(`not found: ${unresolved.join(", ")}`);
+      if (ambiguous.length > 0) parts.push(`ambiguous (multiple skills share this name): ${ambiguous.join(", ")}`);
+      throw new Error(`Could not resolve skillNames — ${parts.join("; ")}`);
+    }
+  }
+  return Array.from(ids);
 }
