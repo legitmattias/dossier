@@ -604,6 +604,34 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
   );
 
   server.registerTool(
+    "dossier_submit_feedback",
+    {
+      title: "Submit Feedback on Dossier",
+      description:
+        "Submit feedback about Dossier itself — the MCP server, the API, a missing feature, or a friction point you hit while using the tools. " +
+        "**IMPORTANT: Always show the draft message to the user and get explicit confirmation before calling this tool.** " +
+        "Do not submit unsolicited feedback. The `confirmed: true` flag represents explicit user approval. " +
+        "Only use this for concrete, actionable observations (specific friction, reproducible bugs, clear missing capabilities) — " +
+        "not generic praise or vague impressions. Profile-level context (skill counts, etc.) may be referenced generically but do not include the user's actual skill names, goal contents, or other personal profile data. " +
+        "Requires API mode; local/file mode returns an error.",
+      inputSchema: z.object({
+        category: z.enum(["bug", "friction", "suggestion", "missing-feature", "other"]).describe("What kind of feedback this is"),
+        severity: z.enum(["low", "medium", "high", "critical"]).optional().describe("How much this impacts usage (default: medium)"),
+        message: z.string().min(5).describe("Concrete observation or issue — what happened, what was expected, why it matters"),
+        reproduction: z.string().optional().describe("Steps to reproduce, or the sequence of tool calls that led to the issue"),
+        confirmed: z.literal(true).describe("Must be `true`. Represents explicit user approval to submit this feedback."),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.submitFeedback(input);
+      return ok(
+        `Feedback submitted (id: ${result.id}, status: ${result.status}). ` +
+        `The operator will review it at /dashboard/feedback.`,
+      );
+    }),
+  );
+
+  server.registerTool(
     "dossier_export",
     {
       title: "Export Profile",

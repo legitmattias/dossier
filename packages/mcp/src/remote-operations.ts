@@ -3,10 +3,10 @@
  * Each operation calls the Dossier REST API via HTTP.
  * Used for multi-device cloud mode (MCP server connects to deployed API).
  */
-import { infrastructure } from "@dossier/core";
+import { getVersionInfo, infrastructure } from "@dossier/core";
 import type { Profile, Domain } from "@dossier/core";
 import type { application } from "@dossier/core";
-import type { DossierOperations } from "./operations.js";
+import type { DossierOperations, SubmitFeedbackInput, SubmitFeedbackOutput } from "./operations.js";
 
 export class RemoteOperations implements DossierOperations {
   constructor(
@@ -178,5 +178,19 @@ export class RemoteOperations implements DossierOperations {
   // Export
   async exportProfile(format: string): Promise<string> {
     return this.api<string>(`/profile/export?format=${format}`);
+  }
+
+  // Feedback
+  async submitFeedback(input: SubmitFeedbackInput): Promise<SubmitFeedbackOutput> {
+    const info = getVersionInfo();
+    return this.api<SubmitFeedbackOutput>("/feedback", {
+      method: "POST",
+      body: {
+        ...input,
+        clientName: "dossier-mcp",
+        clientVersion: info.version,
+        clientSha: info.commitSha,
+      },
+    });
   }
 }

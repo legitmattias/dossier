@@ -51,4 +51,21 @@ export interface DossierOperations {
 
   // Export
   exportProfile(format: string): Promise<string>;
+
+  // Feedback (remote only — local mode throws)
+  submitFeedback(input: SubmitFeedbackInput): Promise<SubmitFeedbackOutput>;
+}
+
+export interface SubmitFeedbackInput {
+  readonly category: "bug" | "friction" | "suggestion" | "missing-feature" | "other";
+  readonly severity?: "low" | "medium" | "high" | "critical";
+  readonly message: string;
+  readonly reproduction?: string;
+  readonly confirmed: true;
+}
+
+export interface SubmitFeedbackOutput {
+  readonly id: string;
+  readonly status: string;
+  readonly acknowledged: boolean;
 }

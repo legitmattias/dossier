@@ -5,7 +5,7 @@
  */
 import { application, infrastructure } from "@dossier/core";
 import type { Profile, Domain } from "@dossier/core";
-import type { DossierOperations } from "./operations.js";
+import type { DossierOperations, SubmitFeedbackInput, SubmitFeedbackOutput } from "./operations.js";
 
 export class LocalOperations implements DossierOperations {
   private readonly repo: application.IProfileRepository;
@@ -155,5 +155,13 @@ export class LocalOperations implements DossierOperations {
       { profileRepository: this.repo, exporter },
     );
     return result.content;
+  }
+
+  // Feedback — unavailable in local mode
+  async submitFeedback(_input: SubmitFeedbackInput): Promise<SubmitFeedbackOutput> {
+    throw new Error(
+      "Feedback submission requires API mode. Configure the MCP to connect to a Dossier API instance " +
+      "(e.g. https://api.dossier.mattic.dev) to submit feedback.",
+    );
   }
 }
