@@ -70,6 +70,13 @@ export default function DashboardLayout() {
             Domains
           </NavLink>
           <NavLink
+            to="/dashboard/feedback"
+            className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
+            title="AI-submitted feedback and triage"
+          >
+            Feedback
+          </NavLink>
+          <NavLink
             to="/dashboard/settings"
             className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
             title="Profile info, API keys, and export preview"
