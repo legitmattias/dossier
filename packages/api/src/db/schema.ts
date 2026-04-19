@@ -200,3 +200,27 @@ export const projects = pgTable("projects", {
 export const projectsRelations = relations(projects, ({ one }) => ({
   profile: one(profiles, { fields: [projects.profileId], references: [profiles.id] }),
 }));
+
+// --- Feedback ---
+
+export const feedback = pgTable("feedback", {
+  id: text("id").primaryKey(),
+  category: text("category").notNull(), // bug | friction | suggestion | missing-feature | other
+  severity: text("severity").notNull().default("medium"), // low | medium | high | critical
+  message: text("message").notNull(),
+  reproduction: text("reproduction"),
+  reporterUserId: text("reporter_user_id").references(() => users.id, { onDelete: "set null" }),
+  clientName: text("client_name"), // e.g. "dossier-mcp", "claude-desktop"
+  clientVersion: text("client_version"),
+  clientSha: text("client_sha"),
+  status: text("status").notNull().default("new"), // new | triaged | resolved | wontfix
+  resolvedNote: text("resolved_note"),
+  githubIssueUrl: text("github_issue_url"),
+  githubIssueNumber: integer("github_issue_number"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const feedbackRelations = relations(feedback, ({ one }) => ({
+  reporter: one(users, { fields: [feedback.reporterUserId], references: [users.id] }),
+}));

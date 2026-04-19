@@ -168,4 +168,24 @@ export async function ensureTables(db: Database): Promise<void> {
   await db.execute(sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
   await db.execute(sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
   await db.execute(sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS feedback (
+      id TEXT PRIMARY KEY,
+      category TEXT NOT NULL,
+      severity TEXT NOT NULL DEFAULT 'medium',
+      message TEXT NOT NULL,
+      reproduction TEXT,
+      reporter_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+      client_name TEXT,
+      client_version TEXT,
+      client_sha TEXT,
+      status TEXT NOT NULL DEFAULT 'new',
+      resolved_note TEXT,
+      github_issue_url TEXT,
+      github_issue_number INTEGER,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
 }
