@@ -6,6 +6,7 @@ import { application, getVersionInfo } from "@dossier/core";
 import type { DbConnection } from "./db/connection.js";
 import { optionalAuth } from "./middleware/auth.js";
 import { authRoutes } from "./routes/auth.js";
+import { feedbackRoutes } from "./routes/feedback.js";
 import { profileRoutes } from "./routes/profile.js";
 import { publicRoutes } from "./routes/public.js";
 
@@ -71,6 +72,7 @@ export function createApp(dbConnection: DbConnection): Hono<AppEnv> {
   // Routes
   app.route("/auth", authRoutes);
   app.route("/profile", profileRoutes);
+  app.route("/feedback", feedbackRoutes);
   app.route("/u", publicRoutes);
 
   return app;
