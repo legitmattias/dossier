@@ -128,7 +128,7 @@ export default function GoalsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdd = searchParams.get("add") === "true";
   const editId = searchParams.get("edit");
-  const isSubmitting = navigation.state !== "idle";
+  const isSubmitting = navigation.state === "submitting";
   const [saved, setSaved] = useState(false);
   const [filterPriority, setFilterPriority] = useState("");
   const [filterFeatured, setFilterFeatured] = useState("");

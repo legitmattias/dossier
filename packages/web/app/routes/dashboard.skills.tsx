@@ -127,7 +127,7 @@ export default function SkillsPage() {
   const showAdd = searchParams.get("add") === "true";
   const editSkillId = searchParams.get("edit");
   const editSkill = editSkillId ? skills.find((s) => s.id === editSkillId) : undefined;
-  const isSubmitting = navigation.state !== "idle";
+  const isSubmitting = navigation.state === "submitting";
   const [saved, setSaved] = useState(false);
   const [filterDomain, setFilterDomain] = useState("");
   const [filterProficiency, setFilterProficiency] = useState("");
