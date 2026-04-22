@@ -14,7 +14,7 @@ export function toSkillOutput(skill: Skill): SkillOutput {
     domainId: skill.domainId,
     categoryId: skill.categoryId,
     proficiency: skill.proficiency,
-    ...(skill.proficiencyLabel !== undefined && { proficiencyLabel: skill.proficiencyLabel }),
+    proficiencyLabel: skill.proficiencyLabel ?? null,
     sources: skill.sources,
     ...(skill.notes !== undefined && { notes: skill.notes }),
     visibility: skill.visibility,

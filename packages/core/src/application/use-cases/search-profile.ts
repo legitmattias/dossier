@@ -16,15 +16,22 @@ export async function searchProfile(
   const q = input.query.toLowerCase();
   const matchName = (name: string) => name.toLowerCase().includes(q);
 
+  const domainById = new Map(profile.domains.map((d) => [d.id, d]));
+
   const skills: SearchResultItem[] = profile.skills
     .filter((s) => matchName(s.name))
-    .map((s) => ({
-      id: s.id,
-      name: s.name,
-      type: "skill" as const,
-      description: s.description,
-      meta: s.proficiency,
-    }));
+    .map((s) => {
+      const domain = domainById.get(s.domainId);
+      const labels = domain?.proficiencyLabels as Record<string, string> | undefined;
+      const displayProf = s.proficiencyLabel ?? labels?.[s.proficiency] ?? s.proficiency;
+      return {
+        id: s.id,
+        name: s.name,
+        type: "skill" as const,
+        description: s.description,
+        meta: displayProf,
+      };
+    });
 
   const goals: SearchResultItem[] = profile.goals
     .filter((g) => matchName(g.name))

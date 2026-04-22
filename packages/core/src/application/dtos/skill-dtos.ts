@@ -49,7 +49,7 @@ export interface SkillOutput {
   readonly domainId: string;
   readonly categoryId: string;
   readonly proficiency: string;
-  readonly proficiencyLabel?: string;
+  readonly proficiencyLabel: string | null;
   readonly sources: readonly SkillSource[];
   readonly notes?: string;
   readonly visibility: string;

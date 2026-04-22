@@ -297,5 +297,37 @@ describe("profile-schema", () => {
       const interest = (serialized["interests"] as Array<Record<string, unknown>>)[0]!;
       expect(typeof interest["createdAt"]).toBe("string");
     });
+
+    it("emits proficiencyLabel: null when skill has no custom label", () => {
+      const profile = createFullProfile();
+      const serialized = serializeProfile(profile) as Record<string, unknown>;
+      const skill = (serialized["skills"] as Array<Record<string, unknown>>)[0]!;
+      expect("proficiencyLabel" in skill).toBe(true);
+      expect(skill["proficiencyLabel"]).toBeNull();
+    });
+
+    it("emits proficiencyLabel with the string value when set", () => {
+      const domain = BUILT_IN_DOMAINS[0]!;
+      let profile = createProfile({
+        id: toProfileId("test-profile-2"),
+        name: "Test User",
+      });
+      profile = addDomainToProfile(profile, domain);
+      const skill = createSkill({
+        id: toSkillId("skill-labelled"),
+        slug: slugify("Swedish"),
+        name: "Swedish",
+        domainId: domain.id,
+        categoryId: domain.categories[0]!.id,
+        proficiency: "expert",
+        proficiencyLabel: "native",
+      });
+      profile = addSkillToProfile(profile, skill);
+
+      const serialized = serializeProfile(profile) as Record<string, unknown>;
+      const skillOut = (serialized["skills"] as Array<Record<string, unknown>>)[0]!;
+      expect(skillOut["proficiencyLabel"]).toBe("native");
+      expect(skillOut["proficiency"]).toBe("expert");
+    });
   });
 });

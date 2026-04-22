@@ -95,4 +95,40 @@ describe("searchProfile", () => {
       searchProfile({ profileRepository: emptyRepo }, { query: "test" }),
     ).rejects.toThrow(ProfileNotFoundError);
   });
+
+  it("skill meta uses skill.proficiencyLabel when set (highest priority)", async () => {
+    const deps = { profileRepository: repo, idGenerator: idGen };
+    await addSkill(deps, {
+      name: "Swedish",
+      domainId: "builtin-domain-software-development",
+      categoryId: "builtin-category-software-development-languages",
+      proficiency: "expert",
+      proficiencyLabel: "native",
+    });
+    const result = await searchProfile({ profileRepository: repo }, { query: "Swedish" });
+    expect(result.results.skills[0]!.meta).toBe("native");
+  });
+
+  it("skill meta falls back to domain.proficiencyLabels when skill has no custom label", async () => {
+    // Add a custom domain with proficiency labels, then add a skill in it
+    const profile = (await repo.load())!;
+    const updated = {
+      ...profile,
+      domains: profile.domains.map((d) =>
+        d.id === "builtin-domain-software-development"
+          ? { ...d, proficiencyLabels: { advanced: "fluent" } }
+          : d,
+      ),
+    };
+    await repo.save(updated);
+
+    const result = await searchProfile({ profileRepository: repo }, { query: "JavaScript" });
+    expect(result.results.skills[0]!.meta).toBe("fluent");
+  });
+
+  it("skill meta falls back to raw proficiency when no labels are set", async () => {
+    const result = await searchProfile({ profileRepository: repo }, { query: "TypeScript" });
+    const skill = result.results.skills.find((s) => s.name === "TypeScript");
+    expect(skill!.meta).toBe("proficient");
+  });
 });
