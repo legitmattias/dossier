@@ -4,7 +4,7 @@ import { createExporter, getSupportedFormats } from "./exporter-factory.js";
 import { JsonExporter } from "./json-exporter.js";
 import { MarkdownExporter } from "./markdown-exporter.js";
 import { PlainTextExporter } from "./plain-text-exporter.js";
-import { ClaudeMdExporter } from "./claude-md-exporter.js";
+import { LlmMdExporter } from "./llm-md-exporter.js";
 
 describe("createExporter", () => {
   it("creates JSON exporter", () => {
@@ -19,15 +19,14 @@ describe("createExporter", () => {
     expect(createExporter("text")).toBeInstanceOf(PlainTextExporter);
   });
 
-  it("creates Claude MD exporter", () => {
-    expect(createExporter("claude")).toBeInstanceOf(ClaudeMdExporter);
+  it("creates LLM MD exporter", () => {
+    expect(createExporter("llm-md")).toBeInstanceOf(LlmMdExporter);
   });
 
   it("resolves aliases", () => {
     expect(createExporter("md")).toBeInstanceOf(MarkdownExporter);
     expect(createExporter("txt")).toBeInstanceOf(PlainTextExporter);
     expect(createExporter("plain")).toBeInstanceOf(PlainTextExporter);
-    expect(createExporter("claude-md")).toBeInstanceOf(ClaudeMdExporter);
   });
 
   it("is case-insensitive", () => {
@@ -51,7 +50,7 @@ describe("getSupportedFormats", () => {
     expect(formats).toContain("json");
     expect(formats).toContain("markdown");
     expect(formats).toContain("text");
-    expect(formats).toContain("claude");
+    expect(formats).toContain("llm-md");
     expect(formats).toContain("md");
     expect(formats).toContain("txt");
   });

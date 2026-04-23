@@ -9,7 +9,7 @@ import {
   isExportVisible,
 } from "./format-helpers.js";
 
-export class ClaudeMdExporter implements IExporter {
+export class LlmMdExporter implements IExporter {
   export(profile: Profile, _options?: ExportOptions): string {
     const lines: string[] = [];
 

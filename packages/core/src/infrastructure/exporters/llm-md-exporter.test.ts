@@ -20,11 +20,11 @@ import {
   toSkillId,
 } from "../../domain/index.js";
 import { slugify } from "../../application/helpers/slugify.js";
-import { ClaudeMdExporter } from "./claude-md-exporter.js";
+import { LlmMdExporter } from "./llm-md-exporter.js";
 import { createExportTestProfile, createExportTestProfileWithCompletedGoal } from "./test-helpers.js";
 
-describe("ClaudeMdExporter", () => {
-  const exporter = new ClaudeMdExporter();
+describe("LlmMdExporter", () => {
+  const exporter = new LlmMdExporter();
 
   it("starts with Dossier Profile heading", () => {
     const profile = createExportTestProfile();

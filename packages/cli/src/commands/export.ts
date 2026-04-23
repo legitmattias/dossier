@@ -13,7 +13,7 @@ export function registerExportCommand(
   program
     .command("export")
     .description("Export your profile")
-    .option("-f, --format <format>", "Export format (json, markdown, text, claude)", "markdown")
+    .option("-f, --format <format>", "Export format (json, markdown, text, llm-md)", "markdown")
     .option("-d, --domain <domain>", "Filter by domain")
     .option("--exclude-goals", "Exclude learning goals")
     .option("--exclude-completed", "Exclude completed goals")

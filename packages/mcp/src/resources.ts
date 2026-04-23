@@ -25,17 +25,17 @@ export function registerResources(server: McpServer, ops: DossierOperations): vo
     },
   );
 
-  // Profile summary in CLAUDE.md format
+  // Profile summary — markdown structured for LLM context
   server.registerResource(
     "profile-summary",
     "dossier://profile/summary",
     {
       title: "Profile Summary",
-      description: "LLM-optimized profile summary (CLAUDE.md format) — ideal for system prompt context",
+      description: "Profile summary formatted as markdown for LLM/AI context consumption — ideal for system prompt context",
       mimeType: "text/markdown",
     },
     async (uri): Promise<ReadResourceResult> => {
-      const text = await ops.exportProfile("claude");
+      const text = await ops.exportProfile("llm-md");
       return { contents: [{ uri: uri.href, text }] };
     },
   );

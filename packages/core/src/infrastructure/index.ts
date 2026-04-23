@@ -14,7 +14,7 @@ export { FileProfileRepository } from "./repositories/file-profile-repository.js
 export { JsonExporter } from "./exporters/json-exporter.js";
 export { MarkdownExporter } from "./exporters/markdown-exporter.js";
 export { PlainTextExporter } from "./exporters/plain-text-exporter.js";
-export { ClaudeMdExporter } from "./exporters/claude-md-exporter.js";
+export { LlmMdExporter } from "./exporters/llm-md-exporter.js";
 export { createExporter, getSupportedFormats } from "./exporters/exporter-factory.js";
 
 // Format helpers

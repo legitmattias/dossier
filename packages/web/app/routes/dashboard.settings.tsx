@@ -37,7 +37,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const [{ user }, { keys }, exportClaude, profileData, apiVersion] = await Promise.all([
     api<{ user: { id: string; username: string; email: string } }>("/auth/me", { token }),
     api<{ keys: ApiKey[] }>("/auth/api-keys", { token }),
-    api<string>("/profile/export?format=claude", { token }),
+    api<string>("/profile/export?format=llm-md", { token }),
     api<Profile>("/profile", { token }).catch(() => ({} as Profile)),
     api<ApiVersion>("/version").catch(() => null),
   ]);
@@ -325,7 +325,7 @@ export default function SettingsPage() {
 
       {/* Export Preview */}
       <div className={styles.domainGroup}>
-        <h2 className={styles.domainName}>Export Preview (Claude format)</h2>
+        <h2 className={styles.domainName}>Export Preview (LLM context markdown)</h2>
         <pre className={styles.exportPreview}>
           {exportPreview}
         </pre>

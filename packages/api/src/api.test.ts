@@ -192,9 +192,9 @@ describe("profile", () => {
     expect(data.domains.length).toBe(3); // 3 built-in domains
   });
 
-  it("exports in claude format", async () => {
+  it("exports in llm-md format", async () => {
     const { token } = await registerAndGetToken();
-    const res = await authReq("/profile/export?format=claude", token);
+    const res = await authReq("/profile/export?format=llm-md", token);
     expect(res.status).toBe(200);
     const text = await res.text();
     expect(text).toContain("# Dossier Profile:");

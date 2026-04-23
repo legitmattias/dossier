@@ -117,7 +117,7 @@ export function registerPrompts(server: McpServer, ops: DossierOperations): void
 
 async function getProfileContext(ops: DossierOperations): Promise<string> {
   try {
-    return await ops.exportProfile("claude");
+    return await ops.exportProfile("llm-md");
   } catch {
     return "No Dossier profile found. The user hasn't set up their profile yet.";
   }

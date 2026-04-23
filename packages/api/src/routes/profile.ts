@@ -58,7 +58,7 @@ profileRoutes.patch("/", requireAuth, requireScope("write"), async (c) => {
   return c.json(serialized);
 });
 
-// GET /profile/export?format=claude
+// GET /profile/export?format=llm-md
 profileRoutes.get("/export", requireAuth, requireScope("read"), async (c) => {
   const format = c.req.query("format") ?? "json";
   const deps = getDeps(c);

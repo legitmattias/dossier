@@ -637,7 +637,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       title: "Export Profile",
       description: "Export the profile in a specified format (json, markdown, text, claude).",
       inputSchema: z.object({
-        format: z.enum(["json", "markdown", "text", "claude"]).describe("Export format"),
+        format: z.enum(["json", "markdown", "text", "llm-md"]).describe("Export format. `llm-md` is markdown structured for LLM/AI context consumption (preferred for piping into agent sessions)."),
       }),
     },
     withErrorHandler(async (input) => {

@@ -151,7 +151,7 @@ describe("resources", () => {
     expect(json.domains).toHaveLength(3);
   });
 
-  it("reads profile summary in claude-md format", async () => {
+  it("reads profile summary in llm-md format", async () => {
     const result = await client.readResource({ uri: "dossier://profile/summary" });
     const text = result.contents[0].text as string;
     expect(text).toContain("# Dossier Profile: Test User");
@@ -480,7 +480,7 @@ describe("tools - domains and categories", () => {
 // --- Tools: Export ---
 
 describe("tools - export", () => {
-  it("exports in claude format with domain/category grouping", async () => {
+  it("exports in llm-md format with domain/category grouping", async () => {
     await client.callTool({
       name: "dossier_add_skill",
       arguments: { name: "TypeScript", domainId: "software-development", categoryId: "languages", proficiency: "advanced" },
@@ -488,7 +488,7 @@ describe("tools - export", () => {
 
     const result = await client.callTool({
       name: "dossier_export",
-      arguments: { format: "claude" },
+      arguments: { format: "llm-md" },
     });
 
     const text = result.content[0].text as string;
