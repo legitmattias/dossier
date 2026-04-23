@@ -179,29 +179,93 @@ export default function GoalsPage() {
     return goal.progress[goal.progress.length - 1].percentage;
   }
 
-  function renderGoalCard(goal: Goal) {
+  function renderGoalRow(goal: Goal) {
     const percentage = getProgress(goal);
+    const domain = domainMap.get(goal.domainId);
+    const domainPrivate = domain?.visibility === "private";
     return (
-      <div className={styles.card} key={goal.id}>
-        <div className={styles.cardHeader}>
-          <span className={styles.cardName}>{goal.name}</span>
-          <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+      <details className={styles.row} key={goal.id}>
+        <summary className={styles.rowSummary}>
+          <svg className={styles.rowDisclosure} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <div className={styles.rowMain}>
+            <div className={styles.rowTitle}>
+              {goal.featured && <span className={styles.rowStar} aria-label="Featured">★</span>}
+              <span className={styles.rowName}>{goal.name}</span>
+            </div>
+            <div className={styles.rowMeta}>
+              <span>{domain?.name ?? goal.domainId}</span>
+              {goal.status !== "completed" && goal.status !== "abandoned" && (
+                <span className={styles.rowProgressInline}>
+                  <span className={styles.rowMetaSep} />
+                  <div className={styles.rowProgressBar}>
+                    <div className={styles.rowProgressFill} style={{ width: `${percentage}%` }} />
+                  </div>
+                  <span className={styles.rowProgressLabel}>{percentage}%</span>
+                </span>
+              )}
+            </div>
+          </div>
+          <div className={styles.rowBadges}>
+            <span className={styles.proficiency} data-level={goal.priority}>{goal.priority}</span>
+            <span className={styles.proficiency} data-level={goal.status}>{goal.status}</span>
+            {goal.visibility === "private" && (
+              <span className={styles.proficiency} data-level="private">private</span>
+            )}
+            {domainPrivate && (
+              <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden</span>
+            )}
+          </div>
+        </summary>
+
+        <div className={styles.rowDetails}>
+          {goal.description && (
+            <div className={styles.rowDetailBlock}>
+              <span className={styles.rowDetailLabel}>Description</span>
+              <span className={styles.rowDetailValue}>{goal.description}</span>
+            </div>
+          )}
+          {goal.motivation && (
+            <div className={styles.rowDetailBlock}>
+              <span className={styles.rowDetailLabel}>Motivation</span>
+              <span className={styles.rowDetailValue}>{goal.motivation}</span>
+            </div>
+          )}
+          {goal.notes && (
+            <div className={styles.rowDetailBlock}>
+              <span className={styles.rowDetailLabel}>Notes</span>
+              <span className={styles.rowDetailValue}>{goal.notes}</span>
+            </div>
+          )}
+
+          {goal.status === "active" && (
+            <div className={styles.rowDetailBlock}>
+              <span className={styles.rowDetailLabel}>Progress ({percentage}%)</span>
+              <ProgressStepper goalId={goal.id} current={percentage} />
+            </div>
+          )}
+
+          <div className={styles.rowDetailBlock}>
+            <span className={styles.rowDetailLabel}>Dates</span>
+            <span className={styles.rowDetailValue}>
+              Added {new Date(goal.createdAt).toLocaleDateString()}
+              {new Date(goal.updatedAt).getTime() - new Date(goal.createdAt).getTime() > 60000 && (
+                <> · Updated {new Date(goal.updatedAt).toLocaleDateString()}</>
+              )}
+            </span>
+          </div>
+
+          <div className={styles.rowActionsRight}>
             {goal.status === "active" && (
-              <button
-                type="button"
-                className={styles.editButton}
-                onClick={() => setSearchParams({ complete: goal.id })}
-              >
+              <button type="button" className={styles.editButton} onClick={() => setSearchParams({ complete: goal.id })}>
                 Complete
               </button>
             )}
-            <button
-              className={styles.editButton}
-              onClick={() => setSearchParams({ edit: goal.id })}
-            >
+            <button type="button" className={styles.editButton} onClick={() => setSearchParams({ edit: goal.id })}>
               Edit
             </button>
-            <Form method="post">
+            <Form method="post" style={{ display: "inline" }}>
               <input type="hidden" name="intent" value="delete" />
               <input type="hidden" name="goalId" value={goal.id} />
               <button
@@ -216,47 +280,7 @@ export default function GoalsPage() {
             </Form>
           </div>
         </div>
-        {goal.description && <div className={styles.cardDescription}>{goal.description}</div>}
-        {goal.motivation && <div className={styles.cardMeta}><span className={styles.cardMetaLabel}>Motivation:</span> {goal.motivation}</div>}
-        {goal.notes && <div className={styles.cardNotes}>{goal.notes}</div>}
-        <div className={styles.cardBadges}>
-          {goal.featured && <span className={styles.featuredBadge}>Featured</span>}
-          <span className={styles.proficiency} data-level={goal.priority}>{goal.priority}</span>
-          <span className={styles.proficiency} data-level={goal.status}>{goal.status}</span>
-          {goal.visibility === "private" && (
-            <span className={styles.proficiency} data-level="private">private</span>
-          )}
-          {domainMap.get(goal.domainId)?.visibility === "private" && (
-            <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden by domain</span>
-          )}
-        </div>
-        <div className={styles.progressBar}>
-          <div className={styles.progressFill} style={{ width: `${percentage}%` }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className={styles.progressLabel}>{percentage}%</span>
-          <Form method="post" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-            <input type="hidden" name="intent" value="progress" />
-            <input type="hidden" name="goalId" value={goal.id} />
-            <input
-              type="number"
-              name="percentage"
-              min="0"
-              max="100"
-              defaultValue={percentage}
-              className={styles.input}
-              style={{ width: '60px', padding: '2px 6px', fontSize: '0.75rem' }}
-            />
-            <button type="submit" className={styles.editButton}>Set</button>
-          </Form>
-        </div>
-        <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
-          Added {new Date(goal.createdAt).toLocaleDateString()}
-          {new Date(goal.updatedAt).getTime() - new Date(goal.createdAt).getTime() > 60000 && (
-            <> · Updated {new Date(goal.updatedAt).toLocaleDateString()}</>
-          )}
-        </div>
-      </div>
+      </details>
     );
   }
 
@@ -265,8 +289,8 @@ export default function GoalsPage() {
     return (
       <div className={styles.domainGroup}>
         <h2 className={styles.domainName}>{title}</h2>
-        <div className={styles.cardGrid}>
-          {items.map(renderGoalCard)}
+        <div className={styles.rowList}>
+          {items.map(renderGoalRow)}
         </div>
       </div>
     );
@@ -537,5 +561,55 @@ export default function GoalsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function ProgressStepper({ goalId, current }: { goalId: string; current: number }) {
+  const [value, setValue] = useState<number>(current);
+
+  // Sync when current changes (after successful save)
+  useEffect(() => setValue(current), [current]);
+
+  const clamp = (n: number) => Math.max(0, Math.min(100, n));
+  const snapToTen = (n: number) => Math.round(n / 10) * 10;
+
+  return (
+    <Form method="post" className={styles.progressStepper}>
+      <input type="hidden" name="intent" value="progress" />
+      <input type="hidden" name="goalId" value={goalId} />
+      <button
+        type="button"
+        className={styles.progressStepperBtn}
+        disabled={value <= 0}
+        onClick={() => setValue((v) => clamp(snapToTen(v - 10)))}
+        aria-label="Decrease by 10%"
+      >
+        −10
+      </button>
+      <button
+        type="button"
+        className={styles.progressStepperBtn}
+        disabled={value >= 100}
+        onClick={() => setValue((v) => clamp(snapToTen(v + 10)))}
+        aria-label="Increase by 10%"
+      >
+        +10
+      </button>
+      <input
+        type="number"
+        name="percentage"
+        className={styles.progressStepperInput}
+        min={0}
+        max={100}
+        step={1}
+        value={value}
+        onChange={(e) => setValue(clamp(Number(e.target.value) || 0))}
+        aria-label="Progress percentage"
+      />
+      <span className={styles.rowProgressLabel} aria-hidden="true">%</span>
+      <button type="submit" className={styles.submitButton} style={{ padding: "4px var(--space-md)", fontSize: "0.75rem" }}>
+        Save
+      </button>
+    </Form>
   );
 }
