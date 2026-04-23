@@ -197,3 +197,64 @@
   border-color: var(--color-primary);
   color: var(--color-primary-hover);
 }
+
+/* ============================================================
+   Mobile responsive overrides
+   ============================================================ */
+
+@media (max-width: 640px) {
+  .filterBar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: var(--space-xs);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .filter,
+  .filterActive {
+    flex: 0 0 auto;
+  }
+
+  .card {
+    padding: var(--space-md);
+  }
+
+  .cardHeader {
+    gap: var(--space-xs);
+  }
+
+  .meta {
+    margin-left: 0;
+    width: 100%;
+    order: 10; /* push date to end of header line */
+  }
+
+  .cardMeta {
+    flex-wrap: wrap;
+    gap: var(--space-xs) var(--space-sm);
+  }
+
+  .message {
+    font-size: 0.875rem;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .statusForm {
+    flex-direction: column;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .statusForm select,
+  .statusForm input {
+    width: 100%;
+  }
+
+  .githubButton {
+    width: 100%;
+  }
+}

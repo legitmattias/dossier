@@ -141,3 +141,31 @@
   text-transform: capitalize;
   font-weight: 500;
 }
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .statCard {
+    padding: var(--space-md);
+  }
+
+  .statNumber {
+    font-size: 1.75rem;
+  }
+
+  .statLabel {
+    font-size: 0.6875rem;
+  }
+
+  .goalItem {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+}

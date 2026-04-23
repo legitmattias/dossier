@@ -200,3 +200,42 @@
   padding: var(--space-3xl);
   color: var(--color-text-muted);
 }
+
+@media (max-width: 640px) {
+  .container {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .header {
+    margin-bottom: var(--space-xl);
+  }
+
+  .name {
+    font-size: 1.75rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.125rem;
+  }
+
+  .goalItem,
+  .projectItem {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .projectHeader {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .projectDetails {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
+  }
+
+  .skillGrid {
+    gap: var(--space-xs);
+  }
+}

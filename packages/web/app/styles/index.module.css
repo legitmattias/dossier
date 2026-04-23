@@ -88,3 +88,35 @@
   color: var(--color-text-faint);
   letter-spacing: 0.02em;
 }
+
+@media (max-width: 640px) {
+  .hero {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .title {
+    font-size: 2.5rem;
+  }
+
+  .subtitle {
+    font-size: 1.0625rem;
+  }
+
+  .description {
+    font-size: 0.9375rem;
+    margin-top: var(--space-sm);
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 320px;
+    margin-top: var(--space-lg);
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
