@@ -3,7 +3,7 @@ import { application } from "@dossier/core";
 import type { Container } from "../container.js";
 import { withErrorHandler } from "../helpers/error-handler.js";
 import { resolveDomainId, resolveGoalId } from "../helpers/resolve.js";
-import { info, table } from "../helpers/output.js";
+import { info, success, table } from "../helpers/output.js";
 
 export function registerGoalsCommand(
   program: Command,
@@ -11,12 +11,13 @@ export function registerGoalsCommand(
 ): void {
   program
     .command("goals [name]")
-    .description("List learning goals, or show detail for a specific goal")
+    .description("List learning goals, show detail, or demote back to an interest")
     .option("--active", "Show only active goals")
     .option("--paused", "Show only paused goals")
     .option("--completed", "Show only completed goals")
     .option("-d, --domain <domain>", "Filter by domain")
     .option("-s, --sort <by>", "Sort by: name (default), added, updated")
+    .option("--demote", "Demote this goal back to an interest (requires name)")
     .action(
       withErrorHandler(async (name: string | undefined, opts: {
         active?: boolean;
@@ -24,11 +25,24 @@ export function registerGoalsCommand(
         completed?: boolean;
         domain?: string;
         sort?: string;
+        demote?: boolean;
       }) => {
         const container = getContainer();
         const profile = await container.profileRepository.load();
         if (!profile) {
           throw new application.ProfileNotFoundError();
+        }
+
+        // Demote action
+        if (opts.demote) {
+          if (!name) {
+            info("Provide a goal name to demote, e.g. `dossier goals 'Learn Rust' --demote`.");
+            return;
+          }
+          const goalId = resolveGoalId(profile, name);
+          const result = await application.demoteGoal(container, { goalId });
+          success(`Demoted goal '${name}' to interest: ${result.interest.name}`);
+          return;
         }
 
         // Detail view for a single goal

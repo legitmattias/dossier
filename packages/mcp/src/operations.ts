@@ -21,6 +21,7 @@ export interface DossierOperations {
   listGoals(input?: { status?: string }): Promise<{ goals: readonly application.GoalOutput[] }>;
   updateGoalProgress(input: application.UpdateGoalProgressInput): Promise<application.UpdateGoalProgressOutput>;
   completeGoal(input: application.CompleteGoalInput): Promise<application.CompleteGoalOutput>;
+  demoteGoal(input: application.DemoteGoalInput): Promise<application.DemoteGoalOutput>;
 
   // Interests
   addInterest(input: application.AddInterestInput): Promise<application.AddInterestOutput>;

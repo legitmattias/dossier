@@ -165,6 +165,13 @@ profileRoutes.post("/goals/:id/complete", requireAuth, requireScope("write"), as
   return c.json(result);
 });
 
+// POST /profile/goals/:id/demote — demote goal back to interest
+profileRoutes.post("/goals/:id/demote", requireAuth, requireScope("write"), async (c) => {
+  const deps = getDeps(c);
+  const result = await application.demoteGoal(deps, { goalId: c.req.param("id") });
+  return c.json(result);
+});
+
 // DELETE /profile/goals/:id
 profileRoutes.delete("/goals/:id", requireAuth, requireScope("write"), async (c) => {
   const deps = getDeps(c);

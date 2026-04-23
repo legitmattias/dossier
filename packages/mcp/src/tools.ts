@@ -251,6 +251,25 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
   );
 
   server.registerTool(
+    "dossier_demote_goal",
+    {
+      title: "Demote Goal to Interest",
+      description:
+        "Demote a learning goal back to an interest — removes the goal and creates an interest with the same name, domain, description, and notes. " +
+        "Use when the user decides they're no longer actively committed to learning something but still want to track the topic. " +
+        "Priority, status, progress, resources, motivation, and targetDate are discarded (interests don't have these fields). " +
+        "Use dossier_search to find the goal ID first.",
+      inputSchema: z.object({
+        goalId: z.string().describe("Goal ID to demote"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.demoteGoal(input);
+      return ok(`Demoted goal to interest: ${result.interest.name}`);
+    }),
+  );
+
+  server.registerTool(
     "dossier_edit_goal",
     {
       title: "Edit Goal",

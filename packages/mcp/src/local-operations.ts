@@ -74,6 +74,10 @@ export class LocalOperations implements DossierOperations {
     return application.completeGoal(this.deps, input);
   }
 
+  async demoteGoal(input: application.DemoteGoalInput) {
+    return application.demoteGoal(this.deps, input);
+  }
+
   async updateGoal(input: application.UpdateGoalInput) {
     return application.updateGoal(this.readDeps, input);
   }

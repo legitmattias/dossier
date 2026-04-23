@@ -92,6 +92,10 @@ export class RemoteOperations implements DossierOperations {
     return this.api<application.CompleteGoalOutput>(`/profile/goals/${goalId}/complete`, { method: "POST", body });
   }
 
+  async demoteGoal(input: application.DemoteGoalInput) {
+    return this.api<application.DemoteGoalOutput>(`/profile/goals/${input.goalId}/demote`, { method: "POST" });
+  }
+
   async updateGoal(input: application.UpdateGoalInput) {
     const { goalId, ...body } = input;
     return this.api<application.UpdateGoalOutput>(`/profile/goals/${goalId}`, { method: "PUT", body });
