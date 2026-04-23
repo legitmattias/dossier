@@ -5,6 +5,48 @@ All notable changes to Dossier are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Feedback channel**: new `dossier_submit_feedback` MCP tool lets AI agents
+  report concrete friction and bugs with explicit user confirmation. Backed by a
+  new `feedback` table, `POST/GET/PATCH /feedback` API routes, and a
+  `/dashboard/feedback` triage page with per-item "Forward to GitHub Issues"
+  action. Configurable via `GITHUB_TOKEN` + `GITHUB_FEEDBACK_REPO` env vars.
+- **Goal schema parity**: `add_goal` now accepts `motivation` and `status`;
+  `edit_goal` now accepts `targetDate`. Eliminates the previous add-then-edit
+  double-call pattern for creating a goal with a motivation.
+- **Project schema completeness**: `add_project` / `update_project` now expose
+  `startDate`, `endDate`, and a `skillNames[]` parameter that auto-resolves to
+  skill IDs by exact-match name (errors on unresolved or ambiguous names).
+  Eliminates the N-round-trip skill-lookup workflow when bulk-linking skills.
+- **Batch search**: `dossier_search` now accepts either `query` (single) or
+  `queries: string[]` (batch); single-call resolution of many skill names.
+- **List tool IDs**: `dossier_list_skills`, `dossier_list_goals`, and
+  `dossier_list_projects` now include `[id: ...]` on every line so agents can
+  drive follow-up calls without a second search round-trip.
+- **Exporter timestamps**: Markdown export gains an `Updated` column on skill
+  tables and a profile-level "Last updated" header; Claude-md export gains
+  the same header and an `updated YYYY-MM-DD` on active goals.
+- **Skill `proficiencyLabel` always present** in REST output (`GET /profile`,
+  `/profile/skills`, `/u/:username`, POST/PUT returns) — emitted as `null`
+  when unset, the string value when set. Lets downstream integrations rely on
+  the field's presence. MCP `dossier_search` now renders the custom label too,
+  matching `dossier_list_skills`.
+
+### Changed
+
+- `docker-compose.prod.yml` uses `${DOSSIER_IMAGE_PREFIX:-ghcr.io/your-org}`
+  so forks can override the image namespace without editing the compose file.
+- `.github/workflows/deploy.yml` builds against
+  `ghcr.io/${{ github.repository_owner }}/*` instead of a hardcoded org.
+
+### Fixed
+
+- Web "Saving…" button no longer flashes briefly during post-submit
+  revalidation on skills/goals/interests/projects edit forms.
+
 ## [0.1.0] — 2026-04-18
 
 First stable release. Dossier is now production-ready for multi-user deployment,
@@ -65,4 +107,4 @@ operators can tell exactly which build is running.
 
 The public REST routes are not yet namespaced under `/api/v1`. Promotion to a
 versioned contract is deferred to a later release — existing integrations
-(CuriOS, Jobhaul) should treat the current surface as unstable until then.
+should treat the current surface as unstable until then.
