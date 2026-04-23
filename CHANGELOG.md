@@ -37,6 +37,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- **Breaking**: export format key `claude` renamed to `llm-md` to avoid
+  collision with Claude Code's `CLAUDE.md` project-instructions file and to
+  accurately reflect that Dossier is agent/LLM-agnostic. Affects the `dossier
+  export --format` flag, the MCP `dossier_export` tool's `format` enum, and
+  the REST `GET /profile/export?format=` query parameter. The `claude-md`
+  alias is also removed. Internal exporter class renamed
+  `ClaudeMdExporter` → `LlmMdExporter`.
 - `docker-compose.prod.yml` uses `${DOSSIER_IMAGE_PREFIX:-ghcr.io/your-org}`
   so forks can override the image namespace without editing the compose file.
 - `.github/workflows/deploy.yml` builds against

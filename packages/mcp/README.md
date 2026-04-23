@@ -72,7 +72,7 @@ Read-only data accessible to MCP clients.
 | URI | Description |
 |---|---|
 | `dossier://profile` | Full profile as JSON |
-| `dossier://profile/summary` | LLM-optimized summary (CLAUDE.md format) |
+| `dossier://profile/summary` | Profile summary as markdown structured for LLM context |
 | `dossier://skills` | All skills |
 | `dossier://skills/{domainSlug}` | Skills filtered by domain |
 | `dossier://goals` | All learning goals |

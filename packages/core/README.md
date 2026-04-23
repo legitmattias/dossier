@@ -8,7 +8,7 @@ Clean architecture with three layers:
 
 - **Domain** — entities (Skill, Goal, Interest, Project, Profile), value objects (Proficiency, Slug, branded IDs), domain errors
 - **Application** — use cases, DTOs, ports (repository/exporter interfaces), validation helpers
-- **Infrastructure** — Zod validation, file repository, export formatters (JSON, Markdown, CLAUDE.md, plain text)
+- **Infrastructure** — Zod validation, file repository, export formatters (JSON, Markdown, LLM context markdown, plain text)
 
 ## Key Patterns
 

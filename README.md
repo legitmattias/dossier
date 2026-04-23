@@ -16,7 +16,7 @@ Every LLM session starts cold. Dossier provides persistent context about what yo
 - **Interests** — topics on your radar for future exploration
 - **Domain-agnostic** — software, languages, music, business — any knowledge domain
 - **Per-entity visibility** — public/private control on every item
-- **Multiple export formats** — JSON, Markdown, CLAUDE.md, plain text
+- **Multiple export formats** — JSON, Markdown, LLM context markdown, plain text
 - **MCP integration** — native Model Context Protocol server for AI tools
 - **REST API** — JWT + API key auth, PostgreSQL-backed
 - **Web dashboard** — manage your profile with a Remix web UI

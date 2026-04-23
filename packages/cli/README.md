@@ -32,8 +32,8 @@ dossier project --list
 
 # Export
 dossier export                        # JSON (default)
-dossier export --format claude        # CLAUDE.md format
-dossier export --format markdown      # Markdown
+dossier export --format llm-md        # Markdown structured for LLM context
+dossier export --format markdown      # General-purpose Markdown (human-facing)
 ```
 
 ## Storage

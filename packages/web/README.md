@@ -11,7 +11,7 @@ Web dashboard for Dossier — manage your knowledge profile through a browser UI
 - **Interests** — add, remove, promote to learning goals
 - **Profile settings** — edit bio, preferred language, custom instructions
 - **API key management** — generate and revoke API keys
-- **Export preview** — view your CLAUDE.md export
+- **Export preview** — view your LLM context markdown export
 - **Public profiles** — shareable profile pages at `/u/:username`
 
 ## Tech Stack
