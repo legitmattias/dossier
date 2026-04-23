@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Form, NavLink, Outlet, useLoaderData } from "@remix-run/react";
+import { Form, NavLink, Outlet, useLoaderData, useLocation } from "@remix-run/react";
 
 import { api } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
@@ -14,10 +15,60 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function DashboardLayout() {
   const { username } = useLoaderData<typeof loader>();
+  const location = useLocation();
+  const [navOpen, setNavOpen] = useState(false);
+
+  // Close drawer on route change
+  useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
+
+  // Lock body scroll while drawer is open
+  useEffect(() => {
+    if (navOpen) document.body.classList.add("nav-locked");
+    else document.body.classList.remove("nav-locked");
+    return () => document.body.classList.remove("nav-locked");
+  }, [navOpen]);
+
+  // Close drawer on Escape
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setNavOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [navOpen]);
 
   return (
     <div className={styles.layout}>
-      <aside className={styles.sidebar}>
+      {/* Mobile header — hidden on desktop via CSS */}
+      <header className={styles.mobileHeader}>
+        <button
+          type="button"
+          aria-label={navOpen ? "Close navigation" : "Open navigation"}
+          aria-expanded={navOpen}
+          aria-controls="dossier-sidebar"
+          className={styles.hamburger}
+          onClick={() => setNavOpen((v) => !v)}
+        >
+          <span className={navOpen ? styles.hamburgerBarsOpen : styles.hamburgerBars} />
+        </button>
+        <NavLink to="/dashboard" className={styles.mobileLogo}>Dossier</NavLink>
+        <span className={styles.mobileUsername}>@{username}</span>
+      </header>
+
+      {/* Backdrop — only visible while drawer is open on mobile */}
+      <div
+        className={navOpen ? styles.backdropOpen : styles.backdrop}
+        onClick={() => setNavOpen(false)}
+        aria-hidden="true"
+      />
+
+      <aside
+        id="dossier-sidebar"
+        className={navOpen ? styles.sidebarOpen : styles.sidebar}
+      >
         <NavLink to="/dashboard" className={styles.logo}>Dossier</NavLink>
         <p className={styles.username}>@{username}</p>
 

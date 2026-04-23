@@ -3,6 +3,10 @@
   min-height: 100vh;
 }
 
+/* ============================================================
+   Sidebar (desktop: always visible, mobile: slide-in drawer)
+   ============================================================ */
+
 .sidebar {
   width: 260px;
   background: var(--color-bg-deep);
@@ -14,6 +18,11 @@
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.sidebarOpen {
+  composes: sidebar;
 }
 
 .logo {
@@ -124,6 +133,7 @@
   padding: var(--space-xl) var(--space-2xl);
   max-width: calc(var(--max-width) - 260px);
   min-height: 100vh;
+  min-width: 0; /* allow child grids/tables to shrink */
 }
 
 .pageTitle {
@@ -131,4 +141,209 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: var(--space-lg);
+}
+
+/* ============================================================
+   Mobile header + hamburger (hidden on desktop)
+   ============================================================ */
+
+.mobileHeader,
+.hamburger,
+.hamburgerBars,
+.hamburgerBarsOpen,
+.mobileLogo,
+.mobileUsername,
+.backdrop,
+.backdropOpen {
+  display: none;
+}
+
+/* ============================================================
+   Tablet + mobile (<= 1024px): sidebar becomes drawer
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .mobileHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--color-bg-deep);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 60;
+  }
+
+  .mobileLogo {
+    display: inline-block;
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-decoration: none;
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+  }
+
+  .mobileLogo:hover {
+    text-decoration: none;
+    opacity: 0.85;
+  }
+
+  .mobileUsername {
+    display: inline-block;
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-faint);
+  }
+
+  .hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-left: calc(-1 * var(--space-xs));
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all var(--transition-base);
+  }
+
+  .hamburger:hover,
+  .hamburger:focus-visible {
+    border-color: var(--color-primary);
+    background: var(--color-primary-muted);
+    outline: none;
+  }
+
+  .hamburgerBars,
+  .hamburgerBarsOpen {
+    display: block;
+    position: relative;
+    width: 18px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+    transition: transform 0.2s ease, background 0.15s ease;
+  }
+
+  .hamburgerBars::before,
+  .hamburgerBars::after,
+  .hamburgerBarsOpen::before,
+  .hamburgerBarsOpen::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 18px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+    transition: transform 0.2s ease, top 0.2s ease;
+  }
+
+  .hamburgerBars::before { top: -6px; }
+  .hamburgerBars::after  { top: 6px; }
+
+  /* Open state: morph to X */
+  .hamburgerBarsOpen {
+    background: transparent;
+  }
+
+  .hamburgerBarsOpen::before {
+    top: 0;
+    transform: rotate(45deg);
+  }
+
+  .hamburgerBarsOpen::after {
+    top: 0;
+    transform: rotate(-45deg);
+  }
+
+  .sidebar,
+  .sidebarOpen {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    height: 100vh;
+    width: 280px;
+    max-width: 85vw;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .backdrop,
+  .backdropOpen {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+    z-index: 150;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .backdropOpen {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .main {
+    max-width: 100%;
+    padding: var(--space-lg) var(--space-lg);
+    min-height: 0; /* sticky header owns top offset; no double-100vh stacking */
+  }
+
+  .logo {
+    /* Hide the in-drawer logo since the sticky header already has one */
+    display: none;
+  }
+
+  .username {
+    margin-top: var(--space-md);
+  }
+}
+
+/* ============================================================
+   Phones (<= 640px): tighter padding, denser spacing
+   ============================================================ */
+
+@media (max-width: 640px) {
+  .main {
+    padding: var(--space-md) var(--space-md);
+  }
+
+  .mobileHeader {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .mobileUsername {
+    /* Hide on very narrow to avoid wrap */
+    display: none;
+  }
+
+  .pageTitle {
+    font-size: 1.25rem;
+  }
 }

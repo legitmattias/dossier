@@ -8,6 +8,12 @@
   padding: 0;
 }
 
+:global(html) {
+  /* Solid base so any area outside the body gradient (e.g., sticky-header
+     offset when content is short) still matches the dark theme. */
+  background: #0f172a;
+}
+
 :global(:root) {
   /* Colors — Dark theme */
   --color-bg: #0f172a;
@@ -70,6 +76,10 @@
   --transition-spring: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   --max-width: 1200px;
+
+  /* Breakpoints (as values — use with @media in modules) */
+  --bp-mobile: 640px;
+  --bp-tablet: 1024px;
 }
 
 .body {
@@ -97,4 +107,16 @@
 :global(::selection) {
   background: rgba(99, 102, 241, 0.3);
   color: #f1f5f9;
+}
+
+/* Prevent body scroll when a mobile drawer is open */
+:global(body.nav-locked) {
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  :global(html) {
+    /* Subtle scaling for typography density on phones without breaking rem-based spacing */
+    font-size: 15.5px;
+  }
 }
