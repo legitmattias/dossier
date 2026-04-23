@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
+import { Form, useActionData, useLoaderData, useNavigation, useSearchParams, useSubmit } from "@remix-run/react";
 
+import { ConfirmDialog } from "~/components/ConfirmDialog";
+import { Toast, type ToastType } from "~/components/Toast";
 import { api, ApiError } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
+import {
+  FEATURED_TOOLTIP,
+  proficiencyTooltip,
+  VISIBILITY_DOMAIN_PRIVATE_TOOLTIP,
+  VISIBILITY_PRIVATE_TOOLTIP,
+} from "~/lib/tooltips";
 import styles from "~/styles/skills.module.css";
 
 interface Skill {
@@ -96,7 +104,7 @@ export async function action({ request }: ActionFunctionArgs) {
         method: "DELETE",
         token,
       });
-      return json({ ok: true });
+      return json({ ok: true, toast: "Skill removed" });
     }
 
     return json({ error: "Unknown action" }, { status: 400 });
@@ -123,6 +131,7 @@ export default function SkillsPage() {
   }
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const submit = useSubmit();
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdd = searchParams.get("add") === "true";
   const editSkillId = searchParams.get("edit");
@@ -136,6 +145,17 @@ export default function SkillsPage() {
   const [sortBy, setSortBy] = useState("name");
   const [addDomainId, setAddDomainId] = useState("");
   const [editDomainId, setEditDomainId] = useState(editSkill?.domainId ?? "");
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+
+  useEffect(() => {
+    if (!actionData) return;
+    if ("error" in actionData && actionData.error) {
+      setToast({ message: actionData.error, type: "error" });
+    } else if ("toast" in actionData && actionData.toast) {
+      setToast({ message: actionData.toast, type: "success" });
+    }
+  }, [actionData]);
 
   // Sync edit domain state when switching skills
   useEffect(() => {
@@ -280,7 +300,9 @@ export default function SkillsPage() {
                         </svg>
                         <div className={styles.rowMain}>
                           <div className={styles.rowTitle}>
-                            {skill.featured && <span className={styles.rowStar} aria-label="Featured">★</span>}
+                            {skill.featured && (
+                              <span className={styles.rowStar} aria-label="Featured" title={FEATURED_TOOLTIP}>★</span>
+                            )}
                             <span className={styles.rowName}>{skill.name}</span>
                           </div>
                           <div className={styles.rowMeta}>
@@ -294,12 +316,18 @@ export default function SkillsPage() {
                           </div>
                         </div>
                         <div className={styles.rowBadges}>
-                          <span className={styles.proficiency} data-level={skill.proficiency}>{displayProf}</span>
+                          <span
+                            className={styles.proficiency}
+                            data-level={skill.proficiency}
+                            title={proficiencyTooltip(skill.proficiency, displayProf)}
+                          >
+                            {displayProf}
+                          </span>
                           {skill.visibility === "private" && (
-                            <span className={styles.proficiency} data-level="private">private</span>
+                            <span className={styles.proficiency} data-level="private" title={VISIBILITY_PRIVATE_TOOLTIP}>private</span>
                           )}
                           {domain?.visibility === "private" && (
-                            <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden</span>
+                            <span className={styles.proficiency} data-level="private" title={VISIBILITY_DOMAIN_PRIVATE_TOOLTIP}>hidden</span>
                           )}
                         </div>
                       </summary>
@@ -342,22 +370,18 @@ export default function SkillsPage() {
                             type="button"
                             className={styles.editButton}
                             onClick={() => setSearchParams({ edit: skill.id })}
+                            title="Edit skill details"
                           >
                             Edit
                           </button>
-                          <Form method="post" style={{ display: "inline" }}>
-                            <input type="hidden" name="intent" value="delete" />
-                            <input type="hidden" name="skillId" value={skill.id} />
-                            <button
-                              type="submit"
-                              className={styles.deleteButton}
-                              onClick={(e) => {
-                                if (!confirm(`Delete skill "${skill.name}"?`)) e.preventDefault();
-                              }}
-                            >
-                              Remove
-                            </button>
-                          </Form>
+                          <button
+                            type="button"
+                            className={styles.deleteButton}
+                            onClick={() => setDeleteConfirm({ id: skill.id, name: skill.name })}
+                            title="Permanently remove this skill"
+                          >
+                            Remove
+                          </button>
                         </div>
                       </div>
                     </details>
@@ -568,6 +592,31 @@ export default function SkillsPage() {
             </Form>
           </div>
         </div>
+      )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title="Delete skill?"
+        message={
+          <p>
+            <strong>"{deleteConfirm?.name}"</strong> will be permanently removed from your profile.
+          </p>
+        }
+        confirmLabel="Delete"
+        variant="danger"
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={() => {
+          if (!deleteConfirm) return;
+          const form = new FormData();
+          form.append("intent", "delete");
+          form.append("skillId", deleteConfirm.id);
+          submit(form, { method: "post" });
+          setDeleteConfirm(null);
+        }}
+      />
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
       )}
     </div>
   );

@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
+import { Form, useActionData, useLoaderData, useNavigation, useSearchParams, useSubmit } from "@remix-run/react";
+
+import { ConfirmDialog } from "~/components/ConfirmDialog";
+import { Toast, type ToastType } from "~/components/Toast";
 
 import { api, ApiError } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
+import {
+  FEATURED_TOOLTIP,
+  VISIBILITY_DOMAIN_PRIVATE_TOOLTIP,
+  VISIBILITY_PRIVATE_TOOLTIP,
+} from "~/lib/tooltips";
 import styles from "~/styles/skills.module.css";
 
 interface Interest {
@@ -78,7 +86,7 @@ export async function action({ request }: ActionFunctionArgs) {
         method: "DELETE",
         token,
       });
-      return json({ ok: true });
+      return json({ ok: true, toast: "Interest removed" });
     }
 
     if (intent === "promote") {
@@ -87,7 +95,7 @@ export async function action({ request }: ActionFunctionArgs) {
         token,
         body: {},
       });
-      return json({ ok: true });
+      return json({ ok: true, toast: "Promoted to goal" });
     }
 
     return json({ error: "Unknown action" }, { status: 400 });
@@ -103,6 +111,7 @@ export default function InterestsPage() {
   const { interests, domains } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const submit = useSubmit();
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdd = searchParams.get("add") === "true";
   const editInterest = interests.find((i) => i.id === searchParams.get("edit"));
@@ -112,6 +121,8 @@ export default function InterestsPage() {
   const [filterFeatured, setFilterFeatured] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
   const [sortBy, setSortBy] = useState("name");
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   useEffect(() => {
     if (navigation.state === "idle" && actionData && "ok" in actionData) {
@@ -120,6 +131,15 @@ export default function InterestsPage() {
       return () => clearTimeout(timer);
     }
   }, [navigation.state, actionData]);
+
+  useEffect(() => {
+    if (!actionData) return;
+    if ("error" in actionData && actionData.error) {
+      setToast({ message: actionData.error, type: "error" });
+    } else if ("toast" in actionData && actionData.toast) {
+      setToast({ message: actionData.toast, type: "success" });
+    }
+  }, [actionData]);
 
   const domainMap = new Map(domains.map((d) => [d.id, d]));
 
@@ -195,7 +215,9 @@ export default function InterestsPage() {
                   </svg>
                   <div className={styles.rowMain}>
                     <div className={styles.rowTitle}>
-                      {interest.featured && <span className={styles.rowStar} aria-label="Featured">★</span>}
+                      {interest.featured && (
+                        <span className={styles.rowStar} aria-label="Featured" title={FEATURED_TOOLTIP}>★</span>
+                      )}
                       <span className={styles.rowName}>{interest.name}</span>
                     </div>
                     <div className={styles.rowMeta}>
@@ -204,10 +226,10 @@ export default function InterestsPage() {
                   </div>
                   <div className={styles.rowBadges}>
                     {interest.visibility === "private" && (
-                      <span className={styles.proficiency} data-level="private">private</span>
+                      <span className={styles.proficiency} data-level="private" title={VISIBILITY_PRIVATE_TOOLTIP}>private</span>
                     )}
                     {domain?.visibility === "private" && (
-                      <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden</span>
+                      <span className={styles.proficiency} data-level="private" title={VISIBILITY_DOMAIN_PRIVATE_TOOLTIP}>hidden</span>
                     )}
                   </div>
                 </summary>
@@ -239,28 +261,26 @@ export default function InterestsPage() {
                     <Form method="post" style={{ display: "inline" }}>
                       <input type="hidden" name="intent" value="promote" />
                       <input type="hidden" name="interestId" value={interest.id} />
-                      <button type="submit" className={styles.editButton}>Promote to Goal</button>
+                      <button type="submit" className={styles.editButton} title="Convert to a learning goal">
+                        Promote to Goal
+                      </button>
                     </Form>
                     <button
                       type="button"
                       className={styles.editButton}
                       onClick={() => setSearchParams({ edit: interest.id })}
+                      title="Edit interest details"
                     >
                       Edit
                     </button>
-                    <Form method="post" style={{ display: "inline" }}>
-                      <input type="hidden" name="intent" value="delete" />
-                      <input type="hidden" name="interestId" value={interest.id} />
-                      <button
-                        type="submit"
-                        className={styles.deleteButton}
-                        onClick={(e) => {
-                          if (!confirm(`Delete interest "${interest.name}"?`)) e.preventDefault();
-                        }}
-                      >
-                        Remove
-                      </button>
-                    </Form>
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      onClick={() => setDeleteConfirm({ id: interest.id, name: interest.name })}
+                      title="Permanently remove this interest"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               </details>
@@ -376,6 +396,31 @@ export default function InterestsPage() {
             </Form>
           </div>
         </div>
+      )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title="Delete interest?"
+        message={
+          <p>
+            <strong>"{deleteConfirm?.name}"</strong> will be removed from your profile.
+          </p>
+        }
+        confirmLabel="Delete"
+        variant="danger"
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={() => {
+          if (!deleteConfirm) return;
+          const form = new FormData();
+          form.append("intent", "delete");
+          form.append("interestId", deleteConfirm.id);
+          submit(form, { method: "post" });
+          setDeleteConfirm(null);
+        }}
+      />
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
       )}
     </div>
   );

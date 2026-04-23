@@ -1,10 +1,19 @@
 import { useEffect, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
+import { Form, useActionData, useLoaderData, useNavigation, useSearchParams, useSubmit } from "@remix-run/react";
 
+import { ConfirmDialog } from "~/components/ConfirmDialog";
+import { Toast, type ToastType } from "~/components/Toast";
 import { api, ApiError } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
+import {
+  FEATURED_TOOLTIP,
+  GOAL_STATUS_TOOLTIPS,
+  PRIORITY_TOOLTIPS,
+  VISIBILITY_DOMAIN_PRIVATE_TOOLTIP,
+  VISIBILITY_PRIVATE_TOOLTIP,
+} from "~/lib/tooltips";
 import styles from "~/styles/skills.module.css";
 
 interface Goal {
@@ -74,7 +83,7 @@ export async function action({ request }: ActionFunctionArgs) {
           note: String(form.get("note") ?? "") || undefined,
         },
       });
-      return json({ ok: true });
+      return json({ ok: true, toast: "Progress saved" });
     }
 
     if (intent === "update") {
@@ -112,12 +121,12 @@ export async function action({ request }: ActionFunctionArgs) {
         method: "POST",
         token,
       });
-      return json({ ok: true });
+      return json({ ok: true, toast: "Demoted to interest" });
     }
 
     if (intent === "delete") {
       await api(`/profile/goals/${form.get("goalId")}`, { method: "DELETE", token });
-      return json({ ok: true });
+      return json({ ok: true, toast: "Goal removed" });
     }
 
     return json({ error: "Unknown action" }, { status: 400 });
@@ -133,6 +142,7 @@ export default function GoalsPage() {
   const { goals, domains } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const submit = useSubmit();
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdd = searchParams.get("add") === "true";
   const editId = searchParams.get("edit");
@@ -142,6 +152,9 @@ export default function GoalsPage() {
   const [filterFeatured, setFilterFeatured] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
   const [sortBy, setSortBy] = useState("name");
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [demoteConfirm, setDemoteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   useEffect(() => {
     if (navigation.state === "idle" && actionData && "ok" in actionData) {
@@ -150,6 +163,15 @@ export default function GoalsPage() {
       return () => clearTimeout(timer);
     }
   }, [navigation.state, actionData]);
+
+  useEffect(() => {
+    if (!actionData) return;
+    if ("error" in actionData && actionData.error) {
+      setToast({ message: actionData.error, type: "error" });
+    } else if ("toast" in actionData && actionData.toast) {
+      setToast({ message: actionData.toast, type: "success" });
+    }
+  }, [actionData]);
 
   const filteredGoals = goals.filter((g) => {
     if (filterPriority && g.priority !== filterPriority) return false;
@@ -191,13 +213,15 @@ export default function GoalsPage() {
           </svg>
           <div className={styles.rowMain}>
             <div className={styles.rowTitle}>
-              {goal.featured && <span className={styles.rowStar} aria-label="Featured">★</span>}
+              {goal.featured && (
+                <span className={styles.rowStar} aria-label="Featured" title={FEATURED_TOOLTIP}>★</span>
+              )}
               <span className={styles.rowName}>{goal.name}</span>
             </div>
             <div className={styles.rowMeta}>
               <span>{domain?.name ?? goal.domainId}</span>
               {goal.status !== "completed" && goal.status !== "abandoned" && (
-                <span className={styles.rowProgressInline}>
+                <span className={styles.rowProgressInline} title={`Progress: ${percentage}%`}>
                   <span className={styles.rowMetaSep} />
                   <div className={styles.rowProgressBar}>
                     <div className={styles.rowProgressFill} style={{ width: `${percentage}%` }} />
@@ -208,13 +232,25 @@ export default function GoalsPage() {
             </div>
           </div>
           <div className={styles.rowBadges}>
-            <span className={styles.proficiency} data-level={goal.priority}>{goal.priority}</span>
-            <span className={styles.proficiency} data-level={goal.status}>{goal.status}</span>
+            <span
+              className={styles.proficiency}
+              data-level={goal.priority}
+              title={PRIORITY_TOOLTIPS[goal.priority] ?? goal.priority}
+            >
+              {goal.priority}
+            </span>
+            <span
+              className={styles.proficiency}
+              data-level={goal.status}
+              title={GOAL_STATUS_TOOLTIPS[goal.status] ?? goal.status}
+            >
+              {goal.status}
+            </span>
             {goal.visibility === "private" && (
-              <span className={styles.proficiency} data-level="private">private</span>
+              <span className={styles.proficiency} data-level="private" title={VISIBILITY_PRIVATE_TOOLTIP}>private</span>
             )}
             {domainPrivate && (
-              <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden</span>
+              <span className={styles.proficiency} data-level="private" title={VISIBILITY_DOMAIN_PRIVATE_TOOLTIP}>hidden</span>
             )}
           </div>
         </summary>
@@ -258,26 +294,31 @@ export default function GoalsPage() {
 
           <div className={styles.rowActionsRight}>
             {goal.status === "active" && (
-              <button type="button" className={styles.editButton} onClick={() => setSearchParams({ complete: goal.id })}>
+              <button
+                type="button"
+                className={styles.editButton}
+                onClick={() => setSearchParams({ complete: goal.id })}
+                title="Mark this goal complete and create a skill from it"
+              >
                 Complete
               </button>
             )}
-            <button type="button" className={styles.editButton} onClick={() => setSearchParams({ edit: goal.id })}>
+            <button
+              type="button"
+              className={styles.editButton}
+              onClick={() => setSearchParams({ edit: goal.id })}
+              title="Edit goal details"
+            >
               Edit
             </button>
-            <Form method="post" style={{ display: "inline" }}>
-              <input type="hidden" name="intent" value="delete" />
-              <input type="hidden" name="goalId" value={goal.id} />
-              <button
-                type="submit"
-                className={styles.deleteButton}
-                onClick={(e) => {
-                  if (!confirm(`Delete goal "${goal.name}"?`)) e.preventDefault();
-                }}
-              >
-                Remove
-              </button>
-            </Form>
+            <button
+              type="button"
+              className={styles.deleteButton}
+              onClick={() => setDeleteConfirm({ id: goal.id, name: goal.name })}
+              title="Permanently remove this goal"
+            >
+              Remove
+            </button>
           </div>
         </div>
       </details>
@@ -539,26 +580,73 @@ export default function GoalsPage() {
               </div>
             </Form>
 
-            <Form
-              method="post"
-              className={styles.form}
+            <div
               style={{ marginTop: "var(--space-md)", paddingTop: "var(--space-md)", borderTop: "1px solid var(--color-border)" }}
-              onSubmit={(e) => {
-                if (!confirm(
-                  `Demote "${editGoal.name}" to an interest?\n\nThis removes the goal and creates an interest with the same name, domain, description, and notes. Priority, status, progress, resources, motivation, and target date will be discarded.`,
-                )) {
-                  e.preventDefault();
-                }
-              }}
             >
-              <input type="hidden" name="intent" value="demote" />
-              <input type="hidden" name="goalId" value={editGoal.id} />
-              <button type="submit" className={styles.cancelButton} disabled={isSubmitting}>
+              <button
+                type="button"
+                className={styles.cancelButton}
+                disabled={isSubmitting}
+                onClick={() => setDemoteConfirm({ id: editGoal.id, name: editGoal.name })}
+                title="Convert this goal back to an interest"
+              >
                 Demote to Interest
               </button>
-            </Form>
+            </div>
           </div>
         </div>
+      )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title="Delete goal?"
+        message={
+          <p>
+            <strong>"{deleteConfirm?.name}"</strong> will be permanently removed along with its progress history. This cannot be undone.
+          </p>
+        }
+        confirmLabel="Delete"
+        variant="danger"
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={() => {
+          if (!deleteConfirm) return;
+          const form = new FormData();
+          form.append("intent", "delete");
+          form.append("goalId", deleteConfirm.id);
+          submit(form, { method: "post" });
+          setDeleteConfirm(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={!!demoteConfirm}
+        title="Demote to interest?"
+        message={
+          <>
+            <p>
+              <strong>"{demoteConfirm?.name}"</strong> will be converted to an interest.
+            </p>
+            <p style={{ marginTop: "var(--space-sm)" }}>
+              Preserved: name, domain, description, notes. Discarded: priority, status, progress, resources, motivation, target date.
+            </p>
+          </>
+        }
+        confirmLabel="Demote"
+        variant="warning"
+        onCancel={() => setDemoteConfirm(null)}
+        onConfirm={() => {
+          if (!demoteConfirm) return;
+          const form = new FormData();
+          form.append("intent", "demote");
+          form.append("goalId", demoteConfirm.id);
+          submit(form, { method: "post" });
+          setDemoteConfirm(null);
+          setSearchParams({});
+        }}
+      />
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
       )}
     </div>
   );
@@ -595,18 +683,20 @@ function ProgressStepper({ goalId, current }: { goalId: string; current: number 
       >
         +10
       </button>
-      <input
-        type="number"
-        name="percentage"
-        className={styles.progressStepperInput}
-        min={0}
-        max={100}
-        step={1}
-        value={value}
-        onChange={(e) => setValue(clamp(Number(e.target.value) || 0))}
-        aria-label="Progress percentage"
-      />
-      <span className={styles.rowProgressLabel} aria-hidden="true">%</span>
+      <span className={styles.progressStepperInputWrap}>
+        <input
+          type="number"
+          name="percentage"
+          className={styles.progressStepperInput}
+          min={0}
+          max={100}
+          step={1}
+          value={value}
+          onChange={(e) => setValue(clamp(Number(e.target.value) || 0))}
+          aria-label="Progress percentage"
+        />
+        <span className={styles.progressStepperSuffix} aria-hidden="true">%</span>
+      </span>
       <button type="submit" className={styles.submitButton} style={{ padding: "4px var(--space-md)", fontSize: "0.75rem" }}>
         Save
       </button>

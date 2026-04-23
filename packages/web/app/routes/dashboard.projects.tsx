@@ -1,10 +1,19 @@
 import { useEffect, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
+import { Form, useActionData, useLoaderData, useNavigation, useSearchParams, useSubmit } from "@remix-run/react";
+
+import { ConfirmDialog } from "~/components/ConfirmDialog";
+import { Toast, type ToastType } from "~/components/Toast";
 
 import { api, ApiError } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
+import {
+  FEATURED_TOOLTIP,
+  PRIORITY_TOOLTIPS,
+  PROJECT_STATUS_TOOLTIPS,
+  VISIBILITY_PRIVATE_TOOLTIP,
+} from "~/lib/tooltips";
 import styles from "~/styles/skills.module.css";
 
 interface Project {
@@ -89,7 +98,7 @@ export async function action({ request }: ActionFunctionArgs) {
         method: "DELETE",
         token,
       });
-      return json({ ok: true });
+      return json({ ok: true, toast: "Project removed" });
     }
 
     return json({ error: "Unknown action" }, { status: 400 });
@@ -109,6 +118,7 @@ export default function ProjectsPage() {
   const { projects, skills } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const submit = useSubmit();
   const [searchParams, setSearchParams] = useSearchParams();
   const showAdd = searchParams.get("add") === "true";
   const editProject = projects.find((p) => p.id === searchParams.get("edit"));
@@ -120,6 +130,8 @@ export default function ProjectsPage() {
   const [filterSearch, setFilterSearch] = useState("");
   const [skillFilter, setSkillFilter] = useState("");
   const [sortBy, setSortBy] = useState("name");
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   useEffect(() => {
     if (navigation.state === "idle" && actionData && "ok" in actionData) {
@@ -128,6 +140,15 @@ export default function ProjectsPage() {
       return () => clearTimeout(timer);
     }
   }, [navigation.state, actionData]);
+
+  useEffect(() => {
+    if (!actionData) return;
+    if ("error" in actionData && actionData.error) {
+      setToast({ message: actionData.error, type: "error" });
+    } else if ("toast" in actionData && actionData.toast) {
+      setToast({ message: actionData.toast, type: "success" });
+    }
+  }, [actionData]);
 
   const filteredProjects = projects.filter((p) => {
     if (filterStatus && p.status !== filterStatus) return false;
@@ -209,7 +230,9 @@ export default function ProjectsPage() {
                   </svg>
                   <div className={styles.rowMain}>
                     <div className={styles.rowTitle}>
-                      {project.featured && <span className={styles.rowStar} aria-label="Featured">★</span>}
+                      {project.featured && (
+                        <span className={styles.rowStar} aria-label="Featured" title={FEATURED_TOOLTIP}>★</span>
+                      )}
                       {project.url ? (
                         <a
                           href={project.url}
@@ -217,6 +240,7 @@ export default function ProjectsPage() {
                           rel="noopener noreferrer"
                           className={styles.rowNameLink}
                           onClick={(e) => e.stopPropagation()}
+                          title={`Open project URL: ${project.url}`}
                         >
                           {project.name}
                         </a>
@@ -233,10 +257,22 @@ export default function ProjectsPage() {
                     </div>
                   </div>
                   <div className={styles.rowBadges}>
-                    <span className={styles.proficiency} data-level={project.status}>{project.status}</span>
-                    <span className={styles.proficiency} data-level={project.priority}>{project.priority}</span>
+                    <span
+                      className={styles.proficiency}
+                      data-level={project.status}
+                      title={PROJECT_STATUS_TOOLTIPS[project.status] ?? project.status}
+                    >
+                      {project.status}
+                    </span>
+                    <span
+                      className={styles.proficiency}
+                      data-level={project.priority}
+                      title={PRIORITY_TOOLTIPS[project.priority] ?? project.priority}
+                    >
+                      {project.priority}
+                    </span>
                     {project.visibility === "private" && (
-                      <span className={styles.proficiency} data-level="private">private</span>
+                      <span className={styles.proficiency} data-level="private" title={VISIBILITY_PRIVATE_TOOLTIP}>private</span>
                     )}
                   </div>
                 </summary>
@@ -291,22 +327,18 @@ export default function ProjectsPage() {
                       type="button"
                       className={styles.editButton}
                       onClick={() => setSearchParams({ edit: project.id })}
+                      title="Edit project details"
                     >
                       Edit
                     </button>
-                    <Form method="post" style={{ display: "inline" }}>
-                      <input type="hidden" name="intent" value="delete" />
-                      <input type="hidden" name="projectId" value={project.id} />
-                      <button
-                        type="submit"
-                        className={styles.deleteButton}
-                        onClick={(e) => {
-                          if (!confirm(`Delete project "${project.name}"?`)) e.preventDefault();
-                        }}
-                      >
-                        Remove
-                      </button>
-                    </Form>
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      onClick={() => setDeleteConfirm({ id: project.id, name: project.name })}
+                      title="Permanently remove this project"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               </details>
@@ -523,6 +555,31 @@ export default function ProjectsPage() {
             </Form>
           </div>
         </div>
+      )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title="Delete project?"
+        message={
+          <p>
+            <strong>"{deleteConfirm?.name}"</strong> will be permanently removed along with its skill links and highlights.
+          </p>
+        }
+        confirmLabel="Delete"
+        variant="danger"
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={() => {
+          if (!deleteConfirm) return;
+          const form = new FormData();
+          form.append("intent", "delete");
+          form.append("projectId", deleteConfirm.id);
+          submit(form, { method: "post" });
+          setDeleteConfirm(null);
+        }}
+      />
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
       )}
     </div>
   );
