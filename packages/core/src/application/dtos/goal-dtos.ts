@@ -28,6 +28,10 @@ export interface CompleteGoalInput {
   readonly proficiency?: string;
 }
 
+export interface DemoteGoalInput {
+  readonly goalId: string;
+}
+
 // --- Output DTOs ---
 
 export interface GoalOutput {
@@ -59,4 +63,8 @@ export interface UpdateGoalProgressOutput {
 export interface CompleteGoalOutput {
   readonly goal: GoalOutput;
   readonly skill: import("./skill-dtos.js").SkillOutput;
+}
+
+export interface DemoteGoalOutput {
+  readonly interest: import("./interest-dtos.js").InterestOutput;
 }

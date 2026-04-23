@@ -31,6 +31,8 @@ export type {
   UpdateGoalProgressOutput,
   CompleteGoalInput,
   CompleteGoalOutput,
+  DemoteGoalInput,
+  DemoteGoalOutput,
   GoalOutput,
 } from "./dtos/goal-dtos.js";
 
@@ -86,6 +88,8 @@ export { updateGoalProgress } from "./use-cases/update-goal-progress.js";
 export type { UpdateGoalProgressDeps } from "./use-cases/update-goal-progress.js";
 export { completeGoal } from "./use-cases/complete-goal.js";
 export type { CompleteGoalDeps } from "./use-cases/complete-goal.js";
+export { demoteGoal } from "./use-cases/demote-goal.js";
+export type { DemoteGoalDeps } from "./use-cases/demote-goal.js";
 export { updateGoal } from "./use-cases/update-goal.js";
 export type { UpdateGoalDeps, UpdateGoalInput, UpdateGoalOutput } from "./use-cases/update-goal.js";
 export { removeGoal } from "./use-cases/remove-goal.js";
