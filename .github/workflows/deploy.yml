@@ -7,9 +7,9 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  API_IMAGE: ghcr.io/legitmattias/dossier-api
-  MCP_IMAGE: ghcr.io/legitmattias/dossier-mcp
-  WEB_IMAGE: ghcr.io/legitmattias/dossier-web
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/dossier-api
+  MCP_IMAGE: ghcr.io/${{ github.repository_owner }}/dossier-mcp
+  WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/dossier-web
 
 jobs:
   # ── Test ───────────────────────────────────────────────────

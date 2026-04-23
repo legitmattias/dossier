@@ -161,7 +161,7 @@ export class LocalOperations implements DossierOperations {
   async submitFeedback(_input: SubmitFeedbackInput): Promise<SubmitFeedbackOutput> {
     throw new Error(
       "Feedback submission requires API mode. Configure the MCP to connect to a Dossier API instance " +
-      "(e.g. https://api.dossier.mattic.dev) to submit feedback.",
+      "to submit feedback.",
     );
   }
 }

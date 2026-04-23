@@ -19,7 +19,7 @@ services:
 
   # --- REST API ---
   api:
-    image: ghcr.io/legitmattias/dossier-api:latest
+    image: ${DOSSIER_IMAGE_PREFIX:-ghcr.io/your-org}/dossier-api:latest
     restart: unless-stopped
     init: true
     environment:
@@ -45,7 +45,7 @@ services:
 
   # --- MCP Server (HTTP transport) ---
   mcp:
-    image: ghcr.io/legitmattias/dossier-mcp:latest
+    image: ${DOSSIER_IMAGE_PREFIX:-ghcr.io/your-org}/dossier-mcp:latest
     restart: unless-stopped
     init: true
     environment:
@@ -72,7 +72,7 @@ services:
 
   # --- Web UI ---
   web:
-    image: ghcr.io/legitmattias/dossier-web:latest
+    image: ${DOSSIER_IMAGE_PREFIX:-ghcr.io/your-org}/dossier-web:latest
     restart: unless-stopped
     init: true
     environment:

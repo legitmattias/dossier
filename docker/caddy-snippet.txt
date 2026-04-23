@@ -1,5 +1,7 @@
+# Caddy snippet for Dossier — replace dossier.example.com with your actual domain.
+
 # Dossier API
-dossier.mattic.dev {
+dossier.example.com {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:3200
 	log {
@@ -8,7 +10,7 @@ dossier.mattic.dev {
 }
 
 # Dossier MCP Server (HTTP transport)
-mcp.dossier.mattic.dev {
+mcp.dossier.example.com {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:3150
 	log {
