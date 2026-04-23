@@ -184,51 +184,88 @@ export default function InterestsPage() {
       ) : sortedInterests.length === 0 ? (
         <p className={styles.emptyState}>No interests match your filters.</p>
       ) : (
-        <div className={styles.cardGrid}>
-          {sortedInterests.map((interest) => (
-            <div key={interest.id} className={styles.card}>
-              <div className={styles.cardHeader}>
-                <span className={styles.cardName}>{interest.name}</span>
-                <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
-                  <Form method="post" style={{ display: "inline" }}>
-                    <input type="hidden" name="intent" value="promote" />
-                    <input type="hidden" name="interestId" value={interest.id} />
-                    <button type="submit" className={styles.editButton}>Promote to Goal</button>
-                  </Form>
-                  <button
-                    type="button"
-                    className={styles.editButton}
-                    onClick={() => setSearchParams({ edit: interest.id })}
-                  >
-                    Edit
-                  </button>
-                  <Form method="post">
-                    <input type="hidden" name="intent" value="delete" />
-                    <input type="hidden" name="interestId" value={interest.id} />
-                    <button type="submit" className={styles.deleteButton}>Remove</button>
-                  </Form>
+        <div className={styles.rowList}>
+          {sortedInterests.map((interest) => {
+            const domain = interest.domainId ? domainMap.get(interest.domainId) : undefined;
+            return (
+              <details key={interest.id} className={styles.row}>
+                <summary className={styles.rowSummary}>
+                  <svg className={styles.rowDisclosure} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <div className={styles.rowMain}>
+                    <div className={styles.rowTitle}>
+                      {interest.featured && <span className={styles.rowStar} aria-label="Featured">★</span>}
+                      <span className={styles.rowName}>{interest.name}</span>
+                    </div>
+                    <div className={styles.rowMeta}>
+                      <span>{domain?.name ?? "—"}</span>
+                    </div>
+                  </div>
+                  <div className={styles.rowBadges}>
+                    {interest.visibility === "private" && (
+                      <span className={styles.proficiency} data-level="private">private</span>
+                    )}
+                    {domain?.visibility === "private" && (
+                      <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden</span>
+                    )}
+                  </div>
+                </summary>
+
+                <div className={styles.rowDetails}>
+                  {interest.description && (
+                    <div className={styles.rowDetailBlock}>
+                      <span className={styles.rowDetailLabel}>Description</span>
+                      <span className={styles.rowDetailValue}>{interest.description}</span>
+                    </div>
+                  )}
+                  {interest.notes && (
+                    <div className={styles.rowDetailBlock}>
+                      <span className={styles.rowDetailLabel}>Notes</span>
+                      <span className={styles.rowDetailValue}>{interest.notes}</span>
+                    </div>
+                  )}
+                  <div className={styles.rowDetailBlock}>
+                    <span className={styles.rowDetailLabel}>Dates</span>
+                    <span className={styles.rowDetailValue}>
+                      Added {new Date(interest.createdAt).toLocaleDateString()}
+                      {interest.updatedAt && new Date(interest.updatedAt).getTime() - new Date(interest.createdAt).getTime() > 60000 && (
+                        <> · Updated {new Date(interest.updatedAt).toLocaleDateString()}</>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className={styles.rowActionsRight}>
+                    <Form method="post" style={{ display: "inline" }}>
+                      <input type="hidden" name="intent" value="promote" />
+                      <input type="hidden" name="interestId" value={interest.id} />
+                      <button type="submit" className={styles.editButton}>Promote to Goal</button>
+                    </Form>
+                    <button
+                      type="button"
+                      className={styles.editButton}
+                      onClick={() => setSearchParams({ edit: interest.id })}
+                    >
+                      Edit
+                    </button>
+                    <Form method="post" style={{ display: "inline" }}>
+                      <input type="hidden" name="intent" value="delete" />
+                      <input type="hidden" name="interestId" value={interest.id} />
+                      <button
+                        type="submit"
+                        className={styles.deleteButton}
+                        onClick={(e) => {
+                          if (!confirm(`Delete interest "${interest.name}"?`)) e.preventDefault();
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </Form>
+                  </div>
                 </div>
-              </div>
-              {interest.domainId && <div className={styles.cardMeta}>{domainMap.get(interest.domainId)?.name ?? "—"}</div>}
-              <div className={styles.cardBadges}>
-                {interest.featured && <span className={styles.featuredBadge}>Featured</span>}
-                {interest.visibility === "private" && (
-                  <span className={styles.proficiency} data-level="private">private</span>
-                )}
-                {interest.domainId && domainMap.get(interest.domainId)?.visibility === "private" && (
-                  <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden by domain</span>
-                )}
-              </div>
-              {interest.description && <div className={styles.cardDescription}>{interest.description}</div>}
-              {interest.notes && <div className={styles.cardNotes}>{interest.notes}</div>}
-              <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
-                Added {new Date(interest.createdAt).toLocaleDateString()}
-                {interest.updatedAt && new Date(interest.updatedAt).getTime() - new Date(interest.createdAt).getTime() > 60000 && (
-                  <> · Updated {new Date(interest.updatedAt).toLocaleDateString()}</>
-                )}
-              </div>
-            </div>
-          ))}
+              </details>
+            );
+          })}
         </div>
       )}
 

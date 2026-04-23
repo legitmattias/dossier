@@ -267,64 +267,103 @@ export default function SkillsPage() {
           return (
             <div key={domainId} className={styles.domainGroup}>
               <h2 className={styles.domainName}>{domain?.name ?? domainId}</h2>
-              <div className={styles.cardGrid}>
-                  {domainSkills.map((skill) => {
-                    const category = domain?.categories.find((c) => c.id === skill.categoryId);
-                    return (
-                      <div key={skill.id} className={styles.card}>
-                        <div className={styles.cardHeader}>
-                          <span className={styles.cardName}>{skill.name}</span>
-                          <div className={styles.cardActions} style={{ borderTop: 'none', paddingTop: 0, marginTop: 0 }}>
-                            <button
-                              type="button"
-                              className={styles.editButton}
-                              onClick={() => setSearchParams({ edit: skill.id })}
-                            >
-                              Edit
-                            </button>
-                            <Form method="post">
-                              <input type="hidden" name="intent" value="delete" />
-                              <input type="hidden" name="skillId" value={skill.id} />
-                              <button type="submit" className={styles.deleteButton}>Remove</button>
-                            </Form>
+              <div className={styles.rowList}>
+                {domainSkills.map((skill) => {
+                  const category = domain?.categories.find((c) => c.id === skill.categoryId);
+                  const displayProf = skill.proficiencyLabel ?? domain?.proficiencyLabels?.[skill.proficiency] ?? skill.proficiency;
+                  const linkedProjects = projectsBySkill.get(skill.id) ?? [];
+                  return (
+                    <details key={skill.id} className={styles.row}>
+                      <summary className={styles.rowSummary}>
+                        <svg className={styles.rowDisclosure} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                          <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <div className={styles.rowMain}>
+                          <div className={styles.rowTitle}>
+                            {skill.featured && <span className={styles.rowStar} aria-label="Featured">★</span>}
+                            <span className={styles.rowName}>{skill.name}</span>
+                          </div>
+                          <div className={styles.rowMeta}>
+                            <span>{category?.name ?? "Uncategorized"}</span>
+                            {linkedProjects.length > 0 && (
+                              <>
+                                <span className={styles.rowMetaSep} />
+                                <span>{linkedProjects.length} project{linkedProjects.length === 1 ? "" : "s"}</span>
+                              </>
+                            )}
                           </div>
                         </div>
-                        {skill.description && <div className={styles.cardDescription}>{skill.description}</div>}
-                        {category && (
-                          <div className={styles.cardMeta}>
-                            <span className={styles.cardMetaLabel}>Category:</span> {category.name}
-                          </div>
-                        )}
-                        <div className={styles.cardBadges}>
-                          {skill.featured && <span className={styles.featuredBadge}>Featured</span>}
-                          <span className={styles.proficiency} data-level={skill.proficiency}>
-                            {skill.proficiencyLabel ?? domain?.proficiencyLabels?.[skill.proficiency] ?? skill.proficiency}
-                          </span>
+                        <div className={styles.rowBadges}>
+                          <span className={styles.proficiency} data-level={skill.proficiency}>{displayProf}</span>
                           {skill.visibility === "private" && (
                             <span className={styles.proficiency} data-level="private">private</span>
                           )}
                           {domain?.visibility === "private" && (
-                            <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden by domain</span>
+                            <span className={styles.proficiency} data-level="private" title="This domain is set to private — hidden from exports">hidden</span>
                           )}
                         </div>
-                        {skill.notes && <div className={styles.cardNotes}>{skill.notes}</div>}
-                        {(projectsBySkill.get(skill.id) ?? []).length > 0 && (
-                          <div className={styles.skillChips}>
-                            {projectsBySkill.get(skill.id)!.map((name) => (
-                              <span key={name} className={styles.skillChip}>{name}</span>
-                            ))}
+                      </summary>
+
+                      <div className={styles.rowDetails}>
+                        {skill.description && (
+                          <div className={styles.rowDetailBlock}>
+                            <span className={styles.rowDetailLabel}>Description</span>
+                            <span className={styles.rowDetailValue}>{skill.description}</span>
                           </div>
                         )}
-                        <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
-                          Added {new Date(skill.createdAt).toLocaleDateString()}
-                          {new Date(skill.updatedAt).getTime() - new Date(skill.createdAt).getTime() > 60000 && (
-                            <> · Updated {new Date(skill.updatedAt).toLocaleDateString()}</>
-                          )}
+                        {skill.notes && (
+                          <div className={styles.rowDetailBlock}>
+                            <span className={styles.rowDetailLabel}>Notes</span>
+                            <span className={styles.rowDetailValue}>{skill.notes}</span>
+                          </div>
+                        )}
+                        {linkedProjects.length > 0 && (
+                          <div className={styles.rowDetailBlock}>
+                            <span className={styles.rowDetailLabel}>Used in projects</span>
+                            <div className={styles.skillChips} style={{ marginBottom: 0 }}>
+                              {linkedProjects.map((name) => (
+                                <span key={name} className={styles.skillChip}>{name}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <div className={styles.rowDetailBlock}>
+                          <span className={styles.rowDetailLabel}>Dates</span>
+                          <span className={styles.rowDetailValue}>
+                            Added {new Date(skill.createdAt).toLocaleDateString()}
+                            {new Date(skill.updatedAt).getTime() - new Date(skill.createdAt).getTime() > 60000 && (
+                              <> · Updated {new Date(skill.updatedAt).toLocaleDateString()}</>
+                            )}
+                          </span>
+                        </div>
+
+                        <div className={styles.rowActionsRight}>
+                          <button
+                            type="button"
+                            className={styles.editButton}
+                            onClick={() => setSearchParams({ edit: skill.id })}
+                          >
+                            Edit
+                          </button>
+                          <Form method="post" style={{ display: "inline" }}>
+                            <input type="hidden" name="intent" value="delete" />
+                            <input type="hidden" name="skillId" value={skill.id} />
+                            <button
+                              type="submit"
+                              className={styles.deleteButton}
+                              onClick={(e) => {
+                                if (!confirm(`Delete skill "${skill.name}"?`)) e.preventDefault();
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </Form>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </details>
+                  );
+                })}
+              </div>
             </div>
           );
         })

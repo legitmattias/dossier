@@ -196,62 +196,122 @@ export default function ProjectsPage() {
           No projects match your filters.
         </p>
       ) : (
-        <div className={styles.cardGrid}>
-          {sortedProjects.map((project) => (
-            <div className={styles.card} key={project.id}>
-              <div className={styles.cardHeader}>
-                {project.url ? (
-                  <a href={project.url} target="_blank" rel="noopener noreferrer" className={styles.cardNameLink}>
-                    {project.name}
-                  </a>
-                ) : (
-                  <span className={styles.cardName}>{project.name}</span>
-                )}
-                {project.featured && <span className={styles.featuredBadge}>Featured</span>}
-              </div>
-              {project.description && <div className={styles.cardDescription}>{project.description}</div>}
-              {project.role && (
-                <div className={styles.cardMeta}>
-                  <span className={styles.cardMetaLabel}>Role:</span> {project.role}
+        <div className={styles.rowList}>
+          {sortedProjects.map((project) => {
+            const linkedSkills = project.skillIds
+              ?.map((id) => skills.find((s) => s.id === id)?.name)
+              .filter((n): n is string => Boolean(n)) ?? [];
+            return (
+              <details key={project.id} className={styles.row}>
+                <summary className={styles.rowSummary}>
+                  <svg className={styles.rowDisclosure} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <div className={styles.rowMain}>
+                    <div className={styles.rowTitle}>
+                      {project.featured && <span className={styles.rowStar} aria-label="Featured">★</span>}
+                      {project.url ? (
+                        <a
+                          href={project.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.rowNameLink}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {project.name}
+                        </a>
+                      ) : (
+                        <span className={styles.rowName}>{project.name}</span>
+                      )}
+                    </div>
+                    <div className={styles.rowMeta}>
+                      {project.role && <span>{project.role}</span>}
+                      {project.role && linkedSkills.length > 0 && <span className={styles.rowMetaSep} />}
+                      {linkedSkills.length > 0 && (
+                        <span>{linkedSkills.length} skill{linkedSkills.length === 1 ? "" : "s"}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className={styles.rowBadges}>
+                    <span className={styles.proficiency} data-level={project.status}>{project.status}</span>
+                    <span className={styles.proficiency} data-level={project.priority}>{project.priority}</span>
+                    {project.visibility === "private" && (
+                      <span className={styles.proficiency} data-level="private">private</span>
+                    )}
+                  </div>
+                </summary>
+
+                <div className={styles.rowDetails}>
+                  {project.description && (
+                    <div className={styles.rowDetailBlock}>
+                      <span className={styles.rowDetailLabel}>Description</span>
+                      <span className={styles.rowDetailValue}>{project.description}</span>
+                    </div>
+                  )}
+                  {project.highlights && project.highlights.length > 0 && (
+                    <div className={styles.rowDetailBlock}>
+                      <span className={styles.rowDetailLabel}>Highlights</span>
+                      <ul style={{ margin: 0, paddingLeft: "var(--space-lg)", color: "var(--color-text-muted)", fontSize: "0.875rem", lineHeight: 1.55 }}>
+                        {project.highlights.map((h, i) => (
+                          <li key={i}>{h}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {linkedSkills.length > 0 && (
+                    <div className={styles.rowDetailBlock}>
+                      <span className={styles.rowDetailLabel}>Skills used</span>
+                      <div className={styles.skillChips} style={{ marginBottom: 0 }}>
+                        {linkedSkills.map((name) => (
+                          <span key={name} className={styles.skillChip}>{name}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {project.notes && (
+                    <div className={styles.rowDetailBlock}>
+                      <span className={styles.rowDetailLabel}>Notes</span>
+                      <span className={styles.rowDetailValue}>{project.notes}</span>
+                    </div>
+                  )}
+                  <div className={styles.rowDetailBlock}>
+                    <span className={styles.rowDetailLabel}>Dates</span>
+                    <span className={styles.rowDetailValue}>
+                      {project.startDate && <>Started {new Date(project.startDate).toLocaleDateString()} · </>}
+                      {project.endDate && <>Ended {new Date(project.endDate).toLocaleDateString()} · </>}
+                      Added {new Date(project.createdAt).toLocaleDateString()}
+                      {new Date(project.updatedAt).getTime() - new Date(project.createdAt).getTime() > 60000 && (
+                        <> · Updated {new Date(project.updatedAt).toLocaleDateString()}</>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className={styles.rowActionsRight}>
+                    <button
+                      type="button"
+                      className={styles.editButton}
+                      onClick={() => setSearchParams({ edit: project.id })}
+                    >
+                      Edit
+                    </button>
+                    <Form method="post" style={{ display: "inline" }}>
+                      <input type="hidden" name="intent" value="delete" />
+                      <input type="hidden" name="projectId" value={project.id} />
+                      <button
+                        type="submit"
+                        className={styles.deleteButton}
+                        onClick={(e) => {
+                          if (!confirm(`Delete project "${project.name}"?`)) e.preventDefault();
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </Form>
+                  </div>
                 </div>
-              )}
-              {project.skillIds && project.skillIds.length > 0 && (
-                <div className={styles.skillChips}>
-                  {project.skillIds.map((skillId) => {
-                    const skill = skills.find((s) => s.id === skillId);
-                    return skill ? <span key={skillId} className={styles.skillChip}>{skill.name}</span> : null;
-                  })}
-                </div>
-              )}
-              <div className={styles.cardBadges}>
-                <span className={styles.proficiency} data-level={project.status}>{project.status}</span>
-                <span className={styles.proficiency} data-level={project.priority}>{project.priority}</span>
-                {project.visibility === "private" && (
-                  <span className={styles.proficiency} data-level="private">private</span>
-                )}
-              </div>
-              {project.notes && <div className={styles.cardNotes}>{project.notes}</div>}
-              <div className={styles.cardActions}>
-                <button
-                  className={styles.editButton}
-                  onClick={() => setSearchParams({ edit: project.id })}
-                >
-                  Edit
-                </button>
-                <Form method="post">
-                  <input type="hidden" name="intent" value="delete" />
-                  <input type="hidden" name="projectId" value={project.id} />
-                  <button type="submit" className={styles.deleteButton}>Remove</button>
-                </Form>
-              </div>
-              <div className={styles.cardMeta} style={{ marginTop: 'auto', paddingTop: 'var(--space-sm)' }}>
-                Added {new Date(project.createdAt).toLocaleDateString()}
-                {new Date(project.updatedAt).getTime() - new Date(project.createdAt).getTime() > 60000 && (
-                  <> · Updated {new Date(project.updatedAt).toLocaleDateString()}</>
-                )}
-              </div>
-            </div>
-          ))}
+              </details>
+            );
+          })}
         </div>
       )}
 
