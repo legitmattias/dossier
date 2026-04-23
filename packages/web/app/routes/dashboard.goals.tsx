@@ -107,6 +107,14 @@ export async function action({ request }: ActionFunctionArgs) {
       return json({ ok: true });
     }
 
+    if (intent === "demote") {
+      await api(`/profile/goals/${form.get("goalId")}/demote`, {
+        method: "POST",
+        token,
+      });
+      return json({ ok: true });
+    }
+
     if (intent === "delete") {
       await api(`/profile/goals/${form.get("goalId")}`, { method: "DELETE", token });
       return json({ ok: true });
@@ -505,6 +513,25 @@ export default function GoalsPage() {
                   {saved ? "Saved!" : isSubmitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
+            </Form>
+
+            <Form
+              method="post"
+              className={styles.form}
+              style={{ marginTop: "var(--space-md)", paddingTop: "var(--space-md)", borderTop: "1px solid var(--color-border)" }}
+              onSubmit={(e) => {
+                if (!confirm(
+                  `Demote "${editGoal.name}" to an interest?\n\nThis removes the goal and creates an interest with the same name, domain, description, and notes. Priority, status, progress, resources, motivation, and target date will be discarded.`,
+                )) {
+                  e.preventDefault();
+                }
+              }}
+            >
+              <input type="hidden" name="intent" value="demote" />
+              <input type="hidden" name="goalId" value={editGoal.id} />
+              <button type="submit" className={styles.cancelButton} disabled={isSubmitting}>
+                Demote to Interest
+              </button>
             </Form>
           </div>
         </div>
