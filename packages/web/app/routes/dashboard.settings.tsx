@@ -244,7 +244,7 @@ export default function SettingsPage() {
                 id="keyName"
                 name="name"
                 required
-                placeholder="e.g. jobhaul, curios-chat"
+                placeholder="e.g. my-integration, chatbot"
                 className={styles.input}
               />
             </div>

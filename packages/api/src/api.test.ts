@@ -84,20 +84,20 @@ describe("auth", () => {
     const res = await req("/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "mattias", email: "m@test.com", password: "testpass123" }),
+      body: JSON.stringify({ username: "alice", email: "m@test.com", password: "testpass123" }),
     });
     expect(res.status).toBe(201);
     const data = await res.json() as { token: string; user: { username: string } };
     expect(data.token).toBeDefined();
-    expect(data.user.username).toBe("mattias");
+    expect(data.user.username).toBe("alice");
   });
 
   it("rejects duplicate username", async () => {
-    await registerAndGetToken("mattias", "a@test.com");
+    await registerAndGetToken("alice", "a@test.com");
     const res = await req("/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "mattias", email: "b@test.com", password: "testpass123" }),
+      body: JSON.stringify({ username: "alice", email: "b@test.com", password: "testpass123" }),
     });
     expect(res.status).toBe(409);
   });
@@ -361,8 +361,8 @@ describe("domains", () => {
 
 describe("public profiles", () => {
   it("returns 404 for non-public profile", async () => {
-    await registerAndGetToken("mattias", "m@test.com");
-    const res = await req("/u/mattias");
+    await registerAndGetToken("alice", "m@test.com");
+    const res = await req("/u/alice");
     expect(res.status).toBe(404);
     const data = await res.json() as { error: string };
     expect(data.error).toContain("not public");

@@ -55,12 +55,12 @@ Three access tiers:
 # Register
 curl -X POST http://localhost:3200/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"username":"mattias","email":"m@example.com","password":"securepass"}'
+  -d '{"username":"alice","email":"alice@example.com","password":"securepass"}'
 
 # Login
 curl -X POST http://localhost:3200/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"m@example.com","password":"securepass"}'
+  -d '{"email":"alice@example.com","password":"securepass"}'
 ```
 
 ### Generate an API key
@@ -69,7 +69,7 @@ curl -X POST http://localhost:3200/auth/login \
 curl -X POST http://localhost:3200/auth/api-keys \
   -H "Authorization: Bearer <jwt>" \
   -H "Content-Type: application/json" \
-  -d '{"name":"jobhaul-integration"}'
+  -d '{"name":"my-integration"}'
 # Returns: { "key": "dsk_abc123..." } — save this, it won't be shown again
 ```
 
