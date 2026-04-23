@@ -882,22 +882,52 @@
   cursor: not-allowed;
 }
 
-.progressStepperInput {
-  width: 64px;
-  padding: 4px var(--space-sm);
+/* Input wrapper: visually unites a bare number input with a "%" suffix */
+.progressStepperInputWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 var(--space-sm) 0 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.03);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.progressStepperInputWrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-muted);
+}
+
+.progressStepperInput {
+  width: 44px;
+  padding: 4px var(--space-xs) 4px var(--space-sm);
+  border: none;
+  background: transparent;
   color: var(--color-text);
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   text-align: right;
+  /* Hide native number spinner */
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.progressStepperInput::-webkit-outer-spin-button,
+.progressStepperInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .progressStepperInput:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-muted);
+}
+
+.progressStepperSuffix {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-faint);
+  user-select: none;
 }
 
 /* ============================================================
