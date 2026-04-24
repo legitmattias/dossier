@@ -627,26 +627,52 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
     {
       title: "Submit Feedback on Dossier",
       description:
-        "Submit feedback about Dossier itself — the MCP server, the API, a missing feature, or a friction point you hit while using the tools. " +
-        "**IMPORTANT: Always show the draft message to the user and get explicit confirmation before calling this tool.** " +
-        "Do not submit unsolicited feedback. The `confirmed: true` flag represents explicit user approval. " +
-        "Only use this for concrete, actionable observations (specific friction, reproducible bugs, clear missing capabilities) — " +
-        "not generic praise or vague impressions. Profile-level context (skill counts, etc.) may be referenced generically but do not include the user's actual skill names, goal contents, or other personal profile data. " +
-        "Requires API mode; local/file mode returns an error.",
+        "Submit feedback about Dossier itself — bugs, friction points, missing features encountered while using the MCP. " +
+        "\n\n**CONSENT & PRIVACY MODEL:**" +
+        "\n- This channel is **off by default** on every Dossier instance. It requires the operator to have set `DOSSIER_FEEDBACK_ENABLED=true`." +
+        "\n- It also requires the authenticated user to have explicitly opted in via their Dossier settings. If they haven't, this call will return 403 — do not retry, just relay the error to the user." +
+        "\n- Feedback is visible to the Dossier instance operator (admin), who may forward it to public GitHub Issues. **Do not include the user's skill names, goal contents, project details, notes, or any personal profile data in the message or reproduction fields.** Describe the interaction/friction abstractly." +
+        "\n\n**USAGE RULES:**" +
+        "\n- Always show the full draft to the user and get explicit confirmation before calling. `confirmed: true` represents that approval." +
+        "\n- Only submit concrete, actionable observations — not generic praise or vague impressions." +
+        "\n- Requires API mode; local/file mode errors.",
       inputSchema: z.object({
         category: z.enum(["bug", "friction", "suggestion", "missing-feature", "other"]).describe("What kind of feedback this is"),
         severity: z.enum(["low", "medium", "high", "critical"]).optional().describe("How much this impacts usage (default: medium)"),
-        message: z.string().min(5).describe("Concrete observation or issue — what happened, what was expected, why it matters"),
-        reproduction: z.string().optional().describe("Steps to reproduce, or the sequence of tool calls that led to the issue"),
+        message: z.string().min(5).describe("Concrete observation or issue — what happened, what was expected, why it matters. Do not include user's personal profile data."),
+        reproduction: z.string().optional().describe("Steps to reproduce, or the sequence of tool calls that led to the issue. Do not include personal profile data."),
         confirmed: z.literal(true).describe("Must be `true`. Represents explicit user approval to submit this feedback."),
       }),
     },
     withErrorHandler(async (input) => {
-      const result = await ops.submitFeedback(input);
-      return ok(
-        `Feedback submitted (id: ${result.id}, status: ${result.status}). ` +
-        `The operator will review it at /dashboard/feedback.`,
-      );
+      try {
+        const result = await ops.submitFeedback(input);
+        return ok(
+          `Feedback submitted (id: ${result.id}, status: ${result.status}). ` +
+          `The operator of this Dossier instance will review it.`,
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // Translate common API statuses into clearer guidance for the agent + user.
+        if (/\b503\b/.test(msg)) {
+          return fail(
+            "Feedback submission is disabled on this Dossier instance. The operator has not enabled DOSSIER_FEEDBACK_ENABLED. " +
+            "Report the issue another way (e.g., the project's GitHub repo).",
+          );
+        }
+        if (/\b403\b/.test(msg)) {
+          return fail(
+            "The authenticated user has not opted in to feedback submission. " +
+            "Ask them to enable it under Dossier → Settings → Feedback & Telemetry if they want to participate, then retry.",
+          );
+        }
+        if (/\b401\b/.test(msg)) {
+          return fail(
+            "Feedback submission requires an authenticated user. The MCP must connect with a valid API key tied to a real user account.",
+          );
+        }
+        throw err;
+      }
     }),
   );
 

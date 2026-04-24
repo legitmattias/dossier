@@ -49,9 +49,22 @@ authRoutes.post("/register", registerRateLimit, async (c) => {
   const profileId = randomUUID();
   const passwordHash = await hashPassword(password);
 
+  // Admin bootstrap:
+  // - If DOSSIER_ADMIN_USERNAME is set in env, only that exact username becomes admin
+  //   (race-proof explicit declaration).
+  // - Otherwise, the first registered user on this instance is auto-admin.
+  const adminUsername = process.env["DOSSIER_ADMIN_USERNAME"];
+  let shouldBeAdmin = false;
+  if (adminUsername) {
+    shouldBeAdmin = username === adminUsername;
+  } else {
+    const existing = await db.select({ id: schema.users.id }).from(schema.users).limit(1);
+    shouldBeAdmin = existing.length === 0;
+  }
+
   try {
     await db.insert(schema.users).values({
-      id: userId, username, email, passwordHash,
+      id: userId, username, email, passwordHash, isAdmin: shouldBeAdmin,
     });
 
     await db.insert(schema.profiles).values({
@@ -124,6 +137,8 @@ authRoutes.get("/me", requireAuth, requireScope("read"), async (c) => {
     id: schema.users.id,
     username: schema.users.username,
     email: schema.users.email,
+    isAdmin: schema.users.isAdmin,
+    feedbackOptIn: schema.users.feedbackOptIn,
   }).from(schema.users).where(eq(schema.users.id, userId));
   const user = rows[0];
 
@@ -132,6 +147,33 @@ authRoutes.get("/me", requireAuth, requireScope("read"), async (c) => {
   }
 
   return c.json({ user });
+});
+
+// PATCH /auth/me — Update non-critical user flags (feedback opt-in)
+authRoutes.patch("/me", requireAuth, requireScope("write"), async (c) => {
+  const userId = c.get("userId")!;
+  const body = await c.req.json<{ feedbackOptIn?: boolean }>();
+  const { db } = c.get("dbConnection");
+
+  const patch: Partial<typeof schema.users.$inferInsert> = { updatedAt: new Date() };
+  if (typeof body.feedbackOptIn === "boolean") {
+    patch.feedbackOptIn = body.feedbackOptIn;
+  }
+
+  const [updated] = await db
+    .update(schema.users)
+    .set(patch)
+    .where(eq(schema.users.id, userId))
+    .returning({
+      id: schema.users.id,
+      username: schema.users.username,
+      email: schema.users.email,
+      isAdmin: schema.users.isAdmin,
+      feedbackOptIn: schema.users.feedbackOptIn,
+    });
+
+  if (!updated) return c.json({ error: "User not found" }, 404);
+  return c.json({ user: updated });
 });
 
 // POST /auth/api-keys — Generate a new API key

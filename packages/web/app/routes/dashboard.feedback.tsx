@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
 
 import { api, ApiError } from "~/lib/api.server";
@@ -31,6 +31,11 @@ export const meta: MetaFunction = () => [{ title: "Feedback — Dossier" }];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const token = await requireToken(request);
+  const { user } = await api<{ user: { isAdmin?: boolean } }>("/auth/me", { token });
+  if (!user.isAdmin) {
+    return redirect("/dashboard");
+  }
+
   const url = new URL(request.url);
   const status = url.searchParams.get("status") ?? "";
   const query = status ? `?status=${encodeURIComponent(status)}` : "";

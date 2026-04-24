@@ -127,6 +127,23 @@ export function requireScope(scope: string) {
   });
 }
 
+/**
+ * Require the authenticated user to have is_admin = true in the users table.
+ * Must be used after `requireAuth`.
+ */
+export const requireAdmin = createMiddleware<AppEnv>(async (c, next) => {
+  const userId = c.get("userId");
+  if (!userId) return c.json({ error: "Authentication required" }, 401);
+
+  const { db } = c.get("dbConnection");
+  const rows = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  const user = rows[0];
+  if (!user || !user.isAdmin) {
+    return c.json({ error: "Admin access required" }, 403);
+  }
+  await next();
+});
+
 // --- Password helpers ---
 
 export async function hashPassword(password: string): Promise<string> {

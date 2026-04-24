@@ -30,18 +30,23 @@ interface ApiVersion {
   api: string;
 }
 
+interface FeedbackStatus {
+  enabled: boolean;
+}
+
 export const meta: MetaFunction = () => [{ title: "Settings — Dossier" }];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const token = await requireToken(request);
-  const [{ user }, { keys }, exportClaude, profileData, apiVersion] = await Promise.all([
-    api<{ user: { id: string; username: string; email: string } }>("/auth/me", { token }),
+  const [{ user }, { keys }, exportClaude, profileData, apiVersion, feedbackStatus] = await Promise.all([
+    api<{ user: { id: string; username: string; email: string; isAdmin?: boolean; feedbackOptIn?: boolean } }>("/auth/me", { token }),
     api<{ keys: ApiKey[] }>("/auth/api-keys", { token }),
     api<string>("/profile/export?format=llm-md", { token }),
     api<Profile>("/profile", { token }).catch(() => ({} as Profile)),
     api<ApiVersion>("/version").catch(() => null),
+    api<FeedbackStatus>("/feedback/status").catch(() => ({ enabled: false } as FeedbackStatus)),
   ]);
-  return json({ user, keys, exportPreview: exportClaude, profile: profileData, apiVersion });
+  return json({ user, keys, exportPreview: exportClaude, profile: profileData, apiVersion, feedbackStatus });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -81,6 +86,16 @@ export async function action({ request }: ActionFunctionArgs) {
       return json({ revoked: true });
     }
 
+    if (intent === "set-feedback-opt-in") {
+      const optIn = form.get("feedbackOptIn") === "on";
+      await api("/auth/me", {
+        method: "PATCH",
+        token,
+        body: { feedbackOptIn: optIn },
+      });
+      return json({ feedbackOptInSaved: true, feedbackOptIn: optIn });
+    }
+
     return json({ error: "Unknown action" }, { status: 400 });
   } catch (error) {
     if (error instanceof ApiError) {
@@ -91,7 +106,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function SettingsPage() {
-  const { user, keys, exportPreview, profile, apiVersion } = useLoaderData<typeof loader>();
+  const { user, keys, exportPreview, profile, apiVersion, feedbackStatus } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -287,6 +302,42 @@ export default function SettingsPage() {
               </div>
             ))}
           </div>
+        )}
+      </div>
+
+      {/* Feedback opt-in */}
+      <div className={styles.domainGroup}>
+        <h2 className={styles.domainName}>Feedback &amp; Telemetry</h2>
+        <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", lineHeight: 1.55, marginBottom: "var(--space-md)", maxWidth: 640 }}>
+          This Dossier instance {feedbackStatus.enabled
+            ? <>is <strong>accepting</strong> feedback submissions. Below you can choose whether to participate.</>
+            : <>is <strong>not</strong> accepting feedback — the operator has feedback disabled on this deployment.</>
+          }
+        </p>
+        {feedbackStatus.enabled && (
+          <>
+            {actionData && "feedbackOptInSaved" in actionData && (
+              <div className={styles.successBanner}>
+                Feedback preference saved.
+              </div>
+            )}
+            <Form method="post" style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+              <input type="hidden" name="intent" value="set-feedback-opt-in" />
+              <label style={{ display: "flex", gap: "var(--space-sm)", alignItems: "flex-start", cursor: "pointer" }}>
+                <input type="checkbox" name="feedbackOptIn" defaultChecked={user.feedbackOptIn ?? false} style={{ marginTop: 4 }} />
+                <span style={{ fontSize: "0.9375rem", lineHeight: 1.55 }}>
+                  <strong>Allow AI agents acting on my behalf to submit feedback to this instance&apos;s operator.</strong>
+                  <br />
+                  <span style={{ color: "var(--color-text-muted)", fontSize: "0.8125rem" }}>
+                    When enabled, AI sessions using the Dossier MCP can submit feedback messages describing friction, bugs, or suggestions encountered during use. The operator of this Dossier instance can read the full text of these messages and may forward them to GitHub Issues. The tool description instructs agents not to include personal profile data (skill names, goal contents, notes), but this is trust-based — only enable this if you trust both the AI and the operator. You can revoke consent at any time.
+                  </span>
+                </span>
+              </label>
+              <button type="submit" disabled={isSubmitting} className={styles.submitButton} style={{ alignSelf: "flex-start" }}>
+                {isSubmitting ? "Saving..." : "Save preference"}
+              </button>
+            </Form>
+          </>
         )}
       </div>
 

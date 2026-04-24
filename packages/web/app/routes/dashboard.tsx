@@ -9,12 +9,12 @@ import styles from "~/styles/dashboard.module.css";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const token = await requireToken(request);
-  const { user } = await api<{ user: { username: string } }>("/auth/me", { token });
-  return json({ username: user.username });
+  const { user } = await api<{ user: { username: string; isAdmin?: boolean } }>("/auth/me", { token });
+  return json({ username: user.username, isAdmin: user.isAdmin === true });
 }
 
 export default function DashboardLayout() {
-  const { username } = useLoaderData<typeof loader>();
+  const { username, isAdmin } = useLoaderData<typeof loader>();
   const location = useLocation();
   const [navOpen, setNavOpen] = useState(false);
 
@@ -120,13 +120,15 @@ export default function DashboardLayout() {
           >
             Domains
           </NavLink>
-          <NavLink
-            to="/dashboard/feedback"
-            className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
-            title="AI-submitted feedback and triage"
-          >
-            Feedback
-          </NavLink>
+          {isAdmin && (
+            <NavLink
+              to="/dashboard/feedback"
+              className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}
+              title="AI-submitted feedback and triage (admin only)"
+            >
+              Feedback
+            </NavLink>
+          )}
           <NavLink
             to="/dashboard/settings"
             className={({ isActive }) => isActive ? styles.navLinkActive : styles.navLink}

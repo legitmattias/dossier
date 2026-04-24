@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import { desc, eq } from "drizzle-orm";
 
 import type { AppEnv } from "../app.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAdmin, requireAuth } from "../middleware/auth.js";
 import * as schema from "../db/schema.js";
 
 export const feedbackRoutes = new Hono<AppEnv>();
@@ -16,8 +16,33 @@ type Category = typeof VALID_CATEGORIES[number];
 type Severity = typeof VALID_SEVERITIES[number];
 type Status = typeof VALID_STATUSES[number];
 
-// POST /feedback — open; AI agents submit here (auth optional for attribution)
+/**
+ * Feedback is a double-opt-in channel:
+ *  1. Instance-level: DOSSIER_FEEDBACK_ENABLED=true must be set on the deployment.
+ *     Default is disabled so an operator must knowingly opt their instance in.
+ *  2. Per-user: the authenticated submitter must have feedbackOptIn=true on their user row.
+ *     Anonymous submissions are only allowed in single-user mode (no users.feedback_opt_in check
+ *     possible) — for multi-tenant, we require auth + opt-in.
+ * Viewing and triage are admin-only (is_admin=true).
+ */
+function feedbackEnabled(): boolean {
+  const v = process.env["DOSSIER_FEEDBACK_ENABLED"];
+  return v === "true" || v === "1";
+}
+
+// GET /feedback/status — public; lets clients (MCP, web) know if submission is available
+feedbackRoutes.get("/status", async (c) => {
+  return c.json({ enabled: feedbackEnabled() });
+});
+
+// POST /feedback — gated by instance flag + per-user opt-in
 feedbackRoutes.post("/", async (c) => {
+  if (!feedbackEnabled()) {
+    return c.json({
+      error: "Feedback is disabled on this instance. The operator must set DOSSIER_FEEDBACK_ENABLED=true to accept submissions.",
+    }, 503);
+  }
+
   const body = await c.req.json<{
     category?: string;
     severity?: string;
@@ -45,8 +70,26 @@ feedbackRoutes.post("/", async (c) => {
 
   const { db } = c.get("dbConnection");
   const reporterUserId = c.get("userId") ?? null;
-  const id = randomUUID();
 
+  // Require authenticated + opted-in submitter. No anonymous submissions.
+  if (!reporterUserId) {
+    return c.json({
+      error: "Feedback submission requires an authenticated user who has opted in via their Dossier settings.",
+    }, 401);
+  }
+
+  const userRows = await db
+    .select({ feedbackOptIn: schema.users.feedbackOptIn })
+    .from(schema.users)
+    .where(eq(schema.users.id, reporterUserId));
+  const user = userRows[0];
+  if (!user || !user.feedbackOptIn) {
+    return c.json({
+      error: "You have not opted in to feedback submission. Enable it in your Dossier settings first.",
+    }, 403);
+  }
+
+  const id = randomUUID();
   await db.insert(schema.feedback).values({
     id,
     category: body.category,
@@ -63,8 +106,8 @@ feedbackRoutes.post("/", async (c) => {
   return c.json({ id, status: "new", acknowledged: true }, 201);
 });
 
-// GET /feedback — list all; authed only
-feedbackRoutes.get("/", requireAuth, async (c) => {
+// GET /feedback — admin only
+feedbackRoutes.get("/", requireAuth, requireAdmin, async (c) => {
   const { db } = c.get("dbConnection");
   const statusFilter = c.req.query("status");
 
@@ -82,8 +125,8 @@ feedbackRoutes.get("/", requireAuth, async (c) => {
   return c.json({ feedback: rows });
 });
 
-// PATCH /feedback/:id — update status / resolved note; authed only
-feedbackRoutes.patch("/:id", requireAuth, async (c) => {
+// PATCH /feedback/:id — admin only
+feedbackRoutes.patch("/:id", requireAuth, requireAdmin, async (c) => {
   const id = c.req.param("id");
   const body = await c.req.json<{ status?: string; resolvedNote?: string }>();
 
@@ -104,8 +147,8 @@ feedbackRoutes.patch("/:id", requireAuth, async (c) => {
   return c.json({ feedback: result[0] });
 });
 
-// POST /feedback/:id/forward — forward to GitHub Issues; authed only
-feedbackRoutes.post("/:id/forward", requireAuth, async (c) => {
+// POST /feedback/:id/forward — admin only; forward to GitHub Issues
+feedbackRoutes.post("/:id/forward", requireAuth, requireAdmin, async (c) => {
   const id = c.req.param("id");
   const { db } = c.get("dbConnection");
 
