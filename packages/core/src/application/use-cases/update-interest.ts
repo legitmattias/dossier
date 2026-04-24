@@ -1,6 +1,7 @@
 import {
   findInterestInProfile,
   toInterestId,
+  updateInterestInProfile,
 } from "../../domain/index.js";
 import { ProfileNotFoundError } from "../errors/application-errors.js";
 import { toInterestOutput } from "../helpers/mappers.js";
@@ -44,11 +45,7 @@ export async function updateInterest(
     updatedAt: new Date(),
   };
 
-  const updatedProfile = {
-    ...profile,
-    interests: profile.interests.map((i) => i.id === interestId ? updatedInterest : i),
-    updatedAt: new Date(),
-  };
+  const updatedProfile = updateInterestInProfile(profile, interestId, updatedInterest);
   await deps.profileRepository.save(updatedProfile);
 
   return { interest: toInterestOutput(updatedInterest) };

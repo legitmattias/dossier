@@ -1,5 +1,6 @@
 import {
   DomainNotFoundError,
+  DuplicateNameError,
   DuplicateSkillError,
   GoalNotFoundError,
   InterestNotFoundError,
@@ -118,6 +119,30 @@ export function removeDomainFromProfile(
   };
 }
 
+// --- Shared name-uniqueness helper ---
+
+/**
+ * Case-insensitive, whitespace-trimmed name match.
+ * Used to enforce entity-name uniqueness within a profile.
+ */
+function namesMatch(a: string, b: string): boolean {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
+}
+
+function assertUniqueName<T extends { id: string; name: string }>(
+  entities: readonly T[],
+  incomingName: string,
+  entityType: string,
+  excludeId?: string,
+): void {
+  const conflict = entities.find(
+    (e) => (!excludeId || e.id !== excludeId) && namesMatch(e.name, incomingName),
+  );
+  if (conflict) {
+    throw new DuplicateNameError(entityType, incomingName.trim());
+  }
+}
+
 // --- Skill operations ---
 
 export function addSkillToProfile(profile: Profile, skill: Skill): Readonly<Profile> {
@@ -132,6 +157,8 @@ export function addSkillToProfile(profile: Profile, skill: Skill): Readonly<Prof
   if (duplicateBySlugAndDomain) {
     throw new DuplicateSkillError(skill.name);
   }
+
+  assertUniqueName(profile.skills, skill.name, "skill");
 
   return {
     ...profile,
@@ -157,6 +184,8 @@ export function updateSkillInProfile(
   if (index === -1) {
     throw new SkillNotFoundError(skillId);
   }
+
+  assertUniqueName(profile.skills, updatedSkill.name, "skill", skillId);
 
   const newSkills = [...profile.skills];
   newSkills[index] = updatedSkill;
@@ -190,6 +219,8 @@ export function addGoalToProfile(
   profile: Profile,
   goal: LearningGoal,
 ): Readonly<Profile> {
+  assertUniqueName(profile.goals, goal.name, "goal");
+
   return {
     ...profile,
     goals: [...profile.goals, goal],
@@ -214,6 +245,8 @@ export function updateGoalInProfile(
   if (index === -1) {
     throw new GoalNotFoundError(goalId);
   }
+
+  assertUniqueName(profile.goals, updatedGoal.name, "goal", goalId);
 
   const newGoals = [...profile.goals];
   newGoals[index] = updatedGoal;
@@ -247,6 +280,8 @@ export function addInterestToProfile(
   profile: Profile,
   interest: Interest,
 ): Readonly<Profile> {
+  assertUniqueName(profile.interests, interest.name, "interest");
+
   return {
     ...profile,
     interests: [...profile.interests, interest],
@@ -263,6 +298,28 @@ export function findInterestInProfile(
     throw new InterestNotFoundError(interestId);
   }
   return interest;
+}
+
+export function updateInterestInProfile(
+  profile: Profile,
+  interestId: InterestId,
+  updatedInterest: Interest,
+): Readonly<Profile> {
+  const index = profile.interests.findIndex((i) => i.id === interestId);
+  if (index === -1) {
+    throw new InterestNotFoundError(interestId);
+  }
+
+  assertUniqueName(profile.interests, updatedInterest.name, "interest", interestId);
+
+  const newInterests = [...profile.interests];
+  newInterests[index] = updatedInterest;
+
+  return {
+    ...profile,
+    interests: newInterests,
+    updatedAt: new Date(),
+  };
 }
 
 export function removeInterestFromProfile(
@@ -287,6 +344,8 @@ export function addProjectToProfile(
   profile: Profile,
   project: Project,
 ): Readonly<Profile> {
+  assertUniqueName(profile.projects, project.name, "project");
+
   return {
     ...profile,
     projects: [...profile.projects, project],
@@ -314,6 +373,8 @@ export function updateProjectInProfile(
   if (index === -1) {
     throw new ProjectNotFoundError(projectId);
   }
+
+  assertUniqueName(profile.projects, updatedProject.name, "project", projectId);
 
   const newProjects = [...profile.projects];
   newProjects[index] = updatedProject;

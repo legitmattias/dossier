@@ -219,7 +219,7 @@ describe("skill operations", () => {
     expect(() => addSkillToProfile(profile, duplicate)).toThrow(DuplicateSkillError);
   });
 
-  it("allows same skill name in different domains", () => {
+  it("rejects same skill name even in different domains (profile-wide uniqueness)", () => {
     const skill1 = createSkill({
       id: toSkillId("skill-1"),
       slug: createSlug("python"),
@@ -237,9 +237,8 @@ describe("skill operations", () => {
       proficiency: "novice",
     });
 
-    let profile = addSkillToProfile(makeProfile(), skill1);
-    profile = addSkillToProfile(profile, skill2);
-    expect(profile.skills).toHaveLength(2);
+    const profile = addSkillToProfile(makeProfile(), skill1);
+    expect(() => addSkillToProfile(profile, skill2)).toThrow(/already exists/);
   });
 
   it("finds a skill by ID", () => {
@@ -451,5 +450,90 @@ describe("non-dev domain workflow", () => {
     expect(findSkillInProfile(profile, toSkillId("skill-guitar")).name).toBe(
       "Acoustic Guitar",
     );
+  });
+});
+
+// ---- Duplicate-name guards ----
+
+describe("duplicate-name guards", () => {
+  describe("addSkillToProfile", () => {
+    it("rejects a second skill with the same name in a different domain", () => {
+      const domainA = makeDomain("domain-a", "practices", "Practices");
+      const domainB = makeDomain("domain-b", "architecture", "Architecture");
+      let profile = addDomainToProfile(makeProfile(), domainA);
+      profile = addDomainToProfile(profile, domainB);
+
+      const skillA = createSkill({
+        id: toSkillId("skill-a"),
+        slug: createSlug("clean-code"),
+        name: "Clean Code",
+        domainId: toDomainId("domain-a"),
+        categoryId: toCategoryId("cat-a"),
+        proficiency: "advanced",
+      });
+      const skillB = createSkill({
+        id: toSkillId("skill-b"),
+        slug: createSlug("clean-code"),
+        name: "Clean Code",
+        domainId: toDomainId("domain-b"),
+        categoryId: toCategoryId("cat-b"),
+        proficiency: "advanced",
+      });
+
+      profile = addSkillToProfile(profile, skillA);
+      expect(() => addSkillToProfile(profile, skillB)).toThrow(/already exists/);
+    });
+
+    it("is case-insensitive", () => {
+      const skillA = makeSkill("skill-a", "TypeScript");
+      const skillB = makeSkill("skill-b", "typescript");
+      let profile = addSkillToProfile(makeProfile(), skillA);
+      expect(() => addSkillToProfile(profile, skillB)).toThrow(/already exists/);
+    });
+  });
+
+  describe("addGoalToProfile", () => {
+    it("rejects duplicate goal names", () => {
+      const goalA = makeGoal("goal-a", "Learn Rust");
+      const goalB = makeGoal("goal-b", "Learn Rust");
+      let profile = addGoalToProfile(makeProfile(), goalA);
+      expect(() => addGoalToProfile(profile, goalB)).toThrow(/already exists/);
+    });
+  });
+
+  describe("addInterestToProfile", () => {
+    it("rejects duplicate interest names", () => {
+      const intA = makeInterest("int-a", "Distributed Systems");
+      const intB = makeInterest("int-b", "distributed systems");
+      let profile = addInterestToProfile(makeProfile(), intA);
+      expect(() => addInterestToProfile(profile, intB)).toThrow(/already exists/);
+    });
+  });
+
+  describe("addProjectToProfile", () => {
+    it("rejects duplicate project names", () => {
+      const projA = makeProject("proj-a", "My Thing");
+      const projB = makeProject("proj-b", "My Thing");
+      let profile = addProjectToProfile(makeProfile(), projA);
+      expect(() => addProjectToProfile(profile, projB)).toThrow(/already exists/);
+    });
+  });
+
+  describe("update paths", () => {
+    it("updateSkillInProfile rejects rename that collides with another skill", () => {
+      const skillA = makeSkill("skill-a", "Rust");
+      const skillB = makeSkill("skill-b", "Go");
+      let profile = addSkillToProfile(makeProfile(), skillA);
+      profile = addSkillToProfile(profile, skillB);
+      const renamed = { ...skillB, name: "Rust" };
+      expect(() => updateSkillInProfile(profile, toSkillId("skill-b"), renamed)).toThrow(/already exists/);
+    });
+
+    it("updateSkillInProfile allows a same-name update on the same entity (no-op rename)", () => {
+      const skill = makeSkill("skill-a", "Rust");
+      const profile = addSkillToProfile(makeProfile(), skill);
+      const sameName = { ...skill, description: "new description" };
+      expect(() => updateSkillInProfile(profile, toSkillId("skill-a"), sameName)).not.toThrow();
+    });
   });
 });

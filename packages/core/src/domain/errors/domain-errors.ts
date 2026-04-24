@@ -84,3 +84,13 @@ export class ProjectNotFoundError extends DomainError {
     this.name = "ProjectNotFoundError";
   }
 }
+
+export class DuplicateNameError extends DomainError {
+  constructor(entityType: string, name: string) {
+    super(
+      "DUPLICATE_NAME",
+      `A ${entityType} with the name "${name}" already exists in this profile.`,
+    );
+    this.name = "DuplicateNameError";
+  }
+}
