@@ -72,6 +72,7 @@ export async function action({ request }: ActionFunctionArgs) {
         token,
         body: {
           name: String(form.get("name")),
+          domainId: String(form.get("domainId") ?? ""),
           description: String(form.get("description") ?? "") || undefined,
           notes: String(form.get("notes") ?? "") || undefined,
           visibility: String(form.get("visibility") ?? "public"),
@@ -359,6 +360,16 @@ export default function InterestsPage() {
               <div className={styles.field}>
                 <label htmlFor="edit-name" className={styles.label}>Name</label>
                 <input id="edit-name" name="name" required className={styles.input} defaultValue={editInterest.name} />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="edit-domainId" className={styles.label}>Domain</label>
+                <select id="edit-domainId" name="domainId" className={styles.select} defaultValue={editInterest.domainId ?? ""}>
+                  <option value="">— None —</option>
+                  {domains.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className={styles.field}>

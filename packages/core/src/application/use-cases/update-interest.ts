@@ -1,5 +1,7 @@
 import {
+  findDomainInProfile,
   findInterestInProfile,
+  toDomainId,
   toInterestId,
   updateInterestInProfile,
 } from "../../domain/index.js";
@@ -15,6 +17,7 @@ export interface UpdateInterestDeps {
 export interface UpdateInterestInput {
   readonly interestId: string;
   readonly name?: string;
+  readonly domainId?: string;
   readonly description?: string;
   readonly notes?: string;
   readonly visibility?: string;
@@ -35,9 +38,20 @@ export async function updateInterest(
   const interestId = toInterestId(input.interestId);
   const interest = findInterestInProfile(profile, interestId);
 
+  let nextDomainId: typeof interest.domainId = interest.domainId;
+  if (input.domainId !== undefined) {
+    if (input.domainId === "") {
+      nextDomainId = undefined;
+    } else {
+      const domain = findDomainInProfile(profile, toDomainId(input.domainId));
+      nextDomainId = domain.id;
+    }
+  }
+
   const updatedInterest = {
     ...interest,
     ...(input.name !== undefined && { name: input.name }),
+    domainId: nextDomainId,
     ...(input.description !== undefined && { description: input.description }),
     ...(input.notes !== undefined && { notes: input.notes }),
     ...(input.visibility !== undefined && { visibility: input.visibility as "public" | "private" }),
