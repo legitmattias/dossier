@@ -14,6 +14,32 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   new `feedback` table, `POST/GET/PATCH /feedback` API routes, and a
   `/dashboard/feedback` triage page with per-item "Forward to GitHub Issues"
   action. Configurable via `GITHUB_TOKEN` + `GITHUB_FEEDBACK_REPO` env vars.
+  **Three-layer consent model for multi-tenant deployments**:
+  1. **Instance-level**: submissions disabled unless the operator sets
+     `DOSSIER_FEEDBACK_ENABLED=true`. `GET /feedback/status` exposes the flag
+     so clients can detect availability. Submissions return `503` when off.
+  2. **Per-user opt-in**: users must enable feedback in their Dossier settings
+     (new `feedback_opt_in` column on `users`). Anonymous submissions are
+     rejected — auth is required so opt-in can be enforced. Returns `403` when
+     the user has not opted in.
+  3. **Admin-only viewing**: `GET /feedback`, `PATCH /feedback/:id`, and
+     `POST /feedback/:id/forward` now require `is_admin=true` on the user row.
+     Non-admins are redirected away from `/dashboard/feedback` and the
+     sidebar link is hidden for them.
+- **Admin bootstrap**: new `is_admin` column on `users`. On registration, the
+  first user to sign up is promoted to admin automatically. Operators who
+  want race-proof control can set `DOSSIER_ADMIN_USERNAME` — only a user
+  registering with that exact username becomes admin, and no one else does.
+- **Profile-wide name uniqueness**: skills, goals, interests, and projects
+  must now have unique names within a profile (case-insensitive, cross-domain).
+  The domain layer raises `DuplicateEntityNameError` on both add and update.
+- **Web: editable Interest domain**: the interest edit modal now exposes a
+  Domain `<select>` (with "— None —"), matching the web parity already in
+  place for skills, goals, and projects.
+- **CLI: link skills to projects**: `dossier project add` and a new
+  `dossier project update` accept repeatable `--skill <name>` flags that
+  resolve to skill IDs (case-insensitive exact match, errors on unresolved or
+  ambiguous names). `dossier project list` now shows a Skills count column.
 - **Goal schema parity**: `add_goal` now accepts `motivation` and `status`;
   `edit_goal` now accepts `targetDate`. Eliminates the previous add-then-edit
   double-call pattern for creating a goal with a motivation.
