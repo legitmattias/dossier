@@ -8,7 +8,7 @@ import {
   toInterestId,
 } from "../../domain/index.js";
 import type { PromoteInterestInput, PromoteInterestOutput } from "../dtos/interest-dtos.js";
-import { ProfileNotFoundError } from "../errors/application-errors.js";
+import { InvalidInputError, ProfileNotFoundError } from "../errors/application-errors.js";
 import { toGoalOutput } from "../helpers/mappers.js";
 import { validatePriority } from "../helpers/validation.js";
 import type { IIdGenerator } from "../ports/id-generator.js";
@@ -38,6 +38,10 @@ export async function promoteInterest(
   const targetDate = input.targetDate !== undefined
     ? (input.targetDate instanceof Date ? input.targetDate : new Date(input.targetDate))
     : undefined;
+
+  if (!interest.domainId) {
+    throw new InvalidInputError(`Cannot promote interest "${interest.name}" to a goal: it has no domain. Set a domain on the interest first.`);
+  }
 
   const goalId = toGoalId(deps.idGenerator.generate("goal"));
   const domainId = toDomainId(interest.domainId);

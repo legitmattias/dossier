@@ -29,7 +29,7 @@ publicRoutes.get("/:username", async (c) => {
   if (!profile) return c.json({ error: "Profile not found" }, 404);
 
   // Filter out private entities for public access (domain visibility overrides entity visibility)
-  const privateDomainIds = new Set(
+  const privateDomainIds = new Set<string>(
     profile.domains.filter((d) => d.visibility === "private").map((d) => d.id),
   );
   const isVisible = (entity: { visibility: string; domainId?: string }) => {

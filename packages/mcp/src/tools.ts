@@ -87,9 +87,9 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         return ok("No skills found matching the filters.");
       }
       const domains = await ops.getDomains();
-      const domainMap = new Map(domains.map((d) => [d.id, d]));
-      const categoryNames = new Map(domains.flatMap((d) => d.categories.map((c) => [c.id, c.name])));
-      const privateDomainIds = new Set(domains.filter((d) => d.visibility === "private").map((d) => d.id));
+      const domainMap = new Map<string, (typeof domains)[number]>(domains.map((d) => [d.id, d]));
+      const categoryNames = new Map<string, string>(domains.flatMap((d) => d.categories.map((c) => [c.id, c.name] as const)));
+      const privateDomainIds = new Set<string>(domains.filter((d) => d.visibility === "private").map((d) => d.id));
       const lines = result.skills.map((s) => {
         const dom = domainMap.get(s.domainId);
         const domainName = dom?.name ?? s.domainId;
@@ -198,7 +198,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         return ok("No goals found matching the filter.");
       }
       const domains = await ops.getDomains();
-      const privateDomainIds = new Set(domains.filter((d) => d.visibility === "private").map((d) => d.id));
+      const privateDomainIds = new Set<string>(domains.filter((d) => d.visibility === "private").map((d) => d.id));
       const lines = result.goals.map((g) => {
         let line = `- ${g.name} (${g.status}, ${g.priority} priority) [id: ${g.id}]`;
         if (privateDomainIds.has(g.domainId)) line += " (hidden by domain)";
@@ -349,12 +349,12 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         return ok("No interests found.");
       }
       const domains = await ops.getDomains();
-      const privateDomainIds = new Set(domains.filter((d) => d.visibility === "private").map((d) => d.id));
+      const privateDomainIds = new Set<string>(domains.filter((d) => d.visibility === "private").map((d) => d.id));
       const lines = result.interests.map((i) => {
         let line = `- ${i.name} [id: ${i.id}]`;
         if (i.featured) line += " ★";
         if (i.description) line += ` — ${i.description}`;
-        if (privateDomainIds.has(i.domainId)) line += " (hidden by domain)";
+        if (i.domainId && privateDomainIds.has(i.domainId)) line += " (hidden by domain)";
         return line;
       });
       return ok(lines.join("\n"));

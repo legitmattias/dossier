@@ -30,9 +30,9 @@ export function registerPrompts(server: McpServer, ops: DossierOperations): void
     {
       title: "Recommend Tech Stack",
       description: "Recommend a tech stack for a project based on the user's skill profile",
-      argsSchema: z.object({
+      argsSchema: {
         project: z.string().describe("Brief description of the project"),
-      }),
+      },
     },
     async ({ project }) => {
       const context = await getProfileContext(ops);
@@ -53,9 +53,9 @@ export function registerPrompts(server: McpServer, ops: DossierOperations): void
     {
       title: "Explain for My Level",
       description: "Explain a topic adapted to the user's proficiency level in that area",
-      argsSchema: z.object({
+      argsSchema: {
         topic: z.string().describe("The topic to explain"),
-      }),
+      },
     },
     async ({ topic }) => {
       const context = await getProfileContext(ops);
@@ -96,9 +96,9 @@ export function registerPrompts(server: McpServer, ops: DossierOperations): void
     {
       title: "Plan Learning Path",
       description: "Create a learning path for a specific goal based on current skills",
-      argsSchema: z.object({
+      argsSchema: {
         goal: z.string().describe("The learning goal to plan for"),
-      }),
+      },
     },
     async ({ goal }) => {
       const context = await getProfileContext(ops);

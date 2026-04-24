@@ -29,7 +29,7 @@ export async function exportProfile(
       domains: filteredProfile.domains.filter((d) => domainIdSet.has(d.id)),
       skills: filteredProfile.skills.filter((s) => domainIdSet.has(s.domainId)),
       goals: filteredProfile.goals.filter((g) => domainIdSet.has(g.domainId)),
-      interests: filteredProfile.interests.filter((i) => domainIdSet.has(i.domainId)),
+      interests: filteredProfile.interests.filter((i) => i.domainId !== undefined && domainIdSet.has(i.domainId)),
     };
   }
 

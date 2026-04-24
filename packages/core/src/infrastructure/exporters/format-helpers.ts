@@ -62,6 +62,7 @@ export function groupByDomain(profile: Profile): readonly DomainGroup[] {
   }
 
   for (const interest of profile.interests.filter((i) => isExportVisible(profile, i))) {
+    if (!interest.domainId) continue;
     const group = domainMap.get(interest.domainId);
     if (group) {
       domainMap.set(interest.domainId, {

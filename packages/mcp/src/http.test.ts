@@ -63,6 +63,7 @@ function createTestOps(repo: InMemoryProfileRepository): DossierOperations {
     },
     updateGoalProgress: (input) => application.updateGoalProgress(readDeps, input),
     completeGoal: (input) => application.completeGoal(deps, input),
+    demoteGoal: (input) => application.demoteGoal(deps, input),
     addInterest: (input) => application.addInterest(deps, input),
     listInterests: async () => {
       const p = await repo.load();
@@ -88,6 +89,9 @@ function createTestOps(repo: InMemoryProfileRepository): DossierOperations {
       const exporter = infrastructure.createExporter(format);
       const result = await application.exportProfile({ profileRepository: repo, exporter });
       return result.content;
+    },
+    submitFeedback: async () => {
+      throw new Error("submitFeedback not available in local test operations");
     },
   };
 }
@@ -198,7 +202,7 @@ describe("HTTP transport", () => {
       name: "dossier_list_skills",
       arguments: {},
     });
-    expect(result.content[0].text).toContain("No skills found");
+    expect((result.content as Array<{ text: string }>)[0]!.text).toContain("No skills found");
   });
 
   it("can read resources over HTTP", async () => {
@@ -210,6 +214,6 @@ describe("HTTP transport", () => {
     await client.connect(transport);
 
     const result = await client.readResource({ uri: "dossier://profile/summary" });
-    expect(result.contents[0].text).toContain("Dossier Profile: Test User");
+    expect((result.contents[0] as { text: string }).text).toContain("Dossier Profile: Test User");
   });
 });

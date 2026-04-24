@@ -66,6 +66,7 @@ function createTestOperations(repo: InMemoryProfileRepository, idGen: StubIdGene
     },
     updateGoalProgress: (input) => application.updateGoalProgress(readDeps, input),
     completeGoal: (input) => application.completeGoal(deps, input),
+    demoteGoal: (input) => application.demoteGoal(deps, input),
     addInterest: (input) => application.addInterest(deps, input),
     listInterests: async () => {
       const p = await repo.load();
@@ -91,6 +92,9 @@ function createTestOperations(repo: InMemoryProfileRepository, idGen: StubIdGene
       const exporter = infrastructure.createExporter(format);
       const result = await application.exportProfile({ profileRepository: repo, exporter });
       return result.content;
+    },
+    submitFeedback: async () => {
+      throw new Error("submitFeedback not available in local test operations");
     },
   };
 }
@@ -146,20 +150,20 @@ describe("resources", () => {
 
   it("reads full profile as JSON", async () => {
     const result = await client.readResource({ uri: "dossier://profile" });
-    const json = JSON.parse(result.contents[0].text as string);
+    const json = JSON.parse((result.contents[0] as { text: string }).text);
     expect(json.name).toBe("Test User");
     expect(json.domains).toHaveLength(3);
   });
 
   it("reads profile summary in llm-md format", async () => {
     const result = await client.readResource({ uri: "dossier://profile/summary" });
-    const text = result.contents[0].text as string;
+    const text = (result.contents[0] as { text: string }).text;
     expect(text).toContain("# Dossier Profile: Test User");
   });
 
   it("reads domains with categories", async () => {
     const result = await client.readResource({ uri: "dossier://domains" });
-    const domains = JSON.parse(result.contents[0].text as string);
+    const domains = JSON.parse((result.contents[0] as { text: string }).text);
     expect(domains).toHaveLength(3);
     const swDomain = domains.find((d: { slug: string }) => d.slug === "software-development");
     expect(swDomain).toBeDefined();
@@ -169,7 +173,7 @@ describe("resources", () => {
 
   it("reads empty skills list", async () => {
     const result = await client.readResource({ uri: "dossier://skills" });
-    const skills = JSON.parse(result.contents[0].text as string);
+    const skills = JSON.parse((result.contents[0] as { text: string }).text);
     expect(skills).toEqual([]);
   });
 
@@ -186,17 +190,17 @@ describe("resources", () => {
     });
 
     const result = await client.readResource({ uri: "dossier://skills/software-development" });
-    const skills = JSON.parse(result.contents[0].text as string);
+    const skills = JSON.parse((result.contents[0] as { text: string }).text);
     expect(skills).toHaveLength(1);
     expect(skills[0].name).toBe("TypeScript");
   });
 
   it("reads empty goals and interests", async () => {
     const goals = await client.readResource({ uri: "dossier://goals" });
-    expect(JSON.parse(goals.contents[0].text as string)).toEqual([]);
+    expect(JSON.parse((goals.contents[0] as { text: string }).text)).toEqual([]);
 
     const interests = await client.readResource({ uri: "dossier://interests" });
-    expect(JSON.parse(interests.contents[0].text as string)).toEqual([]);
+    expect(JSON.parse((interests.contents[0] as { text: string }).text)).toEqual([]);
   });
 
   it("reads only active goals", async () => {
@@ -206,7 +210,7 @@ describe("resources", () => {
     });
 
     const result = await client.readResource({ uri: "dossier://goals/active" });
-    const goals = JSON.parse(result.contents[0].text as string);
+    const goals = JSON.parse((result.contents[0] as { text: string }).text);
     expect(goals).toHaveLength(1);
     expect(goals[0].name).toBe("Learn Rust");
   });
@@ -226,7 +230,7 @@ describe("tools - skills", () => {
       },
     });
 
-    expect(result.content[0].text).toContain("Added skill: TypeScript (proficient)");
+    expect((result.content as Array<{ text: string }>)[0]!.text).toContain("Added skill: TypeScript (proficient)");
 
     const profile = repo.getStoredProfile()!;
     expect(profile.skills).toHaveLength(1);
@@ -244,7 +248,7 @@ describe("tools - skills", () => {
       },
     });
 
-    expect(result.content[0].text).toContain("Added skill: Python");
+    expect((result.content as Array<{ text: string }>)[0]!.text).toContain("Added skill: Python");
   });
 
   it("lists skills with human-readable names", async () => {
@@ -263,7 +267,7 @@ describe("tools - skills", () => {
       arguments: {},
     });
 
-    const text = result.content[0].text as string;
+    const text = (result.content as Array<{ text: string }>)[0]!.text;
     expect(text).toContain("TypeScript (advanced)");
     expect(text).toContain("Software Development > Programming Languages");
   });
@@ -283,7 +287,7 @@ describe("tools - skills", () => {
       arguments: { domainId: "languages" },
     });
 
-    const text = result.content[0].text as string;
+    const text = (result.content as Array<{ text: string }>)[0]!.text;
     expect(text).toContain("Swedish");
     expect(text).not.toContain("TS");
   });
@@ -299,7 +303,7 @@ describe("tools - skills", () => {
       arguments: { skillId: "skill-1", proficiency: "familiar" },
     });
 
-    expect(result.content[0].text).toContain("Updated skill: Rust (familiar)");
+    expect((result.content as Array<{ text: string }>)[0]!.text).toContain("Updated skill: Rust (familiar)");
   });
 
   it("removes a skill", async () => {
@@ -328,7 +332,7 @@ describe("tools - goals", () => {
       arguments: { name: "Learn Rust", domainId: "software-development", priority: "high" },
     });
 
-    expect(result.content[0].text).toContain("Added goal: Learn Rust (high priority)");
+    expect((result.content as Array<{ text: string }>)[0]!.text).toContain("Added goal: Learn Rust (high priority)");
   });
 
   it("lists goals", async () => {
@@ -342,7 +346,7 @@ describe("tools - goals", () => {
       arguments: {},
     });
 
-    expect(result.content[0].text).toContain("Learn Rust (active, medium priority)");
+    expect((result.content as Array<{ text: string }>)[0]!.text).toContain("Learn Rust (active, medium priority)");
   });
 
   it("updates goal progress", async () => {
@@ -356,7 +360,7 @@ describe("tools - goals", () => {
       arguments: { goalId: "goal-1", percentage: 50, note: "Halfway there" },
     });
 
-    expect(result.content[0].text).toContain("50%");
+    expect((result.content as Array<{ text: string }>)[0]!.text).toContain("50%");
   });
 
   it("completes a goal and creates a skill", async () => {
@@ -370,7 +374,7 @@ describe("tools - goals", () => {
       arguments: { goalId: "goal-1", categoryId: "languages" },
     });
 
-    const text = result.content[0].text as string;
+    const text = (result.content as Array<{ text: string }>)[0]!.text;
     expect(text).toContain("Completed goal: Learn Rust");
     expect(text).toContain("Created skill");
 
@@ -389,7 +393,7 @@ describe("tools - interests", () => {
       arguments: { name: "Kubernetes", domainId: "software-development" },
     });
 
-    expect(result.content[0].text).toContain("Added interest: Kubernetes");
+    expect((result.content as Array<{ text: string }>)[0]!.text).toContain("Added interest: Kubernetes");
   });
 });
 
@@ -402,7 +406,7 @@ describe("tools - domains and categories", () => {
       arguments: { name: "Music" },
     });
 
-    const text = result.content[0].text as string;
+    const text = (result.content as Array<{ text: string }>)[0]!.text;
     expect(text).toContain("Added domain: Music");
     expect(text).toContain("id:");
     expect(text).toContain("slug: music");
@@ -424,7 +428,7 @@ describe("tools - domains and categories", () => {
       arguments: { domainId: "music", name: "Instrument" },
     });
 
-    const text = result.content[0].text as string;
+    const text = (result.content as Array<{ text: string }>)[0]!.text;
     expect(text).toContain("Added category: Instrument");
     expect(text).toContain("id:");
     expect(text).toContain("to domain Music");
@@ -455,7 +459,7 @@ describe("tools - domains and categories", () => {
       },
     });
 
-    expect(result.content[0].text).toContain("Added skill: Guitar (familiar)");
+    expect((result.content as Array<{ text: string }>)[0]!.text).toContain("Added skill: Guitar (familiar)");
 
     const profile = repo.getStoredProfile()!;
     expect(profile.skills).toHaveLength(1);
@@ -491,7 +495,7 @@ describe("tools - export", () => {
       arguments: { format: "llm-md" },
     });
 
-    const text = result.content[0].text as string;
+    const text = (result.content as Array<{ text: string }>)[0]!.text;
     expect(text).toContain("# Dossier Profile:");
     expect(text).toContain("### Software Development");
     expect(text).toContain("**Programming Languages:**");
@@ -504,7 +508,7 @@ describe("tools - export", () => {
       arguments: { format: "json" },
     });
 
-    const text = result.content[0].text as string;
+    const text = (result.content as Array<{ text: string }>)[0]!.text;
     const json = JSON.parse(text);
     expect(json.generator).toBe("dossier");
   });
