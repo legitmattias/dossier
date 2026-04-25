@@ -45,8 +45,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      # TODO: Fix strict type errors in MCP test files and re-enable
-      # - run: pnpm typecheck
+      - run: pnpm typecheck
       - run: pnpm test
 
   # ── Build and push Docker images ──────────────────────────
