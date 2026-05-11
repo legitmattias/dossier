@@ -19,6 +19,7 @@ interface ApiKey {
   name: string;
   prefix: string;
   scopes: string;
+  maxVisibility: string | null;
   lastUsedAt: string | null;
   createdAt: string;
 }
@@ -71,11 +72,12 @@ export async function action({ request }: ActionFunctionArgs) {
     if (intent === "create-key") {
       const name = String(form.get("name"));
       const scopes = String(form.get("scopes") || "read");
+      const maxVisibility = form.get("maxVisibility") === "public" ? "public" : null;
       if (!name) return json({ error: "Name is required" }, { status: 400 });
 
       const result = await api<{ id: string; name: string; key: string; prefix: string; scopes: string }>(
         "/auth/api-keys",
-        { method: "POST", token, body: { name, scopes } },
+        { method: "POST", token, body: { name, scopes, maxVisibility } },
       );
       return json({ newKey: result.key, keyName: result.name });
     }
@@ -264,11 +266,21 @@ export default function SettingsPage() {
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor="scopes" className={styles.label}>Scopes</label>
+              <label htmlFor="scopes" className={styles.label} title="Read keys can query your profile. Write keys can also add/update/remove entities.">Scopes</label>
               <select id="scopes" name="scopes" className={styles.select}>
                 <option value="read">Read only</option>
                 <option value="read,write">Read & Write</option>
               </select>
+            </div>
+            <div className={styles.field}>
+              <label htmlFor="maxVisibility" className={styles.label} title="Filter reads as if anonymous. Useful for portfolio bots — the key authenticates as you, but only sees the public slice of your profile.">Visibility cap</label>
+              <select id="maxVisibility" name="maxVisibility" className={styles.select} defaultValue="">
+                <option value="">No cap — sees everything the owner sees</option>
+                <option value="public">Public only — reads filtered as if anonymous</option>
+              </select>
+              <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: "var(--space-xs)" }}>
+                With the cap on, private entities, domain-private cascades, <code>notes</code>, and per-field <code>privateFields</code> overrides are all stripped from this key's reads.
+              </p>
             </div>
             <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
               {isSubmitting ? "Generating..." : "Generate"}
@@ -295,6 +307,15 @@ export default function SettingsPage() {
                 </div>
                 <div className={styles.cardBadges}>
                   <span className={styles.proficiency} data-level="familiar">{key.scopes}</span>
+                  {key.maxVisibility === "public" && (
+                    <span
+                      className={styles.proficiency}
+                      data-level="novice"
+                      title="This key sees only the public slice of your profile"
+                    >
+                      🔒 public-only
+                    </span>
+                  )}
                 </div>
                 <div className={styles.cardMeta}>
                   Last used: {key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : "Never"} | Created: {new Date(key.createdAt).toLocaleDateString()}

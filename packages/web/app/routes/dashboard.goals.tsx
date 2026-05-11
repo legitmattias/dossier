@@ -72,6 +72,7 @@ export async function action({ request }: ActionFunctionArgs) {
           description: String(form.get("description") ?? "") || undefined,
           motivation: form.get("motivation") || undefined,
           notes: String(form.get("notes") ?? "") || undefined,
+          targetDate: String(form.get("targetDate") ?? "") || undefined,
           visibility: form.get("visibility") as string || "public",
           featured: form.get("featured") === "on",
           privateFields: form.getAll("privateField").map(String),
@@ -93,6 +94,12 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     if (intent === "update") {
+      const targetDateRaw = form.get("targetDate");
+      const targetDate = targetDateRaw === null
+        ? undefined
+        : String(targetDateRaw) === ""
+          ? null
+          : String(targetDateRaw);
       await api(`/profile/goals/${form.get("goalId")}`, {
         method: "PUT",
         token,
@@ -103,6 +110,7 @@ export async function action({ request }: ActionFunctionArgs) {
           notes: String(form.get("notes") ?? "") || undefined,
           priority: String(form.get("priority")),
           status: String(form.get("status")),
+          targetDate,
           visibility: String(form.get("visibility") ?? "public"),
           featured: form.get("featured") === "on",
           privateFields: form.getAll("privateField").map(String),
@@ -440,8 +448,14 @@ export default function GoalsPage() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
+                <label htmlFor="notes" className={styles.label} title={FIELD_TOOLTIPS.notes}>Notes (internal — never exported)</label>
                 <ExpandableTextEditor id="notes" name="notes" rows={2} placeholder="Internal notes (not exported)" label="Notes" />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="targetDate" className={styles.label} title={FIELD_TOOLTIPS.targetDate}>Target date (optional)</label>
+                <input id="targetDate" name="targetDate" type="date" className={styles.input} />
+                <PrivateFieldToggle field="targetDate" />
               </div>
 
               <div className={styles.field}>
@@ -457,6 +471,12 @@ export default function GoalsPage() {
                   <option value="private">Private</option>
                 </select>
               </div>
+
+              <fieldset style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", padding: "var(--space-sm) var(--space-md)", margin: 0 }}>
+                <legend style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", padding: "0 var(--space-sm)" }} title="Hide selected sub-collections from public output even when the goal itself is public.">More privacy controls</legend>
+                <PrivateFieldToggle field="progress" defaultChecked note="History of % updates. Private by default — uncheck to publish." />
+                <PrivateFieldToggle field="resources" note="Articles, courses, books linked to this goal." />
+              </fieldset>
 
               <div className={styles.formActions}>
                 <button type="button" onClick={() => { setSaved(false); setSearchParams({}); }} className={styles.cancelButton}>
@@ -579,6 +599,21 @@ export default function GoalsPage() {
               </div>
 
               <div className={styles.field}>
+                <label htmlFor="edit-targetDate" className={styles.label} title={FIELD_TOOLTIPS.targetDate}>Target date (optional)</label>
+                <input
+                  id="edit-targetDate"
+                  name="targetDate"
+                  type="date"
+                  className={styles.input}
+                  defaultValue={editGoal.targetDate ? editGoal.targetDate.slice(0, 10) : ""}
+                />
+                <PrivateFieldToggle
+                  field="targetDate"
+                  defaultChecked={editGoal.privateFields?.includes("targetDate")}
+                />
+              </div>
+
+              <div className={styles.field}>
                 <label className={styles.label}>
                   <input type="checkbox" name="featured" defaultChecked={editGoal.featured} /> Featured
                 </label>
@@ -591,6 +626,23 @@ export default function GoalsPage() {
                   <option value="private">Private</option>
                 </select>
               </div>
+
+              <fieldset style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", padding: "var(--space-sm) var(--space-md)", margin: 0 }}>
+                <legend style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", padding: "0 var(--space-sm)" }} title="Hide selected sub-collections from public output even when the goal itself is public.">More privacy controls</legend>
+                <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", margin: "var(--space-xs) 0 var(--space-sm)" }}>
+                  Progress and resources are managed elsewhere — these toggles control whether they appear on your public profile.
+                </p>
+                <PrivateFieldToggle
+                  field="progress"
+                  defaultChecked={editGoal.privateFields?.includes("progress") ?? true}
+                  note="History of % updates. Private by default — uncheck to publish."
+                />
+                <PrivateFieldToggle
+                  field="resources"
+                  defaultChecked={editGoal.privateFields?.includes("resources")}
+                  note="Articles, courses, books linked to this goal."
+                />
+              </fieldset>
 
               <div className={styles.formActions}>
                 <button type="button" onClick={() => { setSaved(false); setSearchParams({}); }} className={styles.cancelButton}>
