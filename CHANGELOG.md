@@ -7,6 +7,31 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added — 0.2: multi-consumer access control
+
+- **Per-field private overrides (`privateFields`)**: on Skill, Goal, Interest, and Project, the owner can mark specific eligible fields as hidden from public output even when the entity itself is public. Public surfaces (REST `/u/:username`, exporters, MCP via maxVisibility-capped keys) strip the marked fields; authenticated owner reads see everything. Eligible sets per entity:
+  - Skill — `proficiency`, `proficiencyLabel`
+  - Goal — `motivation`, `priority`, `status`, `targetDate`, `progress`, `resources` (with `progress` defaulting to private)
+  - Project — `url`, `role`, `startDate`, `endDate`, `highlights`, `status`
+  - Interest — none (entity-level visibility is sufficient)
+  Drives the canonical use case: a public Bachelor thesis project that links to a private GitHub repo URL.
+- **Per-client MCP HTTP authentication**: the MCP HTTP transport now authenticates each inbound client with their own personal `dsk_` API key, validated against `GET /auth/me` at session-init. Sessions are bound to the validated bearer; the MCP forwards that bearer onward to the API, so each client operates as their own user end-to-end. Replaces the previous shared `MCP_API_KEY` / `STORAGE_API_KEY` env vars. **Breaking** — see migration notes.
+- **API key `maxVisibility` cap**: optional `maxVisibility: "public"` flag on a `dsk_` key. When set, reads through that key are filtered as if the request were anonymous (private entities removed, domain-private cascade applied, `notes` stripped, `privateFields` overrides applied). Lets a single user issue keys that project different curated views — e.g. a portfolio chatbot gets only the public slice, a personal AI assistant gets full access. Settable via `POST /auth/api-keys` body (`maxVisibility: "public"`). Web UI for managing the cap is a follow-up.
+- **`ExpandableTextEditor` web component**: long-text fields (description, motivation, notes) render as a 3–4 row textarea with an inline expand icon that opens a focused full-screen modal (bottom-anchored sheet on mobile) with Cancel/Save, so paragraph-length content gets a real editing surface.
+- **Per-field private-toggle UI** and **list-row padlock badges** on Skills, Goals, and Projects edit modals: inline "🔒 Private" checkbox next to each eligible field with mobile-friendly touch targets; list rows show a small padlock with a count when any field on the entity is hidden from public view.
+- **Field-purpose tooltips**: every form field label on the edit modals now carries a short tooltip explaining its intended purpose, surfaced via the native `title` attribute.
+
+### Changed — 0.2
+
+- **Breaking — MCP HTTP env vars removed.** `DOSSIER_MCP_API_KEY` and `DOSSIER_STORAGE_API_KEY` no longer exist. HTTP transport now requires `DOSSIER_STORAGE=api` plus `DOSSIER_API_URL`; auth comes from the inbound client's `dsk_` key. stdio + file storage is unchanged. See the migration prompt for downstream services below.
+- `notes` is now hard-stripped from `/u/:username` output (was leaking via the JSON serializer despite MCP/exporter contracts treating it as internal).
+
+### Migration notes (0.2)
+
+**For Dossier operators**: pull the new image; the existing per-user `dsk_` API keys in your database continue to work for both REST and MCP HTTP. Remove `MCP_API_KEY` and `STORAGE_API_KEY` from your `.env` — they're no longer read.
+
+**For downstream services consuming Dossier** (e.g. portfolio agents, integrations): the MCP HTTP transport no longer accepts a single shared secret. Issue a personal `dsk_` key in Dossier's web UI (Settings → API Keys), one per service, ideally with `maxVisibility: "public"` for read-only portfolio-style consumers. The same key works for both REST and MCP HTTP — there is no separate MCP key concept anymore.
+
 ### Added
 
 - **Feedback channel**: new `dossier_submit_feedback` MCP tool lets AI agents

@@ -57,13 +57,17 @@ All tools and resources work identically in both modes. Cloud mode enables multi
 | Variable | Default | Description |
 |---|---|---|
 | `DOSSIER_TRANSPORT` | `stdio` | Transport mode: `stdio` or `http` |
-| `DOSSIER_STORAGE` | `file` | Storage backend: `file` (local JSON) or `api` (Dossier API) |
+| `DOSSIER_STORAGE` | `file` | Storage backend: `file` (local JSON) or `api` (Dossier API). HTTP transport requires `api`. |
 | `DOSSIER_PROFILE` | `~/.config/dossier/profile.json` | Path to profile JSON file (file mode only) |
-| `DOSSIER_API_URL` | — | Dossier API base URL (required for api mode) |
-| `DOSSIER_API_KEY` | — | API key for Dossier API authentication (required for api mode) |
-| `DOSSIER_PORT` | `3100` | HTTP port (http mode only) |
-| `DOSSIER_HOST` | `0.0.0.0` | HTTP bind address (http mode only) |
-| `DOSSIER_API_KEY` | — | API key for HTTP transport authentication (required for http transport) |
+| `DOSSIER_API_URL` | — | Dossier API base URL. Required for `api` storage and for `http` transport. |
+| `DOSSIER_API_KEY` | — | Personal `dsk_` API key for stdio + `api` storage. Authenticates as a specific user against the Dossier API. |
+| `DOSSIER_PORT` | `3100` | HTTP port (http transport only) |
+| `DOSSIER_HOST` | `0.0.0.0` | HTTP bind address (http transport only) |
+| `DOSSIER_MCP_CORS_ORIGIN` | `*` | Allowed CORS origin for HTTP transport |
+
+### HTTP transport authentication
+
+In HTTP mode there is **no shared MCP API key**. Each inbound client must present its own personal `dsk_` API key in `Authorization: Bearer dsk_…`. The MCP server validates the key against `GET /auth/me` on the Dossier API at session-init, binds the session to the validated user, and forwards that bearer onward — so each client operates as its own user with their own scopes and (optionally) a `maxVisibility` cap. Issue keys per consumer from the Dossier web UI under **Settings → API Keys**.
 
 ## Resources
 

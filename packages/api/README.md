@@ -69,11 +69,24 @@ curl -X POST http://localhost:3200/auth/login \
 curl -X POST http://localhost:3200/auth/api-keys \
   -H "Authorization: Bearer <jwt>" \
   -H "Content-Type: application/json" \
-  -d '{"name":"my-integration"}'
-# Returns: { "key": "dsk_abc123..." } — save this, it won't be shown again
+  -d '{"name":"my-integration","scopes":"read"}'
+# Returns: { "key": "dsk_abc123...", "maxVisibility": null } — save the key, it won't be shown again
 ```
 
-API keys use the `dsk_` prefix and are compared using timing-safe equality checks.
+API keys use the `dsk_` prefix and are stored hashed (bcrypt). Per-key fields:
+
+- **`scopes`** (default `"read"`): comma-separated `read` and/or `write`. Write routes reject keys lacking `write`.
+- **`maxVisibility`** (optional, defaults to no cap): set to `"public"` to filter every read through this key as if the request were anonymous — private entities removed, domain-private cascade applied, `notes` stripped, per-field `privateFields` overrides applied. Lets one user issue different curated views to different downstream services.
+
+The same `dsk_` key works for both the REST API and the MCP HTTP transport — there is no separate MCP key.
+
+```bash
+# A read-only public-only key for a portfolio agent
+curl -X POST http://localhost:3200/auth/api-keys \
+  -H "Authorization: Bearer <jwt>" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"portfolio-bot","scopes":"read","maxVisibility":"public"}'
+```
 
 ## API Endpoints
 
