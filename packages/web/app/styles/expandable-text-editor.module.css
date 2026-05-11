@@ -1,0 +1,214 @@
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-xs);
+}
+
+.textarea {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  font-family: var(--font-sans);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text);
+  transition: all var(--transition-base);
+  resize: vertical;
+  min-height: 4.5em;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-muted);
+}
+
+.expandButton {
+  flex: 0 0 auto;
+  width: 44px;
+  min-height: 44px;
+  align-self: flex-start;
+  margin-top: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.expandButton:hover,
+.expandButton:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+
+/* --- Fullscreen modal --- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 200; /* above the underlying edit modal (which uses z-index 100) */
+  padding: var(--space-lg);
+}
+
+.modalCard {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-hover);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  width: 100%;
+  max-width: 760px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  box-shadow: var(--shadow-md);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.modalTitle {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.closeButton {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 1.125rem;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+}
+
+.closeButton:hover,
+.closeButton:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text);
+}
+
+.fullscreenTextarea {
+  flex: 1 1 auto;
+  min-height: 360px;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  line-height: 1.6;
+  font-family: var(--font-sans);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text);
+  resize: none;
+  transition: all var(--transition-base);
+}
+
+.fullscreenTextarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-muted);
+}
+
+.modalActions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+.cancelButton {
+  padding: var(--space-sm) var(--space-lg);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  min-height: 44px;
+  transition: all var(--transition-base);
+}
+
+.cancelButton:hover,
+.cancelButton:focus {
+  outline: none;
+  border-color: var(--color-border-hover);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.saveButton {
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--gradient-accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  min-height: 44px;
+  transition: all var(--transition-base);
+}
+
+.saveButton:hover,
+.saveButton:focus {
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* --- Mobile: full-screen bottom-anchored sheet, larger textarea --- */
+
+@media (max-width: 640px) {
+  .modal {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .modalCard {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    padding: var(--space-lg);
+  }
+
+  .fullscreenTextarea {
+    min-height: 60vh;
+    font-size: 1rem;
+  }
+
+  .modalActions {
+    flex-wrap: wrap;
+  }
+
+  .modalActions > * {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .expandButton {
+    min-height: 44px;
+    width: 44px;
+  }
+}

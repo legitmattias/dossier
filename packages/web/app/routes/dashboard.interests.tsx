@@ -4,6 +4,7 @@ import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams, useSubmit } from "@remix-run/react";
 
 import { ConfirmDialog } from "~/components/ConfirmDialog";
+import { ExpandableTextEditor } from "~/components/ExpandableTextEditor";
 import { Toast, type ToastType } from "~/components/Toast";
 
 import { api, ApiError } from "~/lib/api.server";
@@ -314,12 +315,12 @@ export default function InterestsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="description" className={styles.label}>Description (optional)</label>
-                <input id="description" name="description" className={styles.input} placeholder="Why are you interested in this?" />
+                <ExpandableTextEditor id="description" name="description" placeholder="Why are you interested in this?" label="Description" />
               </div>
 
               <div className={styles.field}>
                 <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
-                <textarea id="notes" name="notes" className={styles.input} rows={2} placeholder="Internal notes (not exported)" />
+                <ExpandableTextEditor id="notes" name="notes" rows={2} placeholder="Internal notes (not exported)" label="Notes" />
               </div>
 
               <div className={styles.field}>
@@ -374,12 +375,12 @@ export default function InterestsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="edit-description" className={styles.label}>Description (optional)</label>
-                <input id="edit-description" name="description" className={styles.input} defaultValue={editInterest.description ?? ""} />
+                <ExpandableTextEditor id="edit-description" name="description" defaultValue={editInterest.description ?? ""} label="Description" />
               </div>
 
               <div className={styles.field}>
                 <label htmlFor="edit-notes" className={styles.label}>Notes (optional)</label>
-                <textarea id="edit-notes" name="notes" className={styles.input} rows={2} defaultValue={editInterest.notes ?? ""} placeholder="Internal notes (not exported)" />
+                <ExpandableTextEditor id="edit-notes" name="notes" rows={2} defaultValue={editInterest.notes ?? ""} placeholder="Internal notes (not exported)" label="Notes" />
               </div>
 
               <div className={styles.field}>

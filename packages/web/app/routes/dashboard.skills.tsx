@@ -4,6 +4,7 @@ import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams, useSubmit } from "@remix-run/react";
 
 import { ConfirmDialog } from "~/components/ConfirmDialog";
+import { ExpandableTextEditor } from "~/components/ExpandableTextEditor";
 import { Toast, type ToastType } from "~/components/Toast";
 import { api, ApiError } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
@@ -415,12 +416,12 @@ export default function SkillsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="edit-description" className={styles.label}>Description (optional)</label>
-                <input
+                <ExpandableTextEditor
                   id="edit-description"
                   name="description"
-                  className={styles.input}
                   defaultValue={editSkill.description ?? ""}
                   placeholder="Brief description of this skill"
+                  label="Description"
                 />
               </div>
 
@@ -469,12 +470,12 @@ export default function SkillsPage() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="edit-notes" className={styles.label}>Notes (optional)</label>
-                <input
+                <label htmlFor="edit-notes" className={styles.label}>Notes (internal — never exported)</label>
+                <ExpandableTextEditor
                   id="edit-notes"
                   name="notes"
-                  className={styles.input}
                   defaultValue={editSkill.notes ?? ""}
+                  label="Notes"
                 />
               </div>
 
@@ -525,7 +526,7 @@ export default function SkillsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="description" className={styles.label}>Description (optional)</label>
-                <input id="description" name="description" className={styles.input} placeholder="Brief description of this skill" />
+                <ExpandableTextEditor id="description" name="description" placeholder="Brief description of this skill" label="Description" />
               </div>
 
               <div className={styles.field}>
@@ -564,7 +565,7 @@ export default function SkillsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
-                <input id="notes" name="notes" className={styles.input} placeholder="Personal notes about this skill" />
+                <ExpandableTextEditor id="notes" name="notes" placeholder="Personal notes about this skill" label="Notes" />
               </div>
 
               <div className={styles.field}>

@@ -4,6 +4,7 @@ import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams, useSubmit } from "@remix-run/react";
 
 import { ConfirmDialog } from "~/components/ConfirmDialog";
+import { ExpandableTextEditor } from "~/components/ExpandableTextEditor";
 import { Toast, type ToastType } from "~/components/Toast";
 import { api, ApiError } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
@@ -421,17 +422,17 @@ export default function GoalsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="description" className={styles.label}>Description (optional)</label>
-                <input id="description" name="description" className={styles.input} placeholder="What does this goal involve?" />
+                <ExpandableTextEditor id="description" name="description" placeholder="What does this goal involve?" label="Description" />
               </div>
 
               <div className={styles.field}>
                 <label htmlFor="motivation" className={styles.label}>Motivation (optional)</label>
-                <textarea id="motivation" name="motivation" className={styles.input} rows={3} placeholder="Why are you learning this?" />
+                <ExpandableTextEditor id="motivation" name="motivation" rows={3} placeholder="Why are you learning this?" label="Motivation" />
               </div>
 
               <div className={styles.field}>
                 <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
-                <textarea id="notes" name="notes" className={styles.input} rows={2} placeholder="Internal notes (not exported)" />
+                <ExpandableTextEditor id="notes" name="notes" rows={2} placeholder="Internal notes (not exported)" label="Notes" />
               </div>
 
               <div className={styles.field}>
@@ -524,17 +525,17 @@ export default function GoalsPage() {
 
               <div className={styles.field}>
                 <label htmlFor="edit-description" className={styles.label}>Description (optional)</label>
-                <input id="edit-description" name="description" className={styles.input} defaultValue={editGoal.description ?? ""} />
+                <ExpandableTextEditor id="edit-description" name="description" defaultValue={editGoal.description ?? ""} label="Description" />
               </div>
 
               <div className={styles.field}>
                 <label htmlFor="edit-motivation" className={styles.label}>Motivation (optional)</label>
-                <textarea id="edit-motivation" name="motivation" className={styles.input} rows={3} defaultValue={editGoal.motivation ?? ""} />
+                <ExpandableTextEditor id="edit-motivation" name="motivation" rows={3} defaultValue={editGoal.motivation ?? ""} label="Motivation" />
               </div>
 
               <div className={styles.field}>
                 <label htmlFor="edit-notes" className={styles.label}>Notes (optional)</label>
-                <textarea id="edit-notes" name="notes" className={styles.input} rows={2} defaultValue={editGoal.notes ?? ""} placeholder="Internal notes (not exported)" />
+                <ExpandableTextEditor id="edit-notes" name="notes" rows={2} defaultValue={editGoal.notes ?? ""} placeholder="Internal notes (not exported)" label="Notes" />
               </div>
 
               <div className={styles.field}>
