@@ -52,10 +52,11 @@ services:
       DOSSIER_TRANSPORT: http
       DOSSIER_PORT: "3100"
       DOSSIER_HOST: "0.0.0.0"
-      DOSSIER_MCP_API_KEY: ${MCP_API_KEY}
       DOSSIER_STORAGE: api
       DOSSIER_API_URL: http://api:3200
-      DOSSIER_STORAGE_API_KEY: ${STORAGE_API_KEY}
+      # MCP HTTP transport authenticates each inbound client via /auth/me on
+      # the API. No shared service key is needed — clients present their own
+      # personal dsk_ API key generated from the web UI.
     ports:
       - "${MCP_PORT:-3150}:3100"
     depends_on:

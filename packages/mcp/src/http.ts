@@ -1,5 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { randomUUID, timingSafeEqual } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,21 +8,42 @@ import { log } from "./logger.js";
 export interface HttpServerOptions {
   readonly port: number;
   readonly host: string;
-  readonly apiKey?: string;
+  /**
+   * URL of the Dossier REST API. Used to validate inbound bearer tokens at
+   * session-init time by calling GET /auth/me. Required — HTTP transport
+   * cannot operate in file-storage mode.
+   */
+  readonly apiUrl: string;
   readonly corsOrigin?: string;
+  /**
+   * Override the inbound bearer validator. Used by tests; production passes
+   * undefined and the real `/auth/me` round-trip runs.
+   */
+  readonly validateBearer?: (apiKey: string) => Promise<{ userId: string } | null>;
 }
 
+export interface SessionContext {
+  readonly apiKey: string;
+  readonly userId: string;
+}
+
+/**
+ * Start the MCP HTTP transport.
+ *
+ * Inbound authentication is DB-backed: each client must present a personal
+ * `dsk_` API key in `Authorization: Bearer …`. The key is validated against
+ * the Dossier API at session-init time. Validated bearer + userId are passed
+ * into `serverFactory` so each session operates as its own user — the MCP
+ * server forwards that client's bearer onward to the API instead of using a
+ * shared service identity.
+ */
 export async function startHttpServer(
-  serverFactory: McpServer | (() => McpServer),
+  serverFactory: (ctx: SessionContext) => McpServer,
   options: HttpServerOptions,
 ): Promise<void> {
-  const { port, host, apiKey, corsOrigin } = options;
+  const { port, host, apiUrl, corsOrigin, validateBearer } = options;
   const transports: Record<string, StreamableHTTPServerTransport> = {};
   const sessionActivity: Record<string, number> = {};
-
-  const getServer = typeof serverFactory === "function"
-    ? serverFactory
-    : () => serverFactory;
 
   // Clean up inactive sessions every 5 minutes
   const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
@@ -38,6 +59,29 @@ export async function startHttpServer(
     }
   }, 5 * 60 * 1000);
 
+  const validate = validateBearer ?? (async (token: string) => {
+    if (!token.startsWith("dsk_")) return null;
+    try {
+      const res = await fetch(`${apiUrl}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return null;
+      const body = await res.json() as { user?: { id?: string } };
+      const userId = body.user?.id;
+      if (!userId) return null;
+      return { userId };
+    } catch (err) {
+      log.warn(`Bearer validation failed: ${err instanceof Error ? err.message : String(err)}`);
+      return null;
+    }
+  });
+
+  const extractBearer = (req: IncomingMessage): string | null => {
+    const header = req.headers["authorization"] ?? "";
+    if (!header.startsWith("Bearer ")) return null;
+    return header.slice(7);
+  };
+
   const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     // CORS headers
     res.setHeader("Access-Control-Allow-Origin", corsOrigin ?? "*");
@@ -49,20 +93,6 @@ export async function startHttpServer(
       res.writeHead(204);
       res.end();
       return;
-    }
-
-    // API key check (timing-safe comparison to prevent timing attacks)
-    if (apiKey) {
-      const authHeader = req.headers["authorization"] ?? "";
-      const expected = `Bearer ${apiKey}`;
-      const valid = authHeader.length === expected.length
-        && timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected));
-      if (!valid) {
-        log.warn(`Unauthorized ${req.method} ${req.url}`);
-        res.writeHead(401, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Unauthorized" }));
-        return;
-      }
     }
 
     // Only handle /mcp path
@@ -83,11 +113,30 @@ export async function startHttpServer(
         return;
       }
 
+      // Any POST without a known session id needs a valid bearer. Validate
+      // upfront so missing/bad auth returns 401 regardless of body shape.
+      const bearer = extractBearer(req);
+      if (!bearer) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Missing Authorization: Bearer dsk_… header" }));
+        return;
+      }
+      const result = await validate(bearer);
+      if (!result) {
+        log.warn(`Unauthorized POST from ${req.socket.remoteAddress}`);
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid or revoked API key" }));
+        return;
+      }
+
       if (!sessionId && isInitializeRequest(body)) {
+        // Session is bound to this token; subsequent requests on the
+        // session id use the bound context regardless of later headers.
+
         const transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (id) => {
-            log.info(`Session initialized: ${id}`);
+            log.info(`Session initialized: ${id} (user ${result.userId})`);
             transports[id] = transport;
             sessionActivity[id] = Date.now();
           },
@@ -102,7 +151,7 @@ export async function startHttpServer(
           }
         };
 
-        const server = getServer();
+        const server = serverFactory({ apiKey: bearer, userId: result.userId });
         await server.connect(transport);
         await transport.handleRequest(req, res, body);
         return;
@@ -141,11 +190,7 @@ export async function startHttpServer(
 
   httpServer.listen(port, host, () => {
     log.info(`Listening on http://${host}:${port}/mcp`);
-    if (apiKey) {
-      log.info("API key authentication enabled");
-    } else {
-      log.warn("No DOSSIER_API_KEY set — HTTP transport is unauthenticated");
-    }
+    log.info(`Inbound auth: per-client dsk_ keys, validated via ${apiUrl}/auth/me`);
   });
 
   // Graceful shutdown

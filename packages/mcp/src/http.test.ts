@@ -123,11 +123,20 @@ describe("HTTP transport", () => {
     await repo.save(createTestProfile());
 
     const ops = createTestOps(repo);
-    await startHttpServer(createDossierMcpServer(ops), {
-      port: testPort,
-      host: "127.0.0.1",
-      apiKey: "test-secret",
-    });
+    await startHttpServer(
+      () => createDossierMcpServer(ops),
+      {
+        port: testPort,
+        host: "127.0.0.1",
+        apiUrl: "http://stub-api",
+        // Stub validator: accept exactly "dsk_test-secret", reject everything else.
+        // Real production code calls /auth/me — test code shortcuts that round-trip.
+        validateBearer: async (token: string) => {
+          if (token === "dsk_test-secret") return { userId: "test-user-1" };
+          return null;
+        },
+      },
+    );
 
     // Small delay for server to be ready
     await new Promise((r) => setTimeout(r, 100));
@@ -141,7 +150,7 @@ describe("HTTP transport", () => {
     client = new Client({ name: "test-client", version: "1.0" });
     const transport = new StreamableHTTPClientTransport(
       new URL(`http://127.0.0.1:${testPort}/mcp`),
-      { requestInit: { headers: { Authorization: "Bearer test-secret" } } },
+      { requestInit: { headers: { Authorization: "Bearer dsk_test-secret" } } },
     );
     await client.connect(transport);
 
@@ -176,7 +185,7 @@ describe("HTTP transport", () => {
   it("returns 404 for unknown paths", async () => {
     const response = await fetch(`http://127.0.0.1:${testPort}/unknown`, {
       method: "GET",
-      headers: { Authorization: "Bearer test-secret" },
+      headers: { Authorization: "Bearer dsk_test-secret" },
     });
     expect(response.status).toBe(404);
   });
@@ -194,7 +203,7 @@ describe("HTTP transport", () => {
     client = new Client({ name: "test-client", version: "1.0" });
     const transport = new StreamableHTTPClientTransport(
       new URL(`http://127.0.0.1:${testPort}/mcp`),
-      { requestInit: { headers: { Authorization: "Bearer test-secret" } } },
+      { requestInit: { headers: { Authorization: "Bearer dsk_test-secret" } } },
     );
     await client.connect(transport);
 
@@ -209,7 +218,7 @@ describe("HTTP transport", () => {
     client = new Client({ name: "test-client", version: "1.0" });
     const transport = new StreamableHTTPClientTransport(
       new URL(`http://127.0.0.1:${testPort}/mcp`),
-      { requestInit: { headers: { Authorization: "Bearer test-secret" } } },
+      { requestInit: { headers: { Authorization: "Bearer dsk_test-secret" } } },
     );
     await client.connect(transport);
 
