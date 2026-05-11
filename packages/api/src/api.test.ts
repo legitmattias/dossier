@@ -450,4 +450,65 @@ describe("public profiles", () => {
     expect(body.projects[0]).toHaveProperty("url");
     expect(body.projects[0]).toHaveProperty("privateFields");
   });
+
+  it("filters /profile reads when API key has maxVisibility=public", async () => {
+    const { token } = await registerAndGetToken("alice", "alice@test.com");
+
+    await authReq("/profile/skills", token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "TypeScript",
+        domainId: "builtin-domain-software-development",
+        categoryId: "builtin-category-software-development-languages",
+        proficiency: "advanced",
+        notes: "internal-skill-note",
+        visibility: "public",
+      }),
+    });
+    await authReq("/profile/skills", token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "InternalTool",
+        domainId: "builtin-domain-software-development",
+        categoryId: "builtin-category-software-development-languages",
+        proficiency: "advanced",
+        visibility: "private",
+      }),
+    });
+    await authReq("/profile/projects", token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Thesis",
+        url: "https://github.com/example/private-thesis",
+        privateFields: ["url"],
+      }),
+    });
+
+    const keyRes = await authReq("/auth/api-keys", token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "capped-test", scopes: "read", maxVisibility: "public" }),
+    });
+    expect(keyRes.status).toBe(201);
+    const keyData = await keyRes.json() as { key: string; maxVisibility: string };
+    expect(keyData.maxVisibility).toBe("public");
+
+    const cappedRes = await authReq("/profile", keyData.key);
+    expect(cappedRes.status).toBe(200);
+    const cappedProfile = await cappedRes.json() as {
+      skills: Array<Record<string, unknown>>;
+      projects: Array<Record<string, unknown>>;
+    };
+    expect(cappedProfile.skills.map((s) => s.name)).toEqual(["TypeScript"]);
+    expect(cappedProfile.skills[0]).not.toHaveProperty("notes");
+    expect(JSON.stringify(cappedProfile)).not.toContain("internal-skill-note");
+    expect(cappedProfile.projects[0]).not.toHaveProperty("url");
+
+    const ownerRes = await authReq("/profile", token);
+    const ownerProfile = await ownerRes.json() as { skills: Array<Record<string, unknown>> };
+    expect(ownerProfile.skills.map((s) => s.name).sort()).toEqual(["InternalTool", "TypeScript"]);
+  });
 });

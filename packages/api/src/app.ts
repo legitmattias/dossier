@@ -15,6 +15,8 @@ export interface AppEnv {
     dbConnection: DbConnection;
     userId?: string;
     apiKeyScopes?: string;
+    /** Optional visibility cap on the authenticated API key. "public" filters reads as if anonymous. */
+    apiKeyMaxVisibility?: string;
   };
 }
 

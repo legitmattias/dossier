@@ -179,25 +179,30 @@ authRoutes.patch("/me", requireAuth, requireScope("write"), async (c) => {
 // POST /auth/api-keys — Generate a new API key
 authRoutes.post("/api-keys", requireAuth, requireScope("write"), async (c) => {
   const userId = c.get("userId")!;
-  const body = await c.req.json<{ name: string; scopes?: string }>();
+  const body = await c.req.json<{ name: string; scopes?: string; maxVisibility?: string | null }>();
 
   if (!body.name) {
     return c.json({ error: "name is required" }, 400);
+  }
+  if (body.maxVisibility !== undefined && body.maxVisibility !== null && body.maxVisibility !== "public") {
+    return c.json({ error: "maxVisibility, when set, must be 'public'" }, 400);
   }
 
   const rawKey = `dsk_${randomUUID().replace(/-/g, "")}`;
   const prefix = rawKey.slice(0, 8);
   const keyHash = await hashApiKey(rawKey);
   const id = randomUUID();
+  const maxVisibility = body.maxVisibility ?? null;
 
   const { db } = c.get("dbConnection");
   await db.insert(schema.apiKeys).values({
     id, userId, name: body.name, keyHash, prefix,
     scopes: body.scopes ?? "read",
+    maxVisibility,
   });
 
   // Return the raw key ONCE — it can't be retrieved later
-  return c.json({ id, name: body.name, key: rawKey, prefix, scopes: body.scopes ?? "read" }, 201);
+  return c.json({ id, name: body.name, key: rawKey, prefix, scopes: body.scopes ?? "read", maxVisibility }, 201);
 });
 
 // GET /auth/api-keys — List all API keys (without hashes)
@@ -210,6 +215,7 @@ authRoutes.get("/api-keys", requireAuth, requireScope("read"), async (c) => {
     name: schema.apiKeys.name,
     prefix: schema.apiKeys.prefix,
     scopes: schema.apiKeys.scopes,
+    maxVisibility: schema.apiKeys.maxVisibility,
     lastUsedAt: schema.apiKeys.lastUsedAt,
     createdAt: schema.apiKeys.createdAt,
   }).from(schema.apiKeys).where(eq(schema.apiKeys.userId, userId));

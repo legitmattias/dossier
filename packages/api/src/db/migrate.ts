@@ -181,6 +181,9 @@ export async function ensureTables(db: Database): Promise<void> {
   await db.execute(sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS private_fields JSONB NOT NULL DEFAULT '[]'`);
   await db.execute(sql`ALTER TABLE projects  ADD COLUMN IF NOT EXISTS private_fields JSONB NOT NULL DEFAULT '[]'`);
 
+  // Optional visibility cap on API keys ("public" = filter reads as if anonymous, NULL = no cap)
+  await db.execute(sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS max_visibility TEXT`);
+
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS feedback (
       id TEXT PRIMARY KEY,

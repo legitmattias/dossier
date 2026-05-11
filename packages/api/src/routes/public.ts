@@ -5,6 +5,7 @@ import { infrastructure } from "@dossier/core";
 import type { AppEnv } from "../app.js";
 import * as schema from "../db/schema.js";
 import { loadProfileFromDb } from "../db/profile-loader.js";
+import { filterProfileToPublic } from "../lib/visibility-filter.js";
 
 export const publicRoutes = new Hono<AppEnv>();
 
@@ -28,32 +29,7 @@ publicRoutes.get("/:username", async (c) => {
   const profile = await loadProfileFromDb(db, userId);
   if (!profile) return c.json({ error: "Profile not found" }, 404);
 
-  // Filter out private entities for public access (domain visibility overrides entity visibility)
-  const privateDomainIds = new Set<string>(
-    profile.domains.filter((d) => d.visibility === "private").map((d) => d.id),
-  );
-  const isVisible = (entity: { visibility: string; domainId?: string }) => {
-    if (entity.visibility === "private") return false;
-    if (entity.domainId && privateDomainIds.has(entity.domainId)) return false;
-    return true;
-  };
-  // Strip `notes` and any per-field `privateFields` overrides before serializing to anon viewers.
-  // `notes` is internal-only across all entities; `privateFields` carries owner-marked overrides
-  // (e.g. a public project with a private URL). Authenticated owner reads (GET /profile) keep both.
-  const stripPrivate = <T extends { notes?: unknown; privateFields?: readonly string[] }>(entity: T): T => {
-    const overrides = (entity.privateFields ?? []) as readonly string[];
-    const { notes: _notes, privateFields: _pf, ...rest } = entity as Record<string, unknown> & T;
-    for (const f of overrides) delete (rest as Record<string, unknown>)[f];
-    return rest as T;
-  };
-
-  const publicProfile = {
-    ...profile,
-    skills: profile.skills.filter(isVisible).map(stripPrivate),
-    goals: profile.goals.filter(isVisible).map(stripPrivate),
-    interests: profile.interests.filter(isVisible).map(stripPrivate),
-    projects: profile.projects.filter(isVisible).map(stripPrivate),
-  };
+  const publicProfile = filterProfileToPublic(profile);
 
   const format = c.req.query("format") ?? "json";
 

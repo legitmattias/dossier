@@ -23,6 +23,12 @@ export const apiKeys = pgTable("api_keys", {
   keyHash: text("key_hash").notNull(),
   prefix: text("prefix").notNull(), // First 8 chars for identification
   scopes: text("scopes").notNull().default("read"), // comma-separated: read,write
+  // Optional visibility cap: if "public", requests authenticated with this key
+  // see only the public slice (private entities + private fields stripped),
+  // even though the key authenticates as the owning user. Useful for giving
+  // downstream services (portfolio chatbots, etc.) the same view a non-authed
+  // visitor would see at /u/:username. NULL = no cap (full access).
+  maxVisibility: text("max_visibility"),
   lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

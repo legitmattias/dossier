@@ -48,13 +48,13 @@ export async function verifyApiKey(key: string, hash: string): Promise<boolean> 
   return bcrypt.compare(key, hash);
 }
 
-async function resolveApiKey(db: Database, apiKey: string): Promise<{ userId: string; scopes: string } | null> {
+async function resolveApiKey(db: Database, apiKey: string): Promise<{ userId: string; scopes: string; maxVisibility: string | null } | null> {
   const prefix = apiKey.slice(0, 8);
   const rows = await db.select().from(schema.apiKeys).where(eq(schema.apiKeys.prefix, prefix));
   for (const row of rows) {
     if (await verifyApiKey(apiKey, row.keyHash)) {
       await db.update(schema.apiKeys).set({ lastUsedAt: new Date() }).where(eq(schema.apiKeys.id, row.id));
-      return { userId: row.userId, scopes: row.scopes };
+      return { userId: row.userId, scopes: row.scopes, maxVisibility: row.maxVisibility };
     }
   }
   return null;
@@ -85,6 +85,9 @@ export const optionalAuth = createMiddleware<AppEnv>(async (c, next) => {
     if (result) {
       c.set("userId", result.userId);
       c.set("apiKeyScopes", result.scopes);
+      if (result.maxVisibility) {
+        c.set("apiKeyMaxVisibility", result.maxVisibility);
+      }
     }
     await next();
     return;

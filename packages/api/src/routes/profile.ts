@@ -5,8 +5,14 @@ import type { AppEnv } from "../app.js";
 import { requireAuth, requireScope } from "../middleware/auth.js";
 import { DatabaseProfileRepository } from "../db/db-profile-repository.js";
 import { UuidIdGenerator } from "../db/id-generator.js";
+import { filterProfileToPublic } from "../lib/visibility-filter.js";
 
 export const profileRoutes = new Hono<AppEnv>();
+
+/** True if the authenticated API key has a `maxVisibility: "public"` cap. */
+function isPublicCapped(c: { get(key: "apiKeyMaxVisibility"): string | undefined }): boolean {
+  return c.get("apiKeyMaxVisibility") === "public";
+}
 
 function getDeps(c: { get(key: "dbConnection"): import("../db/connection.js").DbConnection; get(key: "userId"): string | undefined }) {
   const { db } = c.get("dbConnection");
@@ -23,8 +29,10 @@ profileRoutes.get("/", requireAuth, requireScope("read"), async (c) => {
   const profile = await deps.profileRepository.load();
   if (!profile) return c.json({ error: "Profile not found" }, 404);
 
+  const view = isPublicCapped(c) ? filterProfileToPublic(profile) : profile;
+
   try {
-    const serialized = infrastructure.serializeProfile(profile);
+    const serialized = infrastructure.serializeProfile(view);
     return c.json(serialized);
   } catch (err) {
     console.error("[GET /profile] Serialization error:", err);
@@ -63,6 +71,14 @@ profileRoutes.get("/export", requireAuth, requireScope("read"), async (c) => {
   const format = c.req.query("format") ?? "json";
   const deps = getDeps(c);
 
+  if (isPublicCapped(c)) {
+    const profile = await deps.profileRepository.load();
+    if (!profile) return c.text("");
+    const view = filterProfileToPublic(profile);
+    const exporter = infrastructure.createExporter(format);
+    return c.text(exporter.export(view));
+  }
+
   const exporter = infrastructure.createExporter(format);
   const result = await application.exportProfile(
     { profileRepository: deps.profileRepository, exporter },
@@ -77,6 +93,22 @@ profileRoutes.get("/search", requireAuth, requireScope("read"), async (c) => {
   const q = c.req.query("q");
   if (!q) return c.json({ error: "Query parameter 'q' is required" }, 400);
   const deps = getDeps(c);
+
+  if (isPublicCapped(c)) {
+    // Substring search over the public view only.
+    const profile = await deps.profileRepository.load();
+    if (!profile) return c.json({ skills: [], goals: [], interests: [], projects: [] });
+    const filtered = filterProfileToPublic(profile);
+    const term = q.toLowerCase();
+    const match = (s: string | undefined) => (s ?? "").toLowerCase().includes(term);
+    return c.json({
+      skills: filtered.skills.filter((s) => match(s.name)).map(application.toSkillOutput),
+      goals: filtered.goals.filter((g) => match(g.name)).map(application.toGoalOutput),
+      interests: filtered.interests.filter((i) => match(i.name)).map(application.toInterestOutput),
+      projects: filtered.projects.filter((p) => match(p.name)).map(application.toProjectOutput),
+    });
+  }
+
   const result = await application.searchProfile(deps, { query: q });
   return c.json(result);
 });
@@ -86,6 +118,20 @@ profileRoutes.get("/search", requireAuth, requireScope("read"), async (c) => {
 // GET /profile/skills
 profileRoutes.get("/skills", requireAuth, requireScope("read"), async (c) => {
   const deps = getDeps(c);
+  if (isPublicCapped(c)) {
+    const profile = await deps.profileRepository.load();
+    if (!profile) return c.json({ skills: [] });
+    const filtered = filterProfileToPublic(profile);
+    const domainId = c.req.query("domainId");
+    const categoryId = c.req.query("categoryId");
+    const proficiency = c.req.query("proficiency");
+    const skills = filtered.skills
+      .filter((s) => !domainId || s.domainId === domainId)
+      .filter((s) => !categoryId || s.categoryId === categoryId)
+      .filter((s) => !proficiency || s.proficiency === proficiency)
+      .map(application.toSkillOutput);
+    return c.json({ skills });
+  }
   const result = await application.listSkills(deps, {
     domainId: c.req.query("domainId"),
     categoryId: c.req.query("categoryId"),
@@ -125,7 +171,8 @@ profileRoutes.get("/goals", requireAuth, requireScope("read"), async (c) => {
   const profile = await deps.profileRepository.load();
   if (!profile) return c.json({ error: "Profile not found" }, 404);
 
-  let goals = [...profile.goals];
+  const source = isPublicCapped(c) ? filterProfileToPublic(profile) : profile;
+  let goals = [...source.goals];
   const status = c.req.query("status");
   if (status) {
     goals = goals.filter((g) => g.status === status);
@@ -187,7 +234,8 @@ profileRoutes.get("/interests", requireAuth, requireScope("read"), async (c) => 
   const profile = await deps.profileRepository.load();
   if (!profile) return c.json({ error: "Profile not found" }, 404);
 
-  return c.json({ interests: profile.interests.map(application.toInterestOutput) });
+  const source = isPublicCapped(c) ? filterProfileToPublic(profile) : profile;
+  return c.json({ interests: source.interests.map(application.toInterestOutput) });
 });
 
 // POST /profile/interests
@@ -269,10 +317,21 @@ profileRoutes.delete("/domains/:domainId/categories/:categoryId", requireAuth, r
 // GET /profile/projects
 profileRoutes.get("/projects", requireAuth, requireScope("read"), async (c) => {
   const deps = getDeps(c);
-  const result = await application.listProjects(deps, {
-    status: c.req.query("status"),
-    featured: c.req.query("featured") === "true" ? true : c.req.query("featured") === "false" ? false : undefined,
-  });
+  const status = c.req.query("status");
+  const featured = c.req.query("featured") === "true" ? true : c.req.query("featured") === "false" ? false : undefined;
+
+  if (isPublicCapped(c)) {
+    const profile = await deps.profileRepository.load();
+    if (!profile) return c.json({ projects: [] });
+    const filtered = filterProfileToPublic(profile);
+    const projects = filtered.projects
+      .filter((p) => !status || p.status === status)
+      .filter((p) => featured === undefined || p.featured === featured)
+      .map(application.toProjectOutput);
+    return c.json({ projects });
+  }
+
+  const result = await application.listProjects(deps, { status, featured });
   return c.json(result);
 });
 
