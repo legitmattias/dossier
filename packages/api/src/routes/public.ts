@@ -37,12 +37,19 @@ publicRoutes.get("/:username", async (c) => {
     if (entity.domainId && privateDomainIds.has(entity.domainId)) return false;
     return true;
   };
+  // Strip `notes` from every entity — it's internal-only and must never leak to anonymous viewers,
+  // even though authenticated owner reads (GET /profile) keep it.
+  const stripNotes = <T extends { notes?: unknown }>(entity: T): T => {
+    const { notes: _omit, ...rest } = entity;
+    return rest as T;
+  };
+
   const publicProfile = {
     ...profile,
-    skills: profile.skills.filter(isVisible),
-    goals: profile.goals.filter(isVisible),
-    interests: profile.interests.filter(isVisible),
-    projects: profile.projects.filter(isVisible),
+    skills: profile.skills.filter(isVisible).map(stripNotes),
+    goals: profile.goals.filter(isVisible).map(stripNotes),
+    interests: profile.interests.filter(isVisible).map(stripNotes),
+    projects: profile.projects.filter(isVisible).map(stripNotes),
   };
 
   const format = c.req.query("format") ?? "json";

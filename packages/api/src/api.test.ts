@@ -372,4 +372,32 @@ describe("public profiles", () => {
     const res = await req("/u/nobody");
     expect(res.status).toBe(404);
   });
+
+  it("strips notes from entities on the public profile", async () => {
+    const { token, user } = await registerAndGetToken("alice", "alice@test.com");
+
+    const addRes = await authReq("/profile/skills", token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "TypeScript",
+        domainId: "builtin-domain-software-development",
+        categoryId: "builtin-category-software-development-languages",
+        proficiency: "advanced",
+        notes: "should-not-leak",
+      }),
+    });
+    expect(addRes.status).toBe(201);
+
+    await dbConn.db.execute(
+      sql`UPDATE profiles SET is_public = TRUE WHERE user_id = ${user.id}`,
+    );
+
+    const res = await req("/u/alice");
+    expect(res.status).toBe(200);
+    const body = await res.json() as { skills: Array<Record<string, unknown>> };
+    expect(body.skills).toHaveLength(1);
+    expect(body.skills[0]).not.toHaveProperty("notes");
+    expect(JSON.stringify(body)).not.toContain("should-not-leak");
+  });
 });
