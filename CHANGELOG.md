@@ -20,6 +20,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - **`ExpandableTextEditor` web component**: long-text fields (description, motivation, notes) render as a 3–4 row textarea with an inline expand icon that opens a focused full-screen modal (bottom-anchored sheet on mobile) with Cancel/Save, so paragraph-length content gets a real editing surface.
 - **Per-field private-toggle UI** and **list-row padlock badges** on Skills, Goals, and Projects edit modals: inline "🔒 Private" checkbox next to each eligible field with mobile-friendly touch targets; list rows show a small padlock with a count when any field on the entity is hidden from public view.
 - **Field-purpose tooltips**: every form field label on the edit modals now carries a short tooltip explaining its intended purpose, surfaced via the native `title` attribute.
+- **maxVisibility cap in web UI**: the API key generation form on `/dashboard/settings` now exposes the `maxVisibility` cap (no cap / public only) with explanatory copy. Listed keys show a `🔒 public-only` badge when capped.
+- **Goal `targetDate` input + extended privacy controls**: the goal add/edit modal now includes a `targetDate` date input with its own private toggle, plus a "More privacy controls" subsection with toggles for `progress` (default private) and `resources` — the eligible fields that don't have inline editing in the modal.
+- **CLI `--private-field` flag**: `dossier add`, `dossier edit`, `dossier learn`, and `dossier project [--update]` accept repeatable `--private-field <name>` flags, e.g. `dossier project "Thesis" --url https://github.com/foo/bar --private-field url` to add a public project with a private URL.
 
 ### Changed — 0.2
 

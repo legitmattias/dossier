@@ -55,6 +55,12 @@ export function registerProjectCommand(
     .option("--notes <text>", "Internal notes (not exported)")
     .option("--visibility <vis>", "Visibility: public or private", "public")
     .option("-k, --skill <name>", "Skill to link by name (repeatable)", collect, [] as string[])
+    .option(
+      "--private-field <field>",
+      "Mark a field as hidden from public output. Repeatable. Allowed: url, role, startDate, endDate, highlights, status",
+      collect,
+      [] as string[],
+    )
     .option("-s, --sort <by>", "Sort by: name (default), added, updated (list only)")
     .action(
       withErrorHandler(async (name: string | undefined, opts: {
@@ -70,6 +76,7 @@ export function registerProjectCommand(
         notes?: string;
         visibility?: string;
         skill?: string[];
+        privateField: string[];
         sort?: string;
       }) => {
         const container = getContainer();
@@ -140,6 +147,7 @@ export function registerProjectCommand(
             ...(opts.featured !== undefined && { featured: opts.featured }),
             ...(opts.visibility !== undefined && { visibility: opts.visibility }),
             ...(skillIds !== undefined && { skillIds }),
+            ...(opts.privateField.length > 0 && { privateFields: opts.privateField }),
           });
 
           success(`Updated project: ${result.project.name} (${result.project.status})`);
@@ -166,6 +174,7 @@ export function registerProjectCommand(
           featured: opts.featured,
           visibility: opts.visibility,
           ...(skillIds && { skillIds }),
+          ...(opts.privateField.length > 0 && { privateFields: opts.privateField }),
         });
 
         success(`Added project: ${result.project.name} (${result.project.status})`);

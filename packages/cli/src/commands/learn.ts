@@ -5,6 +5,8 @@ import { withErrorHandler } from "../helpers/error-handler.js";
 import { resolveDomain } from "../helpers/resolve.js";
 import { success } from "../helpers/output.js";
 
+const collect = (value: string, prev: string[]): string[] => [...prev, value];
+
 export function registerLearnCommand(
   program: Command,
   getContainer: () => Container,
@@ -20,6 +22,12 @@ export function registerLearnCommand(
     .option("--notes <text>", "Internal notes (not exported)")
     .option("--featured", "Mark as featured")
     .option("--visibility <vis>", "Visibility: public or private", "public")
+    .option(
+      "--private-field <field>",
+      "Mark a field as hidden from public output. Repeatable. Allowed: motivation, priority, status, targetDate, progress, resources. (progress is private by default — pass any --private-field to replace the list.)",
+      collect,
+      [] as string[],
+    )
     .action(
       withErrorHandler(async (name: string, opts: {
         domain: string;
@@ -30,6 +38,7 @@ export function registerLearnCommand(
         notes?: string;
         featured?: boolean;
         visibility?: string;
+        privateField: string[];
       }) => {
         const container = getContainer();
         const profile = await container.profileRepository.load();
@@ -49,6 +58,7 @@ export function registerLearnCommand(
           notes: opts.notes,
           featured: opts.featured,
           visibility: opts.visibility,
+          privateFields: opts.privateField.length > 0 ? opts.privateField : undefined,
         });
 
         success(`Added learning goal: ${result.goal.name} (${result.goal.priority} priority)`);
