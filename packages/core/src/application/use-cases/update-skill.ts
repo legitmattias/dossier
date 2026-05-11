@@ -43,6 +43,7 @@ export async function updateSkill(
     visibility: input.visibility as "public" | "private" | undefined,
     featured: input.featured,
     addSources: input.addSources,
+    privateFields: input.privateFields,
   });
 
   const updatedProfile = updateSkillInProfile(profile, skillId, updatedSkill);

@@ -236,6 +236,7 @@ function serializeSkill(skill: Skill): object {
     ...(skill.notes !== undefined && { notes: skill.notes }),
     visibility: skill.visibility,
     featured: skill.featured,
+    privateFields: skill.privateFields,
     createdAt: serializeDate(skill.createdAt),
     updatedAt: serializeDate(skill.updatedAt),
   };
@@ -273,6 +274,7 @@ function serializeGoal(goal: LearningGoal): object {
     ...(goal.targetDate !== undefined && { targetDate: serializeDate(goal.targetDate) }),
     visibility: goal.visibility,
     featured: goal.featured,
+    privateFields: goal.privateFields,
     createdAt: serializeDate(goal.createdAt),
     updatedAt: serializeDate(goal.updatedAt),
   };
@@ -335,6 +337,7 @@ function serializeProject(project: Project): object {
     ...(project.startDate !== undefined && { startDate: serializeDate(project.startDate) }),
     ...(project.endDate !== undefined && { endDate: serializeDate(project.endDate) }),
     visibility: project.visibility,
+    privateFields: project.privateFields,
     createdAt: serializeDate(project.createdAt),
     updatedAt: serializeDate(project.updatedAt),
   };

@@ -2,10 +2,11 @@ import {
   findProjectInProfile,
   updateProjectInProfile,
   toProjectId,
+  PROJECT_PRIVATE_ELIGIBLE_FIELDS,
 } from "../../domain/index.js";
-import type { ProjectStatus, ProjectPriority } from "../../domain/index.js";
+import type { ProjectStatus, ProjectPriority, ProjectPrivateField } from "../../domain/index.js";
 import type { UpdateProjectInput, UpdateProjectOutput } from "../dtos/project-dtos.js";
-import { ProfileNotFoundError } from "../errors/application-errors.js";
+import { InvalidInputError, ProfileNotFoundError } from "../errors/application-errors.js";
 import { toProjectOutput } from "../helpers/mappers.js";
 import type { IProfileRepository } from "../ports/profile-repository.js";
 
@@ -23,6 +24,16 @@ export async function updateProject(
   const projectId = toProjectId(input.projectId);
   const project = findProjectInProfile(profile, projectId);
 
+  let privateFields = project.privateFields;
+  if (input.privateFields !== undefined) {
+    for (const f of input.privateFields) {
+      if (!PROJECT_PRIVATE_ELIGIBLE_FIELDS.includes(f as ProjectPrivateField)) {
+        throw new InvalidInputError(`privateFields contains '${f}', which is not allowed. Allowed: ${PROJECT_PRIVATE_ELIGIBLE_FIELDS.join(", ")}`);
+      }
+    }
+    privateFields = input.privateFields as readonly ProjectPrivateField[];
+  }
+
   const updatedProject = {
     ...project,
     ...(input.name !== undefined && { name: input.name }),
@@ -38,6 +49,7 @@ export async function updateProject(
     ...(input.notes !== undefined && { notes: input.notes }),
     ...(input.startDate !== undefined && { startDate: new Date(input.startDate) }),
     ...(input.endDate !== undefined && { endDate: new Date(input.endDate) }),
+    privateFields,
     updatedAt: new Date(),
   };
 

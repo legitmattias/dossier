@@ -173,6 +173,14 @@ export async function ensureTables(db: Database): Promise<void> {
   await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE`);
   await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS feedback_opt_in BOOLEAN NOT NULL DEFAULT FALSE`);
 
+  // Per-field privacy override: array of field names hidden from public output
+  // even when the entity itself is public. Goals default to ["progress"] so the
+  // history of % updates stays private unless the user opts in to publishing it.
+  await db.execute(sql`ALTER TABLE skills    ADD COLUMN IF NOT EXISTS private_fields JSONB NOT NULL DEFAULT '[]'`);
+  await db.execute(sql`ALTER TABLE goals     ADD COLUMN IF NOT EXISTS private_fields JSONB NOT NULL DEFAULT '["progress"]'`);
+  await db.execute(sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS private_fields JSONB NOT NULL DEFAULT '[]'`);
+  await db.execute(sql`ALTER TABLE projects  ADD COLUMN IF NOT EXISTS private_fields JSONB NOT NULL DEFAULT '[]'`);
+
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS feedback (
       id TEXT PRIMARY KEY,

@@ -3,6 +3,14 @@ import type { CategoryId, DomainId, SkillId } from "../value-objects/identifiers
 import type { Proficiency } from "../value-objects/proficiency.js";
 import type { Slug } from "../value-objects/slug.js";
 
+/**
+ * Field names that can be marked private on a Skill, even when the skill itself
+ * is `visibility: "public"`. Marked fields are stripped from public output
+ * (REST public route, exporters) but always visible to the owner.
+ */
+export const SKILL_PRIVATE_ELIGIBLE_FIELDS = ["proficiency", "proficiencyLabel"] as const;
+export type SkillPrivateField = (typeof SKILL_PRIVATE_ELIGIBLE_FIELDS)[number];
+
 export interface SkillSource {
   readonly type: "self-reported" | "assessed" | "inferred";
   readonly detail?: string;
@@ -22,6 +30,7 @@ export interface Skill {
   readonly notes?: string;
   readonly visibility: "public" | "private";
   readonly featured: boolean;
+  readonly privateFields: readonly SkillPrivateField[];
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -39,6 +48,7 @@ export interface CreateSkillInput {
   readonly notes?: string;
   readonly visibility?: "public" | "private";
   readonly featured?: boolean;
+  readonly privateFields?: readonly string[];
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
 }
@@ -62,15 +72,29 @@ export function createSkill(input: CreateSkillInput): Readonly<Skill> {
     ...(input.notes !== undefined && { notes: input.notes }),
     visibility: input.visibility ?? "public",
     featured: input.featured ?? false,
+    privateFields: validatePrivateFields(input.privateFields ?? []),
     createdAt: input.createdAt ?? now,
     updatedAt: input.updatedAt ?? now,
   };
+}
+
+function validatePrivateFields(fields: readonly string[]): readonly SkillPrivateField[] {
+  for (const f of fields) {
+    if (!SKILL_PRIVATE_ELIGIBLE_FIELDS.includes(f as SkillPrivateField)) {
+      throw new InvalidNameError(
+        "Skill.privateFields",
+        `${f} is not allowed. Allowed: ${SKILL_PRIVATE_ELIGIBLE_FIELDS.join(", ")}`,
+      );
+    }
+  }
+  return fields as readonly SkillPrivateField[];
 }
 
 export type UpdateSkillInput = Partial<
   Pick<Skill, "name" | "description" | "domainId" | "categoryId" | "proficiency" | "proficiencyLabel" | "notes" | "visibility" | "featured">
 > & {
   readonly addSources?: readonly SkillSource[];
+  readonly privateFields?: readonly string[];
 };
 
 export function updateSkill(skill: Skill, updates: UpdateSkillInput): Readonly<Skill> {
@@ -90,6 +114,9 @@ export function updateSkill(skill: Skill, updates: UpdateSkillInput): Readonly<S
     ...(updates.notes !== undefined ? { notes: updates.notes } : {}),
     visibility: updates.visibility ?? skill.visibility,
     featured: updates.featured ?? skill.featured,
+    privateFields: updates.privateFields !== undefined
+      ? validatePrivateFields(updates.privateFields)
+      : skill.privateFields,
     sources: updates.addSources
       ? [...skill.sources, ...updates.addSources]
       : skill.sources,

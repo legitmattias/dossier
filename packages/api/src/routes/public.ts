@@ -37,19 +37,22 @@ publicRoutes.get("/:username", async (c) => {
     if (entity.domainId && privateDomainIds.has(entity.domainId)) return false;
     return true;
   };
-  // Strip `notes` from every entity — it's internal-only and must never leak to anonymous viewers,
-  // even though authenticated owner reads (GET /profile) keep it.
-  const stripNotes = <T extends { notes?: unknown }>(entity: T): T => {
-    const { notes: _omit, ...rest } = entity;
+  // Strip `notes` and any per-field `privateFields` overrides before serializing to anon viewers.
+  // `notes` is internal-only across all entities; `privateFields` carries owner-marked overrides
+  // (e.g. a public project with a private URL). Authenticated owner reads (GET /profile) keep both.
+  const stripPrivate = <T extends { notes?: unknown; privateFields?: readonly string[] }>(entity: T): T => {
+    const overrides = (entity.privateFields ?? []) as readonly string[];
+    const { notes: _notes, privateFields: _pf, ...rest } = entity as Record<string, unknown> & T;
+    for (const f of overrides) delete (rest as Record<string, unknown>)[f];
     return rest as T;
   };
 
   const publicProfile = {
     ...profile,
-    skills: profile.skills.filter(isVisible).map(stripNotes),
-    goals: profile.goals.filter(isVisible).map(stripNotes),
-    interests: profile.interests.filter(isVisible).map(stripNotes),
-    projects: profile.projects.filter(isVisible).map(stripNotes),
+    skills: profile.skills.filter(isVisible).map(stripPrivate),
+    goals: profile.goals.filter(isVisible).map(stripPrivate),
+    interests: profile.interests.filter(isVisible).map(stripPrivate),
+    projects: profile.projects.filter(isVisible).map(stripPrivate),
   };
 
   const format = c.req.query("format") ?? "json";

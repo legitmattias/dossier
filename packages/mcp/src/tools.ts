@@ -53,6 +53,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         notes: z.string().optional().describe("Optional notes about this skill"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
         featured: z.boolean().optional().describe("Mark as featured/showcase item"),
+        privateFields: z.array(z.enum(["proficiency", "proficiencyLabel"])).optional().describe("Field names to hide from public output even when the skill itself is public. Allowed: 'proficiency', 'proficiencyLabel'."),
       }),
     },
     withErrorHandler(async (input) => {
@@ -120,6 +121,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         notes: z.string().optional().describe("Updated notes"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
         featured: z.boolean().optional().describe("Mark as featured/showcase item"),
+        privateFields: z.array(z.enum(["proficiency", "proficiencyLabel"])).optional().describe("Field names to hide from public output even when the skill itself is public. Replaces the current list; pass [] to clear."),
       }),
     },
     withErrorHandler(async (input) => {
@@ -172,6 +174,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         targetDate: z.string().optional().describe("Target date in ISO format (e.g. '2026-12-31')"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
         featured: z.boolean().optional().describe("Mark as featured/showcase item"),
+        privateFields: z.array(z.enum(["motivation", "priority", "status", "targetDate", "progress", "resources"])).optional().describe("Field names to hide from public output even when the goal is public. 'progress' is private by default if omitted. Allowed: 'motivation', 'priority', 'status', 'targetDate', 'progress', 'resources'."),
       }),
     },
     withErrorHandler(async (input) => {
@@ -285,6 +288,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         priority: z.enum(["low", "medium", "high"]).optional().describe("New priority level"),
         status: z.enum(["active", "paused", "completed", "abandoned"]).optional().describe("New status"),
         targetDate: z.string().optional().describe("Target date in ISO format (e.g. '2026-12-31'); empty string clears"),
+        privateFields: z.array(z.enum(["motivation", "priority", "status", "targetDate", "progress", "resources"])).optional().describe("Field names to hide from public output. Replaces the current list. Pass [] to publish all fields."),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility"),
         featured: z.boolean().optional().describe("Mark as featured/showcase item"),
       }),
@@ -539,6 +543,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         startDate: z.string().optional().describe("Start date in ISO format (e.g. '2026-03-01')"),
         endDate: z.string().optional().describe("End date in ISO format (e.g. '2026-09-30')"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
+        privateFields: z.array(z.enum(["url", "role", "startDate", "endDate", "highlights", "status"])).optional().describe("Field names to hide from public output even when the project is public. Most common: ['url'] for a project with a private repository link. Allowed: 'url', 'role', 'startDate', 'endDate', 'highlights', 'status'."),
       }),
     },
     withErrorHandler(async (input) => {
@@ -595,6 +600,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         startDate: z.string().optional().describe("Start date in ISO format"),
         endDate: z.string().optional().describe("End date in ISO format"),
         visibility: z.enum(["public", "private"]).optional().describe("Visibility (default: public)"),
+        privateFields: z.array(z.enum(["url", "role", "startDate", "endDate", "highlights", "status"])).optional().describe("Field names to hide from public output. Replaces the current list. Pass [] to publish all fields."),
       }),
     },
     withErrorHandler(async (input) => {

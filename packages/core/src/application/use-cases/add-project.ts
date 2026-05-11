@@ -42,6 +42,7 @@ export async function addProject(
     highlights: input.highlights,
     startDate: input.startDate ? new Date(input.startDate) : undefined,
     endDate: input.endDate ? new Date(input.endDate) : undefined,
+    privateFields: input.privateFields,
   });
 
   const updatedProfile = addProjectToProfile(profile, project);

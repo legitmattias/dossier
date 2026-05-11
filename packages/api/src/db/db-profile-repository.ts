@@ -70,6 +70,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
           description: skill.description, domainId: skill.domainId, categoryId: skill.categoryId,
           proficiency: skill.proficiency, proficiencyLabel: skill.proficiencyLabel, notes: skill.notes,
           sources: skill.sources, visibility: skill.visibility, featured: skill.featured,
+          privateFields: skill.privateFields,
           createdAt: skill.createdAt, updatedAt: skill.updatedAt,
         });
       }
@@ -80,6 +81,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
           description: goal.description, motivation: goal.motivation, notes: goal.notes,
           priority: goal.priority, status: goal.status, visibility: goal.visibility, featured: goal.featured,
           progress: goal.progress, resources: goal.resources,
+          privateFields: goal.privateFields,
           targetDate: goal.targetDate, createdAt: goal.createdAt, updatedAt: goal.updatedAt,
         });
       }
@@ -98,6 +100,7 @@ export class DatabaseProfileRepository implements application.IProfileRepository
           description: project.description, url: project.url, role: project.role, notes: project.notes,
           status: project.status, priority: project.priority, featured: project.featured, visibility: project.visibility,
           skillIds: project.skillIds, highlights: project.highlights,
+          privateFields: project.privateFields,
           startDate: project.startDate, endDate: project.endDate,
           createdAt: project.createdAt, updatedAt: project.updatedAt,
         });

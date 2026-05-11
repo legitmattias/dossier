@@ -78,6 +78,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     sources: (s.sources as Skill["sources"]) ?? [],
     visibility: (s.visibility ?? "public") as "public" | "private",
     featured: s.featured ?? false,
+    privateFields: (s.privateFields as Skill["privateFields"]) ?? [],
     createdAt: s.createdAt,
     updatedAt: s.updatedAt,
   }));
@@ -96,6 +97,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     ...(g.targetDate != null && { targetDate: g.targetDate }),
     visibility: g.visibility as "public" | "private",
     featured: g.featured ?? false,
+    privateFields: (g.privateFields as LearningGoal["privateFields"]) ?? [],
     createdAt: g.createdAt,
     updatedAt: g.updatedAt,
   }));
@@ -108,6 +110,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     ...(i.notes != null && { notes: i.notes }),
     visibility: i.visibility as "public" | "private",
     featured: i.featured ?? false,
+    privateFields: [],
     createdAt: i.createdAt,
     updatedAt: i.updatedAt ?? i.createdAt,
   }));
@@ -128,6 +131,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     ...(p.startDate != null && { startDate: p.startDate }),
     ...(p.endDate != null && { endDate: p.endDate }),
     visibility: p.visibility as "public" | "private",
+    privateFields: (p.privateFields as Project["privateFields"]) ?? [],
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
   }));

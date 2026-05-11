@@ -51,12 +51,12 @@ export type { Category, CreateCategoryInput } from "./entities/category.js";
 export { createCategory } from "./entities/category.js";
 
 // Entities — Interest
-export type { Interest, CreateInterestInput } from "./entities/interest.js";
-export { createInterest } from "./entities/interest.js";
+export type { Interest, CreateInterestInput, InterestPrivateField } from "./entities/interest.js";
+export { createInterest, INTEREST_PRIVATE_ELIGIBLE_FIELDS } from "./entities/interest.js";
 
 // Entities — Project
-export type { Project, CreateProjectInput, ProjectStatus, ProjectPriority } from "./entities/project.js";
-export { createProject } from "./entities/project.js";
+export type { Project, CreateProjectInput, ProjectStatus, ProjectPriority, ProjectPrivateField } from "./entities/project.js";
+export { createProject, PROJECT_PRIVATE_ELIGIBLE_FIELDS } from "./entities/project.js";
 
 // Entities — Domain
 export type { Domain, CreateDomainInput, ProficiencyLabels } from "./entities/domain-entity.js";
@@ -72,8 +72,9 @@ export type {
   SkillSource,
   CreateSkillInput,
   UpdateSkillInput,
+  SkillPrivateField,
 } from "./entities/skill.js";
-export { createSkill, updateSkill } from "./entities/skill.js";
+export { createSkill, updateSkill, SKILL_PRIVATE_ELIGIBLE_FIELDS } from "./entities/skill.js";
 
 // Entities — Learning Goal
 export type {
@@ -83,11 +84,13 @@ export type {
   GoalStatus,
   Resource,
   CreateLearningGoalInput,
+  GoalPrivateField,
 } from "./entities/learning-goal.js";
 export {
   createLearningGoal,
   updateGoalProgress,
   completeGoal,
+  GOAL_PRIVATE_ELIGIBLE_FIELDS,
 } from "./entities/learning-goal.js";
 
 // Entities — Profile (aggregate root)

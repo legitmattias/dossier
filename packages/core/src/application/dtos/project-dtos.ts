@@ -16,6 +16,7 @@ export interface AddProjectInput {
   readonly notes?: string;
   readonly startDate?: string | Date;
   readonly endDate?: string | Date;
+  readonly privateFields?: readonly string[];
 }
 
 export interface UpdateProjectInput {
@@ -33,6 +34,7 @@ export interface UpdateProjectInput {
   readonly notes?: string;
   readonly startDate?: string | Date;
   readonly endDate?: string | Date;
+  readonly privateFields?: readonly string[];
 }
 
 export interface RemoveProjectInput {
@@ -62,6 +64,7 @@ export interface ProjectOutput {
   readonly notes?: string;
   readonly startDate?: string;
   readonly endDate?: string;
+  readonly privateFields: readonly string[];
   readonly createdAt: string;
   readonly updatedAt: string;
 }

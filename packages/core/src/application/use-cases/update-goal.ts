@@ -2,8 +2,10 @@ import {
   findGoalInProfile,
   updateGoalInProfile,
   toGoalId,
+  GOAL_PRIVATE_ELIGIBLE_FIELDS,
 } from "../../domain/index.js";
-import { ProfileNotFoundError } from "../errors/application-errors.js";
+import type { GoalPrivateField } from "../../domain/index.js";
+import { InvalidInputError, ProfileNotFoundError } from "../errors/application-errors.js";
 import { toGoalOutput } from "../helpers/mappers.js";
 import type { GoalOutput } from "../dtos/goal-dtos.js";
 import type { IProfileRepository } from "../ports/profile-repository.js";
@@ -23,6 +25,7 @@ export interface UpdateGoalInput {
   readonly visibility?: string;
   readonly featured?: boolean;
   readonly targetDate?: string | Date | null;
+  readonly privateFields?: readonly string[];
 }
 
 export interface UpdateGoalOutput {
@@ -38,6 +41,16 @@ export async function updateGoal(
 
   const goalId = toGoalId(input.goalId);
   const goal = findGoalInProfile(profile, goalId);
+
+  let privateFields = goal.privateFields;
+  if (input.privateFields !== undefined) {
+    for (const f of input.privateFields) {
+      if (!GOAL_PRIVATE_ELIGIBLE_FIELDS.includes(f as GoalPrivateField)) {
+        throw new InvalidInputError(`privateFields contains '${f}', which is not allowed. Allowed: ${GOAL_PRIVATE_ELIGIBLE_FIELDS.join(", ")}`);
+      }
+    }
+    privateFields = input.privateFields as readonly GoalPrivateField[];
+  }
 
   const updatedGoal = {
     ...goal,
@@ -56,6 +69,7 @@ export async function updateGoal(
           ? input.targetDate
           : new Date(input.targetDate),
     }),
+    privateFields,
     updatedAt: new Date(),
   };
 

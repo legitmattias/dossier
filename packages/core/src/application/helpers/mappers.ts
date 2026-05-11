@@ -19,6 +19,7 @@ export function toSkillOutput(skill: Skill): SkillOutput {
     ...(skill.notes !== undefined && { notes: skill.notes }),
     visibility: skill.visibility,
     featured: skill.featured,
+    privateFields: skill.privateFields,
     createdAt: skill.createdAt.toISOString(),
     updatedAt: skill.updatedAt.toISOString(),
   };
@@ -42,6 +43,7 @@ export function toGoalOutput(goal: LearningGoal): GoalOutput {
     ...(goal.targetDate !== undefined && {
       targetDate: goal.targetDate.toISOString(),
     }),
+    privateFields: goal.privateFields,
     createdAt: goal.createdAt.toISOString(),
     updatedAt: goal.updatedAt.toISOString(),
   };
@@ -82,6 +84,7 @@ export function toProjectOutput(project: Project): ProjectOutput {
     ...(project.notes !== undefined && { notes: project.notes }),
     ...(project.startDate !== undefined && { startDate: project.startDate.toISOString() }),
     ...(project.endDate !== undefined && { endDate: project.endDate.toISOString() }),
+    privateFields: project.privateFields,
     createdAt: project.createdAt.toISOString(),
     updatedAt: project.updatedAt.toISOString(),
   };

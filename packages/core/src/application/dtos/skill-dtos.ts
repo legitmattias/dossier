@@ -13,6 +13,7 @@ export interface AddSkillInput {
   readonly notes?: string;
   readonly visibility?: string;
   readonly featured?: boolean;
+  readonly privateFields?: readonly string[];
 }
 
 export interface UpdateSkillInput {
@@ -27,6 +28,7 @@ export interface UpdateSkillInput {
   readonly visibility?: string;
   readonly featured?: boolean;
   readonly addSources?: readonly SkillSource[];
+  readonly privateFields?: readonly string[];
 }
 
 export interface RemoveSkillInput {
@@ -54,6 +56,7 @@ export interface SkillOutput {
   readonly notes?: string;
   readonly visibility: string;
   readonly featured: boolean;
+  readonly privateFields: readonly string[];
   readonly createdAt: string;
   readonly updatedAt: string;
 }

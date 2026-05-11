@@ -57,6 +57,7 @@ export async function addLearningGoal(
     targetDate,
     visibility: input.visibility as "public" | "private" | undefined,
     featured: input.featured,
+    privateFields: input.privateFields,
   });
 
   const updatedProfile = addGoalToProfile(profile, goal);

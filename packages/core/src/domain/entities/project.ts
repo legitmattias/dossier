@@ -5,6 +5,28 @@ import type { Slug } from "../value-objects/slug.js";
 export type ProjectStatus = "active" | "completed" | "paused" | "ideation";
 export type ProjectPriority = "low" | "medium" | "high";
 
+export const PROJECT_PRIVATE_ELIGIBLE_FIELDS = [
+  "url",
+  "role",
+  "startDate",
+  "endDate",
+  "highlights",
+  "status",
+] as const;
+export type ProjectPrivateField = (typeof PROJECT_PRIVATE_ELIGIBLE_FIELDS)[number];
+
+function validateProjectPrivateFields(fields: readonly string[]): readonly ProjectPrivateField[] {
+  for (const f of fields) {
+    if (!PROJECT_PRIVATE_ELIGIBLE_FIELDS.includes(f as ProjectPrivateField)) {
+      throw new InvalidNameError(
+        "Project.privateFields",
+        `${f} is not allowed. Allowed: ${PROJECT_PRIVATE_ELIGIBLE_FIELDS.join(", ")}`,
+      );
+    }
+  }
+  return fields as readonly ProjectPrivateField[];
+}
+
 export interface Project {
   readonly id: ProjectId;
   readonly slug: Slug;
@@ -21,6 +43,7 @@ export interface Project {
   readonly startDate?: Date;
   readonly endDate?: Date;
   readonly visibility: "public" | "private";
+  readonly privateFields: readonly ProjectPrivateField[];
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -41,6 +64,7 @@ export interface CreateProjectInput {
   readonly startDate?: Date;
   readonly endDate?: Date;
   readonly visibility?: "public" | "private";
+  readonly privateFields?: readonly string[];
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
 }
@@ -67,6 +91,7 @@ export function createProject(input: CreateProjectInput): Readonly<Project> {
     ...(input.startDate !== undefined && { startDate: input.startDate }),
     ...(input.endDate !== undefined && { endDate: input.endDate }),
     visibility: input.visibility ?? "public",
+    privateFields: validateProjectPrivateFields(input.privateFields ?? []),
     createdAt: input.createdAt ?? now,
     updatedAt: input.updatedAt ?? now,
   };

@@ -400,4 +400,54 @@ describe("public profiles", () => {
     expect(body.skills[0]).not.toHaveProperty("notes");
     expect(JSON.stringify(body)).not.toContain("should-not-leak");
   });
+
+  it("strips per-field privateFields markings on the public profile", async () => {
+    const { token, user } = await registerAndGetToken("alice", "alice@test.com");
+
+    const addRes = await authReq("/profile/projects", token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Bachelor Thesis",
+        description: "A public project with a private repo URL",
+        url: "https://github.com/example/private-thesis-repo",
+        privateFields: ["url"],
+      }),
+    });
+    expect(addRes.status).toBe(201);
+
+    await dbConn.db.execute(
+      sql`UPDATE profiles SET is_public = TRUE WHERE user_id = ${user.id}`,
+    );
+
+    const res = await req("/u/alice");
+    expect(res.status).toBe(200);
+    const body = await res.json() as { projects: Array<Record<string, unknown>> };
+    expect(body.projects).toHaveLength(1);
+    expect(body.projects[0]).toHaveProperty("name", "Bachelor Thesis");
+    expect(body.projects[0]).toHaveProperty("description");
+    expect(body.projects[0]).not.toHaveProperty("url");
+    expect(body.projects[0]).not.toHaveProperty("privateFields");
+    expect(JSON.stringify(body)).not.toContain("private-thesis-repo");
+  });
+
+  it("keeps privateFields-marked fields visible to authenticated owner", async () => {
+    const { token } = await registerAndGetToken("alice", "alice@test.com");
+
+    await authReq("/profile/projects", token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Bachelor Thesis",
+        url: "https://github.com/example/private-thesis-repo",
+        privateFields: ["url"],
+      }),
+    });
+
+    const res = await authReq("/profile", token);
+    expect(res.status).toBe(200);
+    const body = await res.json() as { projects: Array<Record<string, unknown>> };
+    expect(body.projects[0]).toHaveProperty("url");
+    expect(body.projects[0]).toHaveProperty("privateFields");
+  });
 });

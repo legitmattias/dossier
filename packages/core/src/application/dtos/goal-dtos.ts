@@ -14,6 +14,7 @@ export interface AddGoalInput {
   readonly featured?: boolean;
   readonly resources?: readonly Resource[];
   readonly targetDate?: string | Date;
+  readonly privateFields?: readonly string[];
 }
 
 export interface UpdateGoalProgressInput {
@@ -48,6 +49,7 @@ export interface GoalOutput {
   readonly progress: readonly Progress[];
   readonly resources: readonly Resource[];
   readonly targetDate?: string;
+  readonly privateFields: readonly string[];
   readonly createdAt: string;
   readonly updatedAt: string;
 }
