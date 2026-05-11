@@ -5,11 +5,13 @@ import { Form, useActionData, useLoaderData, useNavigation, useSearchParams, use
 
 import { ConfirmDialog } from "~/components/ConfirmDialog";
 import { ExpandableTextEditor } from "~/components/ExpandableTextEditor";
+import { PrivateFieldsBadge, PrivateFieldToggle } from "~/components/PrivateFieldToggle";
 import { Toast, type ToastType } from "~/components/Toast";
 import { api, ApiError } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
 import {
   FEATURED_TOOLTIP,
+  FIELD_TOOLTIPS,
   GOAL_STATUS_TOOLTIPS,
   PRIORITY_TOOLTIPS,
   VISIBILITY_DOMAIN_PRIVATE_TOOLTIP,
@@ -27,8 +29,10 @@ interface Goal {
   description?: string;
   motivation?: string;
   notes?: string;
+  targetDate?: string;
   visibility?: string;
   featured?: boolean;
+  privateFields?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -70,6 +74,7 @@ export async function action({ request }: ActionFunctionArgs) {
           notes: String(form.get("notes") ?? "") || undefined,
           visibility: form.get("visibility") as string || "public",
           featured: form.get("featured") === "on",
+          privateFields: form.getAll("privateField").map(String),
         },
       });
       return json({ ok: true });
@@ -100,6 +105,7 @@ export async function action({ request }: ActionFunctionArgs) {
           status: String(form.get("status")),
           visibility: String(form.get("visibility") ?? "public"),
           featured: form.get("featured") === "on",
+          privateFields: form.getAll("privateField").map(String),
         },
       });
       return json({ ok: true });
@@ -218,6 +224,7 @@ export default function GoalsPage() {
                 <span className={styles.rowStar} aria-label="Featured" title={FEATURED_TOOLTIP}>★</span>
               )}
               <span className={styles.rowName}>{goal.name}</span>
+              <PrivateFieldsBadge count={(goal.privateFields ?? []).filter((f) => f !== "progress").length} />
             </div>
             <div className={styles.rowMeta}>
               <span>{domain?.name ?? goal.domainId}</span>
@@ -412,22 +419,24 @@ export default function GoalsPage() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="priority" className={styles.label}>Priority</label>
-                <select id="priority" name="priority" className={styles.select}>
+                <label htmlFor="priority" className={styles.label} title={FIELD_TOOLTIPS.priority}>Priority</label>
+                <select id="priority" name="priority" className={styles.select} defaultValue="medium">
                   <option value="low">Low</option>
-                  <option value="medium" selected>Medium</option>
+                  <option value="medium">Medium</option>
                   <option value="high">High</option>
                 </select>
+                <PrivateFieldToggle field="priority" />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="description" className={styles.label}>Description (optional)</label>
+                <label htmlFor="description" className={styles.label} title={FIELD_TOOLTIPS.description}>Description (optional)</label>
                 <ExpandableTextEditor id="description" name="description" placeholder="What does this goal involve?" label="Description" />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="motivation" className={styles.label}>Motivation (optional)</label>
+                <label htmlFor="motivation" className={styles.label} title={FIELD_TOOLTIPS.motivation}>Motivation (optional)</label>
                 <ExpandableTextEditor id="motivation" name="motivation" rows={3} placeholder="Why are you learning this?" label="Motivation" />
+                <PrivateFieldToggle field="motivation" />
               </div>
 
               <div className={styles.field}>
@@ -529,8 +538,12 @@ export default function GoalsPage() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="edit-motivation" className={styles.label}>Motivation (optional)</label>
+                <label htmlFor="edit-motivation" className={styles.label} title={FIELD_TOOLTIPS.motivation}>Motivation (optional)</label>
                 <ExpandableTextEditor id="edit-motivation" name="motivation" rows={3} defaultValue={editGoal.motivation ?? ""} label="Motivation" />
+                <PrivateFieldToggle
+                  field="motivation"
+                  defaultChecked={editGoal.privateFields?.includes("motivation")}
+                />
               </div>
 
               <div className={styles.field}>
@@ -539,22 +552,30 @@ export default function GoalsPage() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="edit-priority" className={styles.label}>Priority</label>
+                <label htmlFor="edit-priority" className={styles.label} title={FIELD_TOOLTIPS.priority}>Priority</label>
                 <select id="edit-priority" name="priority" className={styles.select} defaultValue={editGoal.priority}>
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
                 </select>
+                <PrivateFieldToggle
+                  field="priority"
+                  defaultChecked={editGoal.privateFields?.includes("priority")}
+                />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="edit-status" className={styles.label}>Status</label>
+                <label htmlFor="edit-status" className={styles.label} title={FIELD_TOOLTIPS.goalStatus}>Status</label>
                 <select id="edit-status" name="status" className={styles.select} defaultValue={editGoal.status}>
                   <option value="active">Active</option>
                   <option value="paused">Paused</option>
                   <option value="completed">Completed</option>
                   <option value="abandoned">Abandoned</option>
                 </select>
+                <PrivateFieldToggle
+                  field="status"
+                  defaultChecked={editGoal.privateFields?.includes("status")}
+                />
               </div>
 
               <div className={styles.field}>

@@ -5,12 +5,14 @@ import { Form, useActionData, useLoaderData, useNavigation, useSearchParams, use
 
 import { ConfirmDialog } from "~/components/ConfirmDialog";
 import { ExpandableTextEditor } from "~/components/ExpandableTextEditor";
+import { PrivateFieldsBadge, PrivateFieldToggle } from "~/components/PrivateFieldToggle";
 import { Toast, type ToastType } from "~/components/Toast";
 
 import { api, ApiError } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
 import {
   FEATURED_TOOLTIP,
+  FIELD_TOOLTIPS,
   PRIORITY_TOOLTIPS,
   PROJECT_STATUS_TOOLTIPS,
   VISIBILITY_PRIVATE_TOOLTIP,
@@ -33,6 +35,7 @@ interface Project {
   notes?: string;
   startDate?: string;
   endDate?: string;
+  privateFields?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -69,6 +72,7 @@ export async function action({ request }: ActionFunctionArgs) {
           featured: form.get("featured") === "on",
           visibility: String(form.get("visibility") || "public"),
           skillIds: form.getAll("skillIds").map(String).filter(Boolean),
+          privateFields: form.getAll("privateField").map(String),
         },
       });
       return json({ ok: true });
@@ -89,6 +93,7 @@ export async function action({ request }: ActionFunctionArgs) {
           featured: form.has("featured") ? form.get("featured") === "on" : undefined,
           visibility: String(form.get("visibility") ?? "") || undefined,
           skillIds: form.getAll("skillIds").map(String).filter(Boolean),
+          privateFields: form.getAll("privateField").map(String),
         },
       });
       return json({ ok: true });
@@ -248,6 +253,7 @@ export default function ProjectsPage() {
                       ) : (
                         <span className={styles.rowName}>{project.name}</span>
                       )}
+                      <PrivateFieldsBadge count={project.privateFields?.length ?? 0} />
                     </div>
                     <div className={styles.rowMeta}>
                       {project.role && <span>{project.role}</span>}
@@ -367,27 +373,30 @@ export default function ProjectsPage() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="url" className={styles.label}>URL (optional)</label>
+                <label htmlFor="url" className={styles.label} title={FIELD_TOOLTIPS.url}>URL (optional)</label>
                 <input id="url" name="url" type="url" className={styles.input} placeholder="https://github.com/..." />
+                <PrivateFieldToggle field="url" />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="role" className={styles.label}>Role (optional)</label>
+                <label htmlFor="role" className={styles.label} title={FIELD_TOOLTIPS.role}>Role (optional)</label>
                 <input id="role" name="role" className={styles.input} placeholder="e.g. Lead developer, Solo developer" />
+                <PrivateFieldToggle field="role" />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="notes" className={styles.label}>Notes (optional)</label>
+                <label htmlFor="notes" className={styles.label} title={FIELD_TOOLTIPS.notes}>Notes (internal — never exported)</label>
                 <ExpandableTextEditor id="notes" name="notes" placeholder="Internal notes (not exported)" label="Notes" />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="status" className={styles.label}>Status</label>
+                <label htmlFor="status" className={styles.label} title={FIELD_TOOLTIPS.status}>Status</label>
                 <select id="status" name="status" className={styles.select} defaultValue="active">
                   {STATUS_OPTIONS.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
+                <PrivateFieldToggle field="status" />
               </div>
 
               <div className={styles.field}>
@@ -472,27 +481,39 @@ export default function ProjectsPage() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="edit-url" className={styles.label}>URL (optional)</label>
+                <label htmlFor="edit-url" className={styles.label} title={FIELD_TOOLTIPS.url}>URL (optional)</label>
                 <input id="edit-url" name="url" type="url" className={styles.input} defaultValue={editProject.url ?? ""} />
+                <PrivateFieldToggle
+                  field="url"
+                  defaultChecked={editProject.privateFields?.includes("url")}
+                />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="edit-role" className={styles.label}>Role (optional)</label>
+                <label htmlFor="edit-role" className={styles.label} title={FIELD_TOOLTIPS.role}>Role (optional)</label>
                 <input id="edit-role" name="role" className={styles.input} defaultValue={editProject.role ?? ""} />
+                <PrivateFieldToggle
+                  field="role"
+                  defaultChecked={editProject.privateFields?.includes("role")}
+                />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="edit-notes" className={styles.label}>Notes (optional)</label>
+                <label htmlFor="edit-notes" className={styles.label} title={FIELD_TOOLTIPS.notes}>Notes (internal — never exported)</label>
                 <ExpandableTextEditor id="edit-notes" name="notes" defaultValue={editProject.notes ?? ""} label="Notes" />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="edit-status" className={styles.label}>Status</label>
+                <label htmlFor="edit-status" className={styles.label} title={FIELD_TOOLTIPS.status}>Status</label>
                 <select id="edit-status" name="status" className={styles.select} defaultValue={editProject.status}>
                   {STATUS_OPTIONS.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
+                <PrivateFieldToggle
+                  field="status"
+                  defaultChecked={editProject.privateFields?.includes("status")}
+                />
               </div>
 
               <div className={styles.field}>

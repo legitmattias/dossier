@@ -5,11 +5,14 @@ import { Form, useActionData, useLoaderData, useNavigation, useSearchParams, use
 
 import { ConfirmDialog } from "~/components/ConfirmDialog";
 import { ExpandableTextEditor } from "~/components/ExpandableTextEditor";
+import { PrivateFieldsBadge, PrivateFieldToggle } from "~/components/PrivateFieldToggle";
 import { Toast, type ToastType } from "~/components/Toast";
 import { api, ApiError } from "~/lib/api.server";
 import { requireToken } from "~/lib/session.server";
 import {
   FEATURED_TOOLTIP,
+  FIELD_TOOLTIPS,
+  PRIVATE_FIELD_PROFICIENCY_WARNING,
   proficiencyTooltip,
   VISIBILITY_DOMAIN_PRIVATE_TOOLTIP,
   VISIBILITY_PRIVATE_TOOLTIP,
@@ -27,6 +30,7 @@ interface Skill {
   notes?: string;
   visibility?: string;
   featured?: boolean;
+  privateFields?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -76,6 +80,7 @@ export async function action({ request }: ActionFunctionArgs) {
           notes: String(form.get("notes") ?? "") || undefined,
           visibility: form.get("visibility") as string || "public",
           featured: form.get("featured") === "on",
+          privateFields: form.getAll("privateField").map(String),
         },
       });
       return json({ ok: true });
@@ -95,6 +100,7 @@ export async function action({ request }: ActionFunctionArgs) {
           notes: String(form.get("notes") ?? "") || undefined,
           visibility: String(form.get("visibility") ?? "public"),
           featured: form.get("featured") === "on",
+          privateFields: form.getAll("privateField").map(String),
         },
       });
       return json({ ok: true });
@@ -305,6 +311,7 @@ export default function SkillsPage() {
                               <span className={styles.rowStar} aria-label="Featured" title={FEATURED_TOOLTIP}>★</span>
                             )}
                             <span className={styles.rowName}>{skill.name}</span>
+                            <PrivateFieldsBadge count={skill.privateFields?.length ?? 0} />
                           </div>
                           <div className={styles.rowMeta}>
                             <span>{category?.name ?? "Uncategorized"}</span>
@@ -444,7 +451,7 @@ export default function SkillsPage() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="edit-proficiency" className={styles.label}>Proficiency</label>
+                <label htmlFor="edit-proficiency" className={styles.label} title={FIELD_TOOLTIPS.proficiency}>Proficiency</label>
                 <select
                   id="edit-proficiency"
                   name="proficiency"
@@ -456,16 +463,25 @@ export default function SkillsPage() {
                     <option key={level} value={level}>{level}</option>
                   ))}
                 </select>
+                <PrivateFieldToggle
+                  field="proficiency"
+                  defaultChecked={editSkill.privateFields?.includes("proficiency")}
+                  note={PRIVATE_FIELD_PROFICIENCY_WARNING}
+                />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="edit-proficiencyLabel" className={styles.label}>Custom proficiency label (optional)</label>
+                <label htmlFor="edit-proficiencyLabel" className={styles.label} title={FIELD_TOOLTIPS.proficiencyLabel}>Custom proficiency label (optional)</label>
                 <input
                   id="edit-proficiencyLabel"
                   name="proficiencyLabel"
                   className={styles.input}
                   defaultValue={editSkill.proficiencyLabel ?? ""}
                   placeholder="e.g. native, CEFR B2 — overrides domain default"
+                />
+                <PrivateFieldToggle
+                  field="proficiencyLabel"
+                  defaultChecked={editSkill.privateFields?.includes("proficiencyLabel")}
                 />
               </div>
 
@@ -550,17 +566,19 @@ export default function SkillsPage() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="proficiency" className={styles.label}>Proficiency</label>
+                <label htmlFor="proficiency" className={styles.label} title={FIELD_TOOLTIPS.proficiency}>Proficiency</label>
                 <select id="proficiency" name="proficiency" required className={styles.select}>
                   {PROFICIENCY_LEVELS.map((level) => (
                     <option key={level} value={level}>{level}</option>
                   ))}
                 </select>
+                <PrivateFieldToggle field="proficiency" note={PRIVATE_FIELD_PROFICIENCY_WARNING} />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="proficiencyLabel" className={styles.label}>Custom proficiency label (optional)</label>
+                <label htmlFor="proficiencyLabel" className={styles.label} title={FIELD_TOOLTIPS.proficiencyLabel}>Custom proficiency label (optional)</label>
                 <input id="proficiencyLabel" name="proficiencyLabel" className={styles.input} placeholder="e.g. native, CEFR B2 — overrides domain default" />
+                <PrivateFieldToggle field="proficiencyLabel" />
               </div>
 
               <div className={styles.field}>
