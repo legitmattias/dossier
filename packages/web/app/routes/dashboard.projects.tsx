@@ -239,19 +239,21 @@ export default function ProjectsPage() {
                       {project.featured && (
                         <span className={styles.rowStar} aria-label="Featured" title={FEATURED_TOOLTIP}>★</span>
                       )}
-                      {project.url ? (
+                      <span className={styles.rowName}>{project.name}</span>
+                      {project.url && (
                         <a
                           href={project.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={styles.rowNameLink}
+                          className={styles.rowExternalLink}
                           onClick={(e) => e.stopPropagation()}
                           title={`Open project URL: ${project.url}`}
+                          aria-label={`Open ${project.name} URL in new tab`}
                         >
-                          {project.name}
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M10 2h4v4M14 2 7 9M12 9v4H3V4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
                         </a>
-                      ) : (
-                        <span className={styles.rowName}>{project.name}</span>
                       )}
                       <PrivateFieldsBadge count={project.privateFields?.length ?? 0} />
                     </div>

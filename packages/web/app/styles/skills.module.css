@@ -740,6 +740,32 @@
   text-decoration: none;
 }
 
+.rowExternalLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-base);
+}
+
+.rowExternalLink:hover,
+.rowExternalLink:focus {
+  outline: none;
+  color: var(--color-primary-hover);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 640px) {
+  .rowExternalLink {
+    width: 36px;
+    height: 36px;
+  }
+}
+
 .rowStar {
   color: #fbbf24;
   font-size: 0.875rem;
