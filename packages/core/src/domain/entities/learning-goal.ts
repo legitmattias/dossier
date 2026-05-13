@@ -1,5 +1,5 @@
 import { InvalidNameError } from "../errors/domain-errors.js";
-import type { DomainId, GoalId } from "../value-objects/identifiers.js";
+import type { DomainId, GoalId, ResourceId } from "../value-objects/identifiers.js";
 
 export type Priority = "low" | "medium" | "high";
 export type GoalStatus = "active" | "paused" | "completed" | "abandoned";
@@ -32,11 +32,101 @@ export interface Progress {
   readonly note?: string;
 }
 
+export const RESOURCE_TYPES = [
+  "article",
+  "video",
+  "course",
+  "book",
+  "documentation",
+  "other",
+] as const;
+export type ResourceType = (typeof RESOURCE_TYPES)[number];
+
 export interface Resource {
+  readonly id: ResourceId;
   readonly title: string;
   readonly url?: string;
-  readonly type: "article" | "video" | "course" | "book" | "documentation" | "other";
+  readonly type: ResourceType;
   readonly completed: boolean;
+}
+
+export interface CreateResourceInput {
+  readonly id: ResourceId;
+  readonly title: string;
+  readonly url?: string;
+  readonly type: ResourceType;
+  readonly completed?: boolean;
+}
+
+export function createResource(input: CreateResourceInput): Readonly<Resource> {
+  if (input.title.trim().length === 0) {
+    throw new InvalidNameError("Resource", input.title);
+  }
+  if (!RESOURCE_TYPES.includes(input.type)) {
+    throw new InvalidNameError("Resource.type", `${input.type} is not allowed. Allowed: ${RESOURCE_TYPES.join(", ")}`);
+  }
+  return {
+    id: input.id,
+    title: input.title.trim(),
+    ...(input.url !== undefined && { url: input.url }),
+    type: input.type,
+    completed: input.completed ?? false,
+  };
+}
+
+export type UpdateResourceInput = Partial<Pick<Resource, "title" | "url" | "type" | "completed">>;
+
+export function addResourceToGoal(goal: LearningGoal, resource: Resource): Readonly<LearningGoal> {
+  if (goal.resources.some((r) => r.id === resource.id)) {
+    throw new InvalidNameError("Resource.id", `Resource with id '${resource.id}' already exists on this goal`);
+  }
+  return {
+    ...goal,
+    resources: [...goal.resources, resource],
+    updatedAt: new Date(),
+  };
+}
+
+export function removeResourceFromGoal(goal: LearningGoal, resourceId: ResourceId): Readonly<LearningGoal> {
+  if (!goal.resources.some((r) => r.id === resourceId)) {
+    throw new InvalidNameError("Resource.id", `Resource '${resourceId}' not found on goal`);
+  }
+  return {
+    ...goal,
+    resources: goal.resources.filter((r) => r.id !== resourceId),
+    updatedAt: new Date(),
+  };
+}
+
+export function updateResourceInGoal(
+  goal: LearningGoal,
+  resourceId: ResourceId,
+  updates: UpdateResourceInput,
+): Readonly<LearningGoal> {
+  const existing = goal.resources.find((r) => r.id === resourceId);
+  if (!existing) {
+    throw new InvalidNameError("Resource.id", `Resource '${resourceId}' not found on goal`);
+  }
+  if (updates.type !== undefined && !RESOURCE_TYPES.includes(updates.type)) {
+    throw new InvalidNameError("Resource.type", `${updates.type} is not allowed. Allowed: ${RESOURCE_TYPES.join(", ")}`);
+  }
+  const updated: Resource = {
+    id: existing.id,
+    title: updates.title !== undefined ? updates.title.trim() : existing.title,
+    type: updates.type ?? existing.type,
+    completed: updates.completed ?? existing.completed,
+    ...(updates.url !== undefined
+      ? (updates.url === "" ? {} : { url: updates.url })
+      : (existing.url !== undefined && { url: existing.url })),
+  };
+  if (updated.title.length === 0) {
+    throw new InvalidNameError("Resource", updates.title ?? "");
+  }
+  return {
+    ...goal,
+    resources: goal.resources.map((r) => (r.id === resourceId ? updated : r)),
+    updatedAt: new Date(),
+  };
 }
 
 export interface LearningGoal {

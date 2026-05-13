@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { InvalidNameError } from "../errors/domain-errors.js";
-import { toDomainId, toGoalId } from "../value-objects/identifiers.js";
+import { toDomainId, toGoalId, toResourceId } from "../value-objects/identifiers.js";
 import { completeGoal, createLearningGoal, updateGoalProgress } from "./learning-goal.js";
 import type { Resource } from "./learning-goal.js";
 
@@ -29,6 +29,7 @@ describe("createLearningGoal", () => {
 
   it("creates a goal with all optional fields", () => {
     const resource: Resource = {
+      id: toResourceId("resource-test-1"),
       title: "The Rust Book",
       url: "https://doc.rust-lang.org/book/",
       type: "documentation",
@@ -65,7 +66,7 @@ describe("createLearningGoal", () => {
       domainId: toDomainId("domain-languages"),
       priority: "high",
       resources: [
-        { title: "Duolingo", type: "course", completed: false },
+        { id: toResourceId("resource-test-2"), title: "Duolingo", type: "course", completed: false },
       ],
     });
 

@@ -34,6 +34,14 @@ export type {
   DemoteGoalInput,
   DemoteGoalOutput,
   GoalOutput,
+  ResourceInput,
+  ResourceOutput,
+  AddResourceInput,
+  AddResourceOutput,
+  UpdateResourceInput,
+  UpdateResourceOutput,
+  RemoveResourceInput,
+  RemoveResourceOutput,
 } from "./dtos/goal-dtos.js";
 
 // DTOs — Interests
@@ -68,7 +76,7 @@ export type {
 
 // Helpers
 export { slugify } from "./helpers/slugify.js";
-export { toSkillOutput, toGoalOutput, toInterestOutput, toProjectOutput } from "./helpers/mappers.js";
+export { toSkillOutput, toGoalOutput, toInterestOutput, toProjectOutput, toResourceOutput } from "./helpers/mappers.js";
 export { validateProficiency, validatePriority, validateGoalStatus } from "./helpers/validation.js";
 
 // Use Cases — Skills
@@ -94,6 +102,12 @@ export { updateGoal } from "./use-cases/update-goal.js";
 export type { UpdateGoalDeps, UpdateGoalInput, UpdateGoalOutput } from "./use-cases/update-goal.js";
 export { removeGoal } from "./use-cases/remove-goal.js";
 export type { RemoveGoalDeps, RemoveGoalInput } from "./use-cases/remove-goal.js";
+export { addResource } from "./use-cases/add-resource.js";
+export type { AddResourceDeps } from "./use-cases/add-resource.js";
+export { updateResource } from "./use-cases/update-resource.js";
+export type { UpdateResourceDeps } from "./use-cases/update-resource.js";
+export { removeResource } from "./use-cases/remove-resource.js";
+export type { RemoveResourceDeps } from "./use-cases/remove-resource.js";
 
 // Use Cases — Interests
 export { addInterest } from "./use-cases/add-interest.js";

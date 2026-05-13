@@ -19,12 +19,21 @@ import {
 } from "~/lib/tooltips";
 import styles from "~/styles/skills.module.css";
 
+interface Resource {
+  id: string;
+  title: string;
+  url?: string;
+  type: "article" | "video" | "course" | "book" | "documentation" | "other";
+  completed: boolean;
+}
+
 interface Goal {
   id: string;
   name: string;
   status: string;
   priority: string;
   progress: Array<{ percentage: number }>;
+  resources?: Resource[];
   domainId: string;
   description?: string;
   motivation?: string;
@@ -129,6 +138,43 @@ export async function action({ request }: ActionFunctionArgs) {
         },
       });
       return json({ ok: true });
+    }
+
+    if (intent === "add-resource") {
+      const goalId = String(form.get("goalId"));
+      await api(`/profile/goals/${goalId}/resources`, {
+        method: "POST",
+        token,
+        body: {
+          title: String(form.get("title")),
+          url: String(form.get("url") ?? "") || undefined,
+          type: String(form.get("type") || "other"),
+          completed: form.get("completed") === "on",
+        },
+      });
+      return json({ ok: true, toast: "Resource added" });
+    }
+
+    if (intent === "toggle-resource") {
+      const goalId = String(form.get("goalId"));
+      const resourceId = String(form.get("resourceId"));
+      const completed = form.get("completed") === "true";
+      await api(`/profile/goals/${goalId}/resources/${resourceId}`, {
+        method: "PATCH",
+        token,
+        body: { completed },
+      });
+      return json({ ok: true });
+    }
+
+    if (intent === "remove-resource") {
+      const goalId = String(form.get("goalId"));
+      const resourceId = String(form.get("resourceId"));
+      await api(`/profile/goals/${goalId}/resources/${resourceId}`, {
+        method: "DELETE",
+        token,
+      });
+      return json({ ok: true, toast: "Resource removed" });
     }
 
     if (intent === "demote") {
@@ -236,6 +282,14 @@ export default function GoalsPage() {
             </div>
             <div className={styles.rowMeta}>
               <span>{domain?.name ?? goal.domainId}</span>
+              {(goal.resources?.length ?? 0) > 0 && (
+                <>
+                  <span className={styles.rowMetaSep} />
+                  <span title={`${goal.resources!.length} resource${goal.resources!.length === 1 ? "" : "s"}`}>
+                    📚 {goal.resources!.length}
+                  </span>
+                </>
+              )}
               {goal.status !== "completed" && goal.status !== "abandoned" && (
                 <span className={styles.rowProgressInline} title={`Progress: ${percentage}%`}>
                   <span className={styles.rowMetaSep} />
@@ -630,7 +684,7 @@ export default function GoalsPage() {
               <fieldset style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", padding: "var(--space-sm) var(--space-md)", margin: 0 }}>
                 <legend style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", padding: "0 var(--space-sm)" }} title="Hide selected sub-collections from public output even when the goal itself is public.">More privacy controls</legend>
                 <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", margin: "var(--space-xs) 0 var(--space-sm)" }}>
-                  Progress and resources are managed elsewhere — these toggles control whether they appear on your public profile.
+                  Toggle whether these sub-collections appear on your public profile.
                 </p>
                 <PrivateFieldToggle
                   field="progress"
@@ -640,7 +694,7 @@ export default function GoalsPage() {
                 <PrivateFieldToggle
                   field="resources"
                   defaultChecked={editGoal.privateFields?.includes("resources")}
-                  note="Articles, courses, books linked to this goal."
+                  note="Articles, courses, books linked to this goal (managed below)."
                 />
               </fieldset>
 
@@ -653,6 +707,8 @@ export default function GoalsPage() {
                 </button>
               </div>
             </Form>
+
+            <ResourcesSection goal={editGoal} isSubmitting={isSubmitting} />
 
             <div
               style={{ marginTop: "var(--space-md)", paddingTop: "var(--space-md)", borderTop: "1px solid var(--color-border)" }}
@@ -721,6 +777,128 @@ export default function GoalsPage() {
 
       {toast && (
         <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
+      )}
+    </div>
+  );
+}
+
+const RESOURCE_TYPE_ICONS: Record<Resource["type"], string> = {
+  article: "📄",
+  video: "🎬",
+  course: "🎓",
+  book: "📚",
+  documentation: "📑",
+  other: "•",
+};
+
+function ResourcesSection({ goal, isSubmitting }: { goal: Goal; isSubmitting: boolean }) {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const resources = goal.resources ?? [];
+  return (
+    <div style={{ marginTop: "var(--space-md)", paddingTop: "var(--space-md)", borderTop: "1px solid var(--color-border)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-sm)" }}>
+        <h3 style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 600 }} title="Articles, courses, books, and other materials linked to this goal.">
+          Resources <span style={{ color: "var(--color-text-muted)", fontWeight: 400 }}>({resources.length})</span>
+        </h3>
+        <button
+          type="button"
+          className={styles.editButton}
+          onClick={() => setShowAddForm((v) => !v)}
+          disabled={isSubmitting}
+        >
+          {showAddForm ? "Cancel" : "+ Add"}
+        </button>
+      </div>
+
+      {showAddForm && (
+        <Form method="post" style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)", padding: "var(--space-sm)", background: "rgba(255,255,255,0.03)", borderRadius: "var(--radius-md)", marginBottom: "var(--space-sm)" }}>
+          <input type="hidden" name="intent" value="add-resource" />
+          <input type="hidden" name="goalId" value={goal.id} />
+          <input name="title" required placeholder="Title (e.g. The Rust Book)" className={styles.input} />
+          <input name="url" type="url" placeholder="URL (optional)" className={styles.input} />
+          <div style={{ display: "flex", gap: "var(--space-sm)", flexWrap: "wrap" }}>
+            <select name="type" defaultValue="article" className={styles.select} style={{ flex: 1, minWidth: 0 }}>
+              <option value="article">📄 Article</option>
+              <option value="video">🎬 Video</option>
+              <option value="course">🎓 Course</option>
+              <option value="book">📚 Book</option>
+              <option value="documentation">📑 Documentation</option>
+              <option value="other">• Other</option>
+            </select>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-xs)", fontSize: "0.875rem" }}>
+              <input type="checkbox" name="completed" /> Already completed
+            </label>
+          </div>
+          <button type="submit" className={styles.submitButton} disabled={isSubmitting} style={{ alignSelf: "flex-end", padding: "4px var(--space-md)", fontSize: "0.75rem" }}>
+            Add Resource
+          </button>
+        </Form>
+      )}
+
+      {resources.length === 0 && !showAddForm && (
+        <p style={{ color: "var(--color-text-muted)", fontSize: "0.8125rem", margin: 0 }}>
+          No resources yet. Add articles, videos, or courses you're using to learn.
+        </p>
+      )}
+
+      {resources.length > 0 && (
+        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
+          {resources.map((r) => (
+            <li key={r.id} style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", padding: "var(--space-xs) var(--space-sm)", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-sm)", minHeight: 44 }}>
+              <Form method="post" style={{ display: "inline-flex" }}>
+                <input type="hidden" name="intent" value="toggle-resource" />
+                <input type="hidden" name="goalId" value={goal.id} />
+                <input type="hidden" name="resourceId" value={r.id} />
+                <input type="hidden" name="completed" value={String(!r.completed)} />
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  title={r.completed ? "Mark as not completed" : "Mark as completed"}
+                  aria-label={r.completed ? "Mark as not completed" : "Mark as completed"}
+                  style={{
+                    width: 28, height: 28, minHeight: 28,
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    background: r.completed ? "var(--gradient-accent)" : "rgba(255,255,255,0.05)",
+                    color: r.completed ? "white" : "var(--color-text-muted)",
+                    border: "1px solid var(--color-border)",
+                    borderRadius: "var(--radius-sm)",
+                    cursor: "pointer",
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  {r.completed ? "✓" : ""}
+                </button>
+              </Form>
+              <span style={{ fontSize: "1rem" }} aria-hidden="true" title={r.type}>
+                {RESOURCE_TYPE_ICONS[r.type]}
+              </span>
+              <span style={{ flex: 1, minWidth: 0, textDecoration: r.completed ? "line-through" : "none", color: r.completed ? "var(--color-text-muted)" : "var(--color-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {r.url ? (
+                  <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }} title={r.url}>
+                    {r.title}
+                  </a>
+                ) : (
+                  r.title
+                )}
+              </span>
+              <Form method="post" style={{ display: "inline-flex" }}>
+                <input type="hidden" name="intent" value="remove-resource" />
+                <input type="hidden" name="goalId" value={goal.id} />
+                <input type="hidden" name="resourceId" value={r.id} />
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={styles.deleteButton}
+                  title="Remove resource"
+                  aria-label="Remove resource"
+                  style={{ padding: "4px 8px", fontSize: "0.75rem" }}
+                >
+                  ✕
+                </button>
+              </Form>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

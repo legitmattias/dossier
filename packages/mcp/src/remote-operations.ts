@@ -105,6 +105,21 @@ export class RemoteOperations implements DossierOperations {
     await this.api<void>(`/profile/goals/${input.goalId}`, { method: "DELETE" });
   }
 
+  // Resources
+  async addResource(input: application.AddResourceInput) {
+    const { goalId, ...body } = input;
+    return this.api<application.AddResourceOutput>(`/profile/goals/${goalId}/resources`, { method: "POST", body });
+  }
+
+  async updateResource(input: application.UpdateResourceInput) {
+    const { goalId, resourceId, ...body } = input;
+    return this.api<application.UpdateResourceOutput>(`/profile/goals/${goalId}/resources/${resourceId}`, { method: "PATCH", body });
+  }
+
+  async removeResource(input: application.RemoveResourceInput) {
+    return this.api<application.RemoveResourceOutput>(`/profile/goals/${input.goalId}/resources/${input.resourceId}`, { method: "DELETE" });
+  }
+
   // Interests
   async addInterest(input: application.AddInterestInput) {
     return this.api<application.AddInterestOutput>("/profile/interests", { method: "POST", body: input });

@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added — 0.3: learning resources end-to-end
+
+- **Resources on learning goals**: articles, videos, courses, books, documentation, or other materials can now be attached to a goal. Each resource carries a stable `id`, a title, optional URL, type, and a `completed` flag. Surfaced across:
+  - **Domain layer**: `Resource` type + `addResourceToGoal` / `updateResourceInGoal` / `removeResourceFromGoal` mutation functions, plus `RESOURCE_TYPES` constant and `ResourceId` branded type.
+  - **REST API**: `POST /profile/goals/:id/resources`, `PATCH /profile/goals/:id/resources/:resourceId`, `DELETE /profile/goals/:id/resources/:resourceId`. Auth + scope checks identical to other write routes.
+  - **MCP tools**: `dossier_add_resource`, `dossier_update_resource`, `dossier_remove_resource`. AI agents can attach materials, toggle completion, and remove resources without needing to read or rewrite the whole goal.
+  - **Web UI**: a Resources section in the goal edit modal lists existing resources with type icons, completion checkboxes, and remove buttons. An inline Add form supports title/URL/type/completed. Goal row meta shows a resource count.
+  - **CLI**: `dossier resource <goal-name> add|list|remove|complete [identifier]` with `--title`, `--url`, `--type`, `--completed` flags. Resources can be addressed by id or exact-match title.
+- Legacy resource rows without ids are backfilled on profile load (the schema's resource validator accepts missing `id` and synthesizes a stable replacement). No migration required for existing data.
+
+### Changed — 0.3
+
+- `serializeGoal` (the public serializer) now omits `progress`, `resources`, and `privateFields` keys entirely when they're missing on the entity, rather than crashing on `.map`. This makes the public route tolerant of the visibility filter stripping fields from a goal (e.g. `privateFields: ["resources"]` no longer 500s).
+- The goal edit modal's "More privacy controls" section now references the Resources section below it explicitly: the `resources` toggle hides the section from public output, the section itself is the place to add/remove materials.
+
 ### Added — 0.2: multi-consumer access control
 
 - **Per-field private overrides (`privateFields`)**: on Skill, Goal, Interest, and Project, the owner can mark specific eligible fields as hidden from public output even when the entity itself is public. Public surfaces (REST `/u/:username`, exporters, MCP via maxVisibility-capped keys) strip the marked fields; authenticated owner reads see everything. Eligible sets per entity:

@@ -1,10 +1,13 @@
 import {
   addGoalToProfile,
   createLearningGoal,
+  createResource,
   findDomainInProfile,
   toDomainId,
   toGoalId,
+  toResourceId,
 } from "../../domain/index.js";
+import type { ResourceType } from "../../domain/index.js";
 import type { AddGoalInput, AddGoalOutput } from "../dtos/goal-dtos.js";
 import { ProfileNotFoundError } from "../errors/application-errors.js";
 import { toGoalOutput } from "../helpers/mappers.js";
@@ -44,6 +47,15 @@ export async function addLearningGoal(
 
   const goalId = toGoalId(deps.idGenerator.generate("goal"));
 
+  // Generate stable ids for any resources passed in at creation time.
+  const resources = input.resources?.map((r) => createResource({
+    id: toResourceId(deps.idGenerator.generate("resource")),
+    title: r.title,
+    url: r.url,
+    type: r.type as ResourceType,
+    completed: r.completed,
+  }));
+
   const goal = createLearningGoal({
     id: goalId,
     name: input.name,
@@ -53,7 +65,7 @@ export async function addLearningGoal(
     notes: input.notes,
     priority,
     status,
-    resources: input.resources,
+    resources,
     targetDate,
     visibility: input.visibility as "public" | "private" | undefined,
     featured: input.featured,

@@ -86,6 +86,9 @@ function createTestOperations(repo: InMemoryProfileRepository, idGen: StubIdGene
     addCategory: (input) => application.addCategory(deps, input),
     updateGoal: (input) => application.updateGoal(readDeps, input),
     removeGoal: async (input) => { await application.removeGoal(readDeps, input); },
+    addResource: (input) => application.addResource(deps, input),
+    updateResource: (input) => application.updateResource(readDeps, input),
+    removeResource: (input) => application.removeResource(readDeps, input),
     removeDomain: async (input) => { await application.removeDomain(readDeps, input); },
     removeCategory: async (input) => { await application.removeCategory(readDeps, input); },
     exportProfile: async (format) => {

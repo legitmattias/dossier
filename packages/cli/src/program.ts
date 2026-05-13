@@ -13,6 +13,7 @@ import { registerProgressCommand } from "./commands/progress.js";
 import { registerInterestCommand } from "./commands/interest.js";
 import { registerExportCommand } from "./commands/export.js";
 import { registerProjectCommand } from "./commands/project.js";
+import { registerResourceCommand } from "./commands/resource.js";
 
 function getContainer(program: Command): Container {
   const opts = program.opts<{ profile?: string }>();
@@ -42,6 +43,7 @@ export function createProgram(): Command {
   registerInterestCommand(program, lazyContainer);
   registerExportCommand(program, lazyContainer);
   registerProjectCommand(program, lazyContainer);
+  registerResourceCommand(program, lazyContainer);
 
   return program;
 }

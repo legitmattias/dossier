@@ -1,8 +1,19 @@
-import type { Interest, LearningGoal, Project, Skill } from "../../domain/index.js";
-import type { GoalOutput } from "../dtos/goal-dtos.js";
+import type { Interest, LearningGoal, Project, Resource, Skill } from "../../domain/index.js";
+import type { GoalOutput, ResourceOutput } from "../dtos/goal-dtos.js";
 import type { InterestOutput } from "../dtos/interest-dtos.js";
 import type { ProjectOutput } from "../dtos/project-dtos.js";
 import type { SkillOutput } from "../dtos/skill-dtos.js";
+
+/** Map a Resource entity to a ResourceOutput DTO. */
+export function toResourceOutput(resource: Resource): ResourceOutput {
+  return {
+    id: resource.id,
+    title: resource.title,
+    ...(resource.url !== undefined && { url: resource.url }),
+    type: resource.type,
+    completed: resource.completed,
+  };
+}
 
 /** Map a Skill entity to a SkillOutput DTO. */
 export function toSkillOutput(skill: Skill): SkillOutput {
@@ -39,7 +50,7 @@ export function toGoalOutput(goal: LearningGoal): GoalOutput {
     featured: goal.featured,
     status: goal.status,
     progress: goal.progress,
-    resources: goal.resources,
+    resources: goal.resources.map(toResourceOutput),
     ...(goal.targetDate !== undefined && {
       targetDate: goal.targetDate.toISOString(),
     }),

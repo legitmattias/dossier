@@ -317,6 +317,69 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
     }),
   );
 
+  // --- Resources (on goals) ---
+
+  const RESOURCE_TYPE_ENUM = ["article", "video", "course", "book", "documentation", "other"] as const;
+
+  server.registerTool(
+    "dossier_add_resource",
+    {
+      title: "Add Resource to Goal",
+      description:
+        "Attach a learning resource (article, video, course, book, etc.) to an existing learning goal. " +
+        "Use dossier_search to find the goal ID first. Returns the created resource with a stable ID you can use to update or remove it later.",
+      inputSchema: z.object({
+        goalId: z.string().describe("Goal ID this resource belongs to"),
+        title: z.string().describe("Resource title (e.g. 'The Rust Book')"),
+        url: z.string().optional().describe("Link to the resource (e.g. 'https://doc.rust-lang.org/book/')"),
+        type: z.enum(RESOURCE_TYPE_ENUM).describe("Resource format"),
+        completed: z.boolean().optional().describe("Whether the user has finished this resource (default: false)"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.addResource(input);
+      return ok(`Added resource '${result.resource.title}' to goal '${result.goal.name}' (id: ${result.resource.id})`);
+    }),
+  );
+
+  server.registerTool(
+    "dossier_update_resource",
+    {
+      title: "Update Resource",
+      description:
+        "Update a resource on a learning goal — change title, URL, type, or toggle the completed flag. " +
+        "Pass only the fields you want to change. Useful for marking a resource as completed: pass `completed: true`.",
+      inputSchema: z.object({
+        goalId: z.string().describe("Goal ID this resource belongs to"),
+        resourceId: z.string().describe("Resource ID to update"),
+        title: z.string().optional().describe("New title"),
+        url: z.string().optional().describe("New URL (pass empty string to clear)"),
+        type: z.enum(RESOURCE_TYPE_ENUM).optional().describe("New type"),
+        completed: z.boolean().optional().describe("Mark completed or not"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.updateResource(input);
+      return ok(`Updated resource '${result.resource.title}' on goal '${result.goal.name}' (completed: ${result.resource.completed})`);
+    }),
+  );
+
+  server.registerTool(
+    "dossier_remove_resource",
+    {
+      title: "Remove Resource",
+      description: "Remove a resource from a learning goal. Use dossier_search and the goal's resources list to find the resource ID first.",
+      inputSchema: z.object({
+        goalId: z.string().describe("Goal ID this resource belongs to"),
+        resourceId: z.string().describe("Resource ID to remove"),
+      }),
+    },
+    withErrorHandler(async (input) => {
+      const result = await ops.removeResource(input);
+      return ok(`Removed resource from goal '${result.goal.name}'`);
+    }),
+  );
+
   server.registerTool(
     "dossier_add_interest",
     {

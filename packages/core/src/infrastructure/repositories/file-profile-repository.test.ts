@@ -16,6 +16,7 @@ import {
   toGoalId,
   toInterestId,
   toProfileId,
+  toResourceId,
   toSkillId,
 } from "../../domain/index.js";
 import { slugify } from "../../application/helpers/slugify.js";
@@ -73,7 +74,7 @@ function createFullTestProfile() {
     priority: "high",
     targetDate: new Date("2026-12-31"),
     resources: [
-      { title: "The Rust Book", url: "https://doc.rust-lang.org/book/", type: "book", completed: false },
+      { id: toResourceId("resource-test-1"), title: "The Rust Book", url: "https://doc.rust-lang.org/book/", type: "book", completed: false },
     ],
     createdAt: new Date("2026-03-01"),
     updatedAt: new Date("2026-03-01"),

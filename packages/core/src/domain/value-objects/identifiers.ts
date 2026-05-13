@@ -8,6 +8,7 @@ export type GoalId = string & { readonly __brand: "GoalId" };
 export type InterestId = string & { readonly __brand: "InterestId" };
 export type ProjectId = string & { readonly __brand: "ProjectId" };
 export type ProfileId = string & { readonly __brand: "ProfileId" };
+export type ResourceId = string & { readonly __brand: "ResourceId" };
 
 function validateId(value: string, typeName: string): void {
   if (value.trim().length === 0) {
@@ -48,4 +49,9 @@ export function toProjectId(value: string): ProjectId {
 export function toProfileId(value: string): ProfileId {
   validateId(value, "ProfileId");
   return value as ProfileId;
+}
+
+export function toResourceId(value: string): ResourceId {
+  validateId(value, "ResourceId");
+  return value as ResourceId;
 }

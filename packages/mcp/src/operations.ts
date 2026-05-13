@@ -40,6 +40,11 @@ export interface DossierOperations {
   updateGoal(input: application.UpdateGoalInput): Promise<application.UpdateGoalOutput>;
   removeGoal(input: application.RemoveGoalInput): Promise<void>;
 
+  // Resources (on goals)
+  addResource(input: application.AddResourceInput): Promise<application.AddResourceOutput>;
+  updateResource(input: application.UpdateResourceInput): Promise<application.UpdateResourceOutput>;
+  removeResource(input: application.RemoveResourceInput): Promise<application.RemoveResourceOutput>;
+
   // Domains & Categories
   addDomain(input: application.AddDomainInput): Promise<application.AddDomainOutput>;
   updateDomain(input: application.UpdateDomainInput): Promise<application.UpdateDomainOutput>;

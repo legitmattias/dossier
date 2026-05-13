@@ -226,6 +226,38 @@ profileRoutes.delete("/goals/:id", requireAuth, requireScope("write"), async (c)
   return c.json({ removed: true });
 });
 
+// --- Goal Resources ---
+
+// POST /profile/goals/:id/resources
+profileRoutes.post("/goals/:id/resources", requireAuth, requireScope("write"), async (c) => {
+  const body = await c.req.json();
+  const deps = getDeps(c);
+  const result = await application.addResource(deps, { goalId: c.req.param("id"), ...body });
+  return c.json(result, 201);
+});
+
+// PATCH /profile/goals/:id/resources/:resourceId
+profileRoutes.patch("/goals/:id/resources/:resourceId", requireAuth, requireScope("write"), async (c) => {
+  const body = await c.req.json();
+  const deps = getDeps(c);
+  const result = await application.updateResource(deps, {
+    goalId: c.req.param("id"),
+    resourceId: c.req.param("resourceId"),
+    ...body,
+  });
+  return c.json(result);
+});
+
+// DELETE /profile/goals/:id/resources/:resourceId
+profileRoutes.delete("/goals/:id/resources/:resourceId", requireAuth, requireScope("write"), async (c) => {
+  const deps = getDeps(c);
+  const result = await application.removeResource(deps, {
+    goalId: c.req.param("id"),
+    resourceId: c.req.param("resourceId"),
+  });
+  return c.json(result);
+});
+
 // --- Interests ---
 
 // GET /profile/interests

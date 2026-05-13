@@ -86,6 +86,19 @@ export class LocalOperations implements DossierOperations {
     await application.removeGoal(this.readDeps, input);
   }
 
+  // Resources
+  async addResource(input: application.AddResourceInput) {
+    return application.addResource(this.deps, input);
+  }
+
+  async updateResource(input: application.UpdateResourceInput) {
+    return application.updateResource(this.readDeps, input);
+  }
+
+  async removeResource(input: application.RemoveResourceInput) {
+    return application.removeResource(this.readDeps, input);
+  }
+
   // Interests
   async addInterest(input: application.AddInterestInput) {
     return application.addInterest(this.deps, input);

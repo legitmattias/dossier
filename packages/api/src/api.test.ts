@@ -319,6 +319,79 @@ describe("goals", () => {
   });
 });
 
+// --- Resources (on goals) ---
+
+describe("resources", () => {
+  it("adds, updates, and removes resources on a goal", async () => {
+    const { token } = await registerAndGetToken();
+
+    const addGoalRes = await authReq("/profile/goals", token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Learn Rust", domainId: "builtin-domain-software-development" }),
+    });
+    const { goal } = await addGoalRes.json() as { goal: { id: string } };
+
+    const addRes = await authReq(`/profile/goals/${goal.id}/resources`, token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Rustlings", url: "https://github.com/rust-lang/rustlings", type: "course" }),
+    });
+    expect(addRes.status).toBe(201);
+    const { resource } = await addRes.json() as { resource: { id: string; title: string; type: string; completed: boolean } };
+    expect(resource.title).toBe("Rustlings");
+    expect(resource.type).toBe("course");
+    expect(resource.completed).toBe(false);
+    expect(resource.id).toMatch(/^resource[_-]/);
+
+    const toggleRes = await authReq(`/profile/goals/${goal.id}/resources/${resource.id}`, token, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ completed: true }),
+    });
+    expect(toggleRes.status).toBe(200);
+    const { resource: toggled } = await toggleRes.json() as { resource: { completed: boolean } };
+    expect(toggled.completed).toBe(true);
+
+    const removeRes = await authReq(`/profile/goals/${goal.id}/resources/${resource.id}`, token, { method: "DELETE" });
+    expect(removeRes.status).toBe(200);
+
+    const goalsRes = await authReq("/profile/goals", token);
+    const { goals: [g] } = await goalsRes.json() as { goals: Array<{ resources: unknown[] }> };
+    expect(g.resources).toHaveLength(0);
+  });
+
+  it("strips resources from public profile when goal has privateFields=['resources']", async () => {
+    const { token, user } = await registerAndGetToken("bob", "bob@test.com");
+
+    const addGoalRes = await authReq("/profile/goals", token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Learn Rust",
+        domainId: "builtin-domain-software-development",
+        privateFields: ["resources"],
+      }),
+    });
+    const { goal } = await addGoalRes.json() as { goal: { id: string } };
+
+    await authReq(`/profile/goals/${goal.id}/resources`, token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Rustlings", url: "https://github.com/rust-lang/rustlings", type: "course" }),
+    });
+
+    await dbConn.db.execute(sql`UPDATE profiles SET is_public = TRUE WHERE user_id = ${user.id}`);
+
+    const publicRes = await req("/u/bob");
+    expect(publicRes.status).toBe(200);
+    const publicProfile = await publicRes.json() as { goals: Array<Record<string, unknown>> };
+    expect(publicProfile.goals).toHaveLength(1);
+    expect(publicProfile.goals[0]).not.toHaveProperty("resources");
+    expect(JSON.stringify(publicProfile)).not.toContain("Rustlings");
+  });
+});
+
 // --- Interests ---
 
 describe("interests", () => {

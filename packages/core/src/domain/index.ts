@@ -23,6 +23,7 @@ export type {
   InterestId,
   ProjectId,
   ProfileId,
+  ResourceId,
 } from "./value-objects/identifiers.js";
 export {
   toSkillId,
@@ -32,6 +33,7 @@ export {
   toInterestId,
   toProjectId,
   toProfileId,
+  toResourceId,
 } from "./value-objects/identifiers.js";
 
 // Value Objects — Slug
@@ -83,6 +85,9 @@ export type {
   Priority,
   GoalStatus,
   Resource,
+  ResourceType,
+  CreateResourceInput,
+  UpdateResourceInput,
   CreateLearningGoalInput,
   GoalPrivateField,
 } from "./entities/learning-goal.js";
@@ -90,6 +95,11 @@ export {
   createLearningGoal,
   updateGoalProgress,
   completeGoal,
+  createResource,
+  addResourceToGoal,
+  removeResourceFromGoal,
+  updateResourceInGoal,
+  RESOURCE_TYPES,
   GOAL_PRIVATE_ELIGIBLE_FIELDS,
 } from "./entities/learning-goal.js";
 

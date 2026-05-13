@@ -47,11 +47,16 @@ const progressSchema = z.object({
 });
 
 const resourceSchema = z.object({
+  // Older profile files may have resources without an id — backfill on parse so legacy data keeps working.
+  id: z.string().min(1).optional(),
   title: z.string(),
   url: z.string().optional(),
   type: z.literal(["article", "video", "course", "book", "documentation", "other"]),
   completed: z.boolean(),
-});
+}).transform((r) => ({
+  ...r,
+  id: r.id ?? `resource_legacy_${Math.random().toString(36).slice(2, 10)}`,
+}));
 
 const learningGoalSchema = z.object({
   id: z.string().min(1),
@@ -252,6 +257,7 @@ function serializeProgress(progress: Progress): object {
 
 function serializeResource(resource: Resource): object {
   return {
+    id: resource.id,
     title: resource.title,
     ...(resource.url !== undefined && { url: resource.url }),
     type: resource.type,
@@ -260,6 +266,10 @@ function serializeResource(resource: Resource): object {
 }
 
 function serializeGoal(goal: LearningGoal): object {
+  // The visibility filter may strip fields out of a goal before serialization
+  // (e.g. `resources` if marked private). Tolerate missing arrays by skipping
+  // them entirely from output, rather than emitting an empty array we then
+  // have to filter again downstream.
   return {
     id: goal.id,
     name: goal.name,
@@ -269,12 +279,12 @@ function serializeGoal(goal: LearningGoal): object {
     ...(goal.notes !== undefined && { notes: goal.notes }),
     priority: goal.priority,
     status: goal.status,
-    progress: goal.progress.map(serializeProgress),
-    resources: goal.resources.map(serializeResource),
+    ...(goal.progress !== undefined && { progress: goal.progress.map(serializeProgress) }),
+    ...(goal.resources !== undefined && { resources: goal.resources.map(serializeResource) }),
     ...(goal.targetDate !== undefined && { targetDate: serializeDate(goal.targetDate) }),
     visibility: goal.visibility,
     featured: goal.featured,
-    privateFields: goal.privateFields,
+    ...(goal.privateFields !== undefined && { privateFields: goal.privateFields }),
     createdAt: serializeDate(goal.createdAt),
     updatedAt: serializeDate(goal.updatedAt),
   };

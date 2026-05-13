@@ -2,6 +2,7 @@
  * Loads a full Profile domain entity from the database.
  * Bridges between Drizzle database rows and @dossier/core domain model.
  */
+import { randomUUID } from "crypto";
 import { eq, inArray } from "drizzle-orm";
 import {
   createProfile,
@@ -12,9 +13,22 @@ import {
   toGoalId,
   toInterestId,
   toProjectId,
+  toResourceId,
   createSlug,
 } from "@dossier/core";
-import type { Profile, Domain, Category, Skill, LearningGoal, Interest, Project } from "@dossier/core";
+import type { Profile, Domain, Category, Skill, LearningGoal, Interest, Project, Resource } from "@dossier/core";
+
+// Backfill missing ids on legacy resource rows (pre-0.3 data may lack stable ids).
+function normalizeResource(raw: unknown): Resource {
+  const r = raw as Resource & { id?: string };
+  return {
+    id: r.id ? toResourceId(r.id) : toResourceId(`resource_${randomUUID().replace(/-/g, "")}`),
+    title: r.title,
+    ...(r.url !== undefined && { url: r.url }),
+    type: r.type,
+    completed: r.completed ?? false,
+  };
+}
 
 import type { Database } from "./connection.js";
 import * as schema from "./schema.js";
@@ -93,7 +107,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     priority: g.priority as LearningGoal["priority"],
     status: g.status as LearningGoal["status"],
     progress: (g.progress as LearningGoal["progress"]) ?? [],
-    resources: (g.resources as LearningGoal["resources"]) ?? [],
+    resources: ((g.resources as unknown[]) ?? []).map(normalizeResource),
     ...(g.targetDate != null && { targetDate: g.targetDate }),
     visibility: g.visibility as "public" | "private",
     featured: g.featured ?? false,
