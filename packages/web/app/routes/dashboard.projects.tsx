@@ -90,7 +90,7 @@ export async function action({ request }: ActionFunctionArgs) {
           role: String(form.get("role") ?? "") || undefined,
           status: String(form.get("status") ?? "") || undefined,
           priority: String(form.get("priority") ?? "") || undefined,
-          featured: form.has("featured") ? form.get("featured") === "on" : undefined,
+          featured: form.get("featured") === "on",
           visibility: String(form.get("visibility") ?? "") || undefined,
           skillIds: form.getAll("skillIds").map(String).filter(Boolean),
           privateFields: form.getAll("privateField").map(String),
