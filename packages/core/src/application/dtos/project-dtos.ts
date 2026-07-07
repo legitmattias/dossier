@@ -26,7 +26,8 @@ export interface UpdateProjectInput {
   readonly url?: string;
   readonly role?: string;
   readonly status?: string;
-  readonly priority?: string;
+  /** A priority string sets it; `null` clears it; omitting leaves it unchanged. */
+  readonly priority?: string | null;
   readonly featured?: boolean;
   readonly visibility?: string;
   readonly skillIds?: readonly string[];
@@ -56,7 +57,7 @@ export interface ProjectOutput {
   readonly url?: string;
   readonly role?: string;
   readonly status: ProjectStatus;
-  readonly priority: ProjectPriority;
+  readonly priority?: ProjectPriority;
   readonly featured: boolean;
   readonly visibility: string;
   readonly skillIds: readonly string[];

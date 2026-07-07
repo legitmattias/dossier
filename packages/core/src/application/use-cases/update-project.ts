@@ -41,7 +41,9 @@ export async function updateProject(
     ...(input.url !== undefined && { url: input.url }),
     ...(input.role !== undefined && { role: input.role }),
     ...(input.status !== undefined && { status: input.status as ProjectStatus }),
-    ...(input.priority !== undefined && { priority: input.priority as ProjectPriority }),
+    ...(input.priority !== undefined && {
+      priority: input.priority === null ? undefined : (input.priority as ProjectPriority),
+    }),
     ...(input.featured !== undefined && { featured: input.featured }),
     ...(input.visibility !== undefined && { visibility: input.visibility as "public" | "private" }),
     ...(input.skillIds !== undefined && { skillIds: input.skillIds }),

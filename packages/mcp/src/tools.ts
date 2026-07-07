@@ -597,7 +597,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         url: z.string().optional().describe("Project URL (repository, website, etc.)"),
         role: z.string().optional().describe("Your role in the project"),
         status: z.enum(["active", "completed", "paused", "ideation"]).optional().describe("Project status (default: active)"),
-        priority: z.enum(["low", "medium", "high"]).optional().describe("Project priority (default: medium)"),
+        priority: z.enum(["low", "medium", "high"]).optional().describe("Project priority (optional — omit for no priority)"),
         featured: z.boolean().optional().describe("Whether this is a featured/showcase project"),
         skillIds: z.array(z.string()).optional().describe("IDs of skills used in this project"),
         skillNames: z.array(z.string()).optional().describe("Skill names to resolve to IDs (case-insensitive exact match). Merged with skillIds."),
@@ -633,7 +633,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         return ok("No projects found matching the filters.");
       }
       const lines = result.projects.map((p) => {
-        let line = `- ${p.name} (${p.status}, ${p.priority} priority) [id: ${p.id}]`;
+        let line = `- ${p.name} (${p.status}${p.priority ? `, ${p.priority} priority` : ""}) [id: ${p.id}]`;
         if (p.featured) line += " ★";
         if (p.description) line += ` — ${p.description}`;
         return line;
@@ -654,7 +654,7 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
         url: z.string().optional().describe("Updated URL"),
         role: z.string().optional().describe("Updated role"),
         status: z.enum(["active", "completed", "paused", "ideation"]).optional().describe("New status"),
-        priority: z.enum(["low", "medium", "high"]).optional().describe("New priority"),
+        priority: z.enum(["low", "medium", "high", "none"]).optional().describe("New priority. Pass \"none\" to clear it."),
         featured: z.boolean().optional().describe("Set featured flag"),
         skillIds: z.array(z.string()).optional().describe("Updated skill IDs (replaces current list)"),
         skillNames: z.array(z.string()).optional().describe("Skill names to resolve to IDs (case-insensitive exact match). Merged with skillIds, replaces current list."),
@@ -671,7 +671,11 @@ export function registerTools(server: McpServer, ops: DossierOperations): void {
       const skillIds = (rest.skillIds !== undefined || skillNames !== undefined)
         ? await mergeSkillIds(ops, rest.skillIds, skillNames)
         : undefined;
-      const result = await ops.updateProject({ ...rest, ...(skillIds !== undefined && { skillIds }) });
+      const result = await ops.updateProject({
+        ...rest,
+        ...(rest.priority !== undefined && { priority: rest.priority === "none" ? null : rest.priority }),
+        ...(skillIds !== undefined && { skillIds }),
+      });
       return ok(`Updated project: ${result.project.name} (${result.project.status})`);
     }),
   );

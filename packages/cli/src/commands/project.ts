@@ -47,7 +47,7 @@ export function registerProjectCommand(
     .option("--remove", "Remove project")
     .option("--update", "Update an existing project (rather than add)")
     .option("--status <status>", "Filter by status (list) or set status")
-    .option("--priority <priority>", "Set priority")
+    .option("--priority <priority>", "Set priority: low, medium, high, or none (clears it)")
     .option("--featured", "Mark as featured")
     .option("--url <url>", "Project URL")
     .option("--role <role>", "Your role in the project")
@@ -103,7 +103,7 @@ export function registerProjectCommand(
             sortedProjects.map((p) => [
               p.name,
               p.status,
-              p.priority,
+              p.priority ?? "—",
               String(p.skillIds?.length ?? 0),
               p.featured ? "★" : "",
             ]),
@@ -143,7 +143,7 @@ export function registerProjectCommand(
             ...(opts.role !== undefined && { role: opts.role }),
             ...(opts.notes !== undefined && { notes: opts.notes }),
             ...(opts.status !== undefined && { status: opts.status }),
-            ...(opts.priority !== undefined && { priority: opts.priority }),
+            ...(opts.priority !== undefined && { priority: opts.priority === "none" ? null : opts.priority }),
             ...(opts.featured !== undefined && { featured: opts.featured }),
             ...(opts.visibility !== undefined && { visibility: opts.visibility }),
             ...(skillIds !== undefined && { skillIds }),
@@ -170,7 +170,7 @@ export function registerProjectCommand(
           role: opts.role,
           notes: opts.notes,
           status: opts.status,
-          priority: opts.priority,
+          priority: opts.priority === "none" ? undefined : opts.priority,
           featured: opts.featured,
           visibility: opts.visibility,
           ...(skillIds && { skillIds }),

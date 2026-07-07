@@ -27,7 +27,7 @@ describe("addProject", () => {
     expect(result.project.slug).toBe("dossier");
     expect(result.project.name).toBe("Dossier");
     expect(result.project.status).toBe("active");
-    expect(result.project.priority).toBe("medium");
+    expect(result.project.priority).toBeUndefined();
     expect(result.project.featured).toBe(false);
     expect(result.project.createdAt).toBeDefined();
     expect(result.project.updatedAt).toBeDefined();

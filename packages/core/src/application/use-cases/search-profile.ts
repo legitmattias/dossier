@@ -59,7 +59,7 @@ export async function searchProfile(
       name: p.name,
       type: "project" as const,
       description: p.description,
-      meta: `${p.status}, ${p.priority}`,
+      meta: p.priority ? `${p.status}, ${p.priority}` : p.status,
     }));
 
   return {

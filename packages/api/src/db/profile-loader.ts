@@ -137,7 +137,7 @@ export async function loadProfileFromDb(db: Database, userId: string): Promise<P
     ...(p.url != null && { url: p.url }),
     ...(p.role != null && { role: p.role }),
     status: p.status as Project["status"],
-    priority: p.priority as Project["priority"],
+    ...(p.priority != null && { priority: p.priority as Project["priority"] }),
     featured: p.featured,
     skillIds: (p.skillIds as string[]) ?? [],
     highlights: (p.highlights as string[]) ?? [],

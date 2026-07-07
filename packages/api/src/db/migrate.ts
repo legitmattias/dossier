@@ -133,7 +133,7 @@ export async function ensureTables(db: Database): Promise<void> {
       url TEXT,
       role TEXT,
       status TEXT NOT NULL DEFAULT 'active',
-      priority TEXT NOT NULL DEFAULT 'medium',
+      priority TEXT,
       featured BOOLEAN NOT NULL DEFAULT FALSE,
       skill_ids JSONB NOT NULL DEFAULT '[]',
       highlights JSONB NOT NULL DEFAULT '[]',
@@ -149,6 +149,10 @@ export async function ensureTables(db: Database): Promise<void> {
   await db.execute(sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'`);
   await db.execute(sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'`);
   await db.execute(sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS notes TEXT`);
+
+  // Project priority is optional (null = no priority). Relax the legacy NOT NULL/default.
+  await db.execute(sql`ALTER TABLE projects ALTER COLUMN priority DROP NOT NULL`);
+  await db.execute(sql`ALTER TABLE projects ALTER COLUMN priority DROP DEFAULT`);
 
   await db.execute(sql`ALTER TABLE skills ADD COLUMN IF NOT EXISTS description TEXT`);
   await db.execute(sql`ALTER TABLE skills ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT FALSE`);

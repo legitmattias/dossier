@@ -196,7 +196,7 @@ export const projects = pgTable("projects", {
   url: text("url"),
   role: text("role"),
   status: text("status").notNull().default("active"),
-  priority: text("priority").notNull().default("medium"),
+  priority: text("priority"), // low | medium | high — optional (null = no priority)
   featured: boolean("featured").notNull().default(false),
   skillIds: jsonb("skill_ids").notNull().default([]),
   highlights: jsonb("highlights").notNull().default([]),

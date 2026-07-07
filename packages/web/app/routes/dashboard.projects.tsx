@@ -27,7 +27,7 @@ interface Project {
   url?: string;
   role?: string;
   status: string;
-  priority: string;
+  priority?: string;
   featured: boolean;
   visibility: string;
   skillIds: string[];
@@ -68,7 +68,7 @@ export async function action({ request }: ActionFunctionArgs) {
           role: String(form.get("role") ?? "") || undefined,
           notes: String(form.get("notes") ?? "") || undefined,
           status: String(form.get("status") || "active"),
-          priority: String(form.get("priority") || "medium"),
+          priority: String(form.get("priority") ?? "") || undefined,
           featured: form.get("featured") === "on",
           visibility: String(form.get("visibility") || "public"),
           skillIds: form.getAll("skillIds").map(String).filter(Boolean),
@@ -89,7 +89,8 @@ export async function action({ request }: ActionFunctionArgs) {
           url: String(form.get("url") ?? "") || undefined,
           role: String(form.get("role") ?? "") || undefined,
           status: String(form.get("status") ?? "") || undefined,
-          priority: String(form.get("priority") ?? "") || undefined,
+          // Edit form always renders the selector; "" (None) explicitly clears via null.
+          priority: String(form.get("priority") ?? "") === "" ? null : String(form.get("priority")),
           featured: form.get("featured") === "on",
           visibility: String(form.get("visibility") ?? "") || undefined,
           skillIds: form.getAll("skillIds").map(String).filter(Boolean),
@@ -273,13 +274,15 @@ export default function ProjectsPage() {
                     >
                       {project.status}
                     </span>
-                    <span
-                      className={styles.proficiency}
-                      data-level={project.priority}
-                      title={PRIORITY_TOOLTIPS[project.priority] ?? project.priority}
-                    >
-                      {project.priority}
-                    </span>
+                    {project.priority && (
+                      <span
+                        className={styles.proficiency}
+                        data-level={project.priority}
+                        title={PRIORITY_TOOLTIPS[project.priority] ?? project.priority}
+                      >
+                        {project.priority}
+                      </span>
+                    )}
                     {project.visibility === "private" && (
                       <span className={styles.proficiency} data-level="private" title={VISIBILITY_PRIVATE_TOOLTIP}>private</span>
                     )}
@@ -402,8 +405,9 @@ export default function ProjectsPage() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="priority" className={styles.label}>Priority</label>
-                <select id="priority" name="priority" className={styles.select} defaultValue="medium">
+                <label htmlFor="priority" className={styles.label}>Priority (optional)</label>
+                <select id="priority" name="priority" className={styles.select} defaultValue="">
+                  <option value="">None</option>
                   {PRIORITY_OPTIONS.map((p) => (
                     <option key={p} value={p}>{p}</option>
                   ))}
@@ -519,8 +523,9 @@ export default function ProjectsPage() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="edit-priority" className={styles.label}>Priority</label>
-                <select id="edit-priority" name="priority" className={styles.select} defaultValue={editProject.priority}>
+                <label htmlFor="edit-priority" className={styles.label}>Priority (optional)</label>
+                <select id="edit-priority" name="priority" className={styles.select} defaultValue={editProject.priority ?? ""}>
+                  <option value="">None</option>
                   {PRIORITY_OPTIONS.map((p) => (
                     <option key={p} value={p}>{p}</option>
                   ))}

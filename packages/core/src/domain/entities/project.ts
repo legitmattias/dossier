@@ -35,7 +35,7 @@ export interface Project {
   readonly url?: string;
   readonly role?: string;
   readonly status: ProjectStatus;
-  readonly priority: ProjectPriority;
+  readonly priority?: ProjectPriority;
   readonly featured: boolean;
   readonly skillIds: readonly string[];
   readonly highlights: readonly string[];
@@ -83,7 +83,7 @@ export function createProject(input: CreateProjectInput): Readonly<Project> {
     ...(input.url !== undefined && { url: input.url }),
     ...(input.role !== undefined && { role: input.role }),
     status: input.status ?? "active",
-    priority: input.priority ?? "medium",
+    ...(input.priority !== undefined && { priority: input.priority }),
     featured: input.featured ?? false,
     skillIds: input.skillIds ?? [],
     highlights: input.highlights ?? [],

@@ -87,7 +87,7 @@ export function toProjectOutput(project: Project): ProjectOutput {
     ...(project.url !== undefined && { url: project.url }),
     ...(project.role !== undefined && { role: project.role }),
     status: project.status,
-    priority: project.priority,
+    ...(project.priority !== undefined && { priority: project.priority }),
     featured: project.featured,
     visibility: project.visibility,
     skillIds: project.skillIds,

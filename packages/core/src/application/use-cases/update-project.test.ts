@@ -52,6 +52,37 @@ describe("updateProject", () => {
     expect(result.project.featured).toBe(true);
   });
 
+  it("sets priority when provided", async () => {
+    const result = await updateProject({ profileRepository: repo }, {
+      projectId: "project-1",
+      priority: "high",
+    });
+
+    expect(result.project.priority).toBe("high");
+  });
+
+  it("clears priority when passed null", async () => {
+    await updateProject({ profileRepository: repo }, { projectId: "project-1", priority: "high" });
+
+    const result = await updateProject({ profileRepository: repo }, {
+      projectId: "project-1",
+      priority: null,
+    });
+
+    expect(result.project.priority).toBeUndefined();
+  });
+
+  it("leaves priority unchanged when omitted", async () => {
+    await updateProject({ profileRepository: repo }, { projectId: "project-1", priority: "low" });
+
+    const result = await updateProject({ profileRepository: repo }, {
+      projectId: "project-1",
+      name: "Renamed",
+    });
+
+    expect(result.project.priority).toBe("low");
+  });
+
   it("throws ProfileNotFoundError when no profile exists", async () => {
     const emptyRepo = new InMemoryProfileRepository();
     await expect(

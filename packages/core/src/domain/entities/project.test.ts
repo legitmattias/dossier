@@ -21,7 +21,7 @@ describe("createProject", () => {
     expect(project.url).toBeUndefined();
     expect(project.role).toBeUndefined();
     expect(project.status).toBe("active");
-    expect(project.priority).toBe("medium");
+    expect(project.priority).toBeUndefined();
     expect(project.featured).toBe(false);
     expect(project.skillIds).toEqual([]);
     expect(project.highlights).toEqual([]);
