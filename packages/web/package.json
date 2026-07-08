@@ -9,6 +9,7 @@
     "build": "remix vite:build",
     "dev": "remix vite:dev",
     "start": "node ./build/server/index.js",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf build .cache"
   },
   "dependencies": {
