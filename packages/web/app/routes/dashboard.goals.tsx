@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction, TypedResponse } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams, useSubmit } from "@remix-run/react";
 
@@ -64,7 +64,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return json({ goals: goalsData.goals, domains: domainsData.domains });
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+type ActionData = { ok: true; toast?: string } | { error: string };
+
+export async function action({ request }: ActionFunctionArgs): Promise<TypedResponse<ActionData>> {
   const token = await requireToken(request);
   const form = await request.formData();
   const intent = String(form.get("intent"));
