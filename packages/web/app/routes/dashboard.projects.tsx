@@ -135,7 +135,6 @@ export default function ProjectsPage() {
   const [filterPriority, setFilterPriority] = useState("");
   const [filterFeatured, setFilterFeatured] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
-  const [skillFilter, setSkillFilter] = useState("");
   const [sortBy, setSortBy] = useState("name");
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
@@ -429,30 +428,7 @@ export default function ProjectsPage() {
                 </select>
               </div>
 
-              <div className={styles.field}>
-                <label className={styles.label}>Skills</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="Filter skills..."
-                  value={skillFilter}
-                  onChange={(e) => setSkillFilter(e.target.value)}
-                />
-                <div className={styles.skillPickerList}>
-                  {skills
-                    .filter((s) => s.name.toLowerCase().includes(skillFilter.toLowerCase()))
-                    .map((skill) => (
-                      <label key={skill.id} className={styles.skillPickerItem}>
-                        <input
-                          type="checkbox"
-                          name="skillIds"
-                          value={skill.id}
-                        />
-                        {skill.name}
-                      </label>
-                    ))}
-                </div>
-              </div>
+              <SkillPicker skills={skills} initialSelected={[]} />
 
               <div className={styles.formActions}>
                 <button type="button" onClick={() => { setSaved(false); setSearchParams({}); }} className={styles.cancelButton}>
@@ -547,31 +523,7 @@ export default function ProjectsPage() {
                 </select>
               </div>
 
-              <div className={styles.field}>
-                <label className={styles.label}>Skills</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="Filter skills..."
-                  value={skillFilter}
-                  onChange={(e) => setSkillFilter(e.target.value)}
-                />
-                <div className={styles.skillPickerList}>
-                  {skills
-                    .filter((s) => s.name.toLowerCase().includes(skillFilter.toLowerCase()))
-                    .map((skill) => (
-                      <label key={skill.id} className={styles.skillPickerItem}>
-                        <input
-                          type="checkbox"
-                          name="skillIds"
-                          value={skill.id}
-                          defaultChecked={editProject.skillIds.includes(skill.id)}
-                        />
-                        {skill.name}
-                      </label>
-                    ))}
-                </div>
-              </div>
+              <SkillPicker skills={skills} initialSelected={editProject.skillIds} />
 
               <div className={styles.formActions}>
                 <button type="button" onClick={() => { setSaved(false); setSearchParams({}); }} className={styles.cancelButton}>
@@ -610,6 +562,64 @@ export default function ProjectsPage() {
       {toast && (
         <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
       )}
+    </div>
+  );
+}
+
+/**
+ * Skill selector with a filter box. Selection is tracked in state so it is
+ * independent of the filter: filtering only changes which skills are *shown*,
+ * never which are *selected*. Hidden inputs submit the full selection, so a
+ * checked skill that is currently filtered out is still saved.
+ */
+function SkillPicker({
+  skills,
+  initialSelected,
+}: {
+  skills: Array<{ id: string; name: string }>;
+  initialSelected: readonly string[];
+}) {
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(initialSelected));
+  const [filter, setFilter] = useState("");
+
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const visible = skills.filter((s) => s.name.toLowerCase().includes(filter.toLowerCase()));
+
+  return (
+    <div className={styles.field}>
+      <label className={styles.label}>
+        Skills{selected.size > 0 ? ` (${selected.size} selected)` : ""}
+      </label>
+      <input
+        type="text"
+        className={styles.input}
+        placeholder="Filter skills..."
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+      />
+      <div className={styles.skillPickerList}>
+        {visible.map((skill) => (
+          <label key={skill.id} className={styles.skillPickerItem}>
+            <input
+              type="checkbox"
+              checked={selected.has(skill.id)}
+              onChange={() => toggle(skill.id)}
+            />
+            {skill.name}
+          </label>
+        ))}
+      </div>
+      {/* Carries the full selection on submit, regardless of the active filter. */}
+      {[...selected].map((id) => (
+        <input key={id} type="hidden" name="skillIds" value={id} />
+      ))}
     </div>
   );
 }
